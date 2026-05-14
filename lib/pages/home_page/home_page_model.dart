@@ -42,6 +42,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
           int index, Function(PatientStruct) updateFn) =>
       sortedAllPatients[index] = updateFn(sortedAllPatients[index]);
 
+  bool displaySearch = false;
+
   ///  State fields for stateful widgets in this page.
 
   // Stores action output result for [Backend Call - API (Get All Patients)] action in HomePage widget.
@@ -60,6 +62,11 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late MenuItemsComponentModel settingsModel;
   // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
   ApiCallResponse? allPatientsQuery2;
+  // State field(s) for SearchName widget.
+  FocusNode? searchNameFocusNode;
+  TextEditingController? searchNameTextController;
+  String? Function(BuildContext, String?)? searchNameTextControllerValidator;
+  List<String> simpleSearchResults = [];
   // State field(s) for AllPatientsDataTable widget.
   final allPatientsDataTableController =
       FlutterFlowDataTableController<PatientStruct>();
@@ -82,6 +89,9 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     createPatientModel.dispose();
     activityModel.dispose();
     settingsModel.dispose();
+    searchNameFocusNode?.dispose();
+    searchNameTextController?.dispose();
+
     allPatientsDataTableController.dispose();
   }
 }

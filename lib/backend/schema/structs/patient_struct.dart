@@ -15,6 +15,7 @@ class PatientStruct extends BaseStruct {
     String? gender,
     String? birthDate,
     String? firstName,
+    String? combinedNames,
   })  : _identifier = identifier,
         _givenNames = givenNames,
         _familyName = familyName,
@@ -22,7 +23,8 @@ class PatientStruct extends BaseStruct {
         _telecomValue = telecomValue,
         _gender = gender,
         _birthDate = birthDate,
-        _firstName = firstName;
+        _firstName = firstName,
+        _combinedNames = combinedNames;
 
   // "identifier" field.
   String? _identifier;
@@ -80,6 +82,13 @@ class PatientStruct extends BaseStruct {
 
   bool hasFirstName() => _firstName != null;
 
+  // "combinedNames" field.
+  String? _combinedNames;
+  String get combinedNames => _combinedNames ?? '';
+  set combinedNames(String? val) => _combinedNames = val;
+
+  bool hasCombinedNames() => _combinedNames != null;
+
   static PatientStruct fromMap(Map<String, dynamic> data) => PatientStruct(
         identifier: data['identifier'] as String?,
         givenNames: data['givenNames'] as String?,
@@ -89,6 +98,7 @@ class PatientStruct extends BaseStruct {
         gender: data['gender'] as String?,
         birthDate: data['birthDate'] as String?,
         firstName: data['firstName'] as String?,
+        combinedNames: data['combinedNames'] as String?,
       );
 
   static PatientStruct? maybeFromMap(dynamic data) =>
@@ -103,6 +113,7 @@ class PatientStruct extends BaseStruct {
         'gender': _gender,
         'birthDate': _birthDate,
         'firstName': _firstName,
+        'combinedNames': _combinedNames,
       }.withoutNulls;
 
   @override
@@ -137,6 +148,10 @@ class PatientStruct extends BaseStruct {
         ),
         'firstName': serializeParam(
           _firstName,
+          ParamType.String,
+        ),
+        'combinedNames': serializeParam(
+          _combinedNames,
           ParamType.String,
         ),
       }.withoutNulls;
@@ -183,6 +198,11 @@ class PatientStruct extends BaseStruct {
           ParamType.String,
           false,
         ),
+        combinedNames: deserializeParam(
+          data['combinedNames'],
+          ParamType.String,
+          false,
+        ),
       );
 
   @override
@@ -198,7 +218,8 @@ class PatientStruct extends BaseStruct {
         telecomValue == other.telecomValue &&
         gender == other.gender &&
         birthDate == other.birthDate &&
-        firstName == other.firstName;
+        firstName == other.firstName &&
+        combinedNames == other.combinedNames;
   }
 
   @override
@@ -210,7 +231,8 @@ class PatientStruct extends BaseStruct {
         telecomValue,
         gender,
         birthDate,
-        firstName
+        firstName,
+        combinedNames
       ]);
 }
 
@@ -223,6 +245,7 @@ PatientStruct createPatientStruct({
   String? gender,
   String? birthDate,
   String? firstName,
+  String? combinedNames,
 }) =>
     PatientStruct(
       identifier: identifier,
@@ -233,4 +256,5 @@ PatientStruct createPatientStruct({
       gender: gender,
       birthDate: birthDate,
       firstName: firstName,
+      combinedNames: combinedNames,
     );

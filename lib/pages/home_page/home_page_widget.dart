@@ -1,5 +1,6 @@
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
+import '/components/empty_widget_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
 import '/flutter_flow/flutter_flow_data_table.dart';
@@ -9,11 +10,13 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'dart:math' as math;
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:text_search/text_search.dart';
 import 'home_page_model.dart';
 export 'home_page_model.dart';
 
@@ -66,6 +69,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         );
       }
     });
+
+    _model.searchNameTextController ??= TextEditingController();
+    _model.searchNameFocusNode ??= FocusNode();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -415,7 +421,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.max,
                                     children: [
-                                      if (_model.showPatients)
+                                      if (_model.showPatients ||
+                                          _model.showSearch)
                                         Container(
                                           height: 750.0,
                                           decoration: BoxDecoration(),
@@ -438,7 +445,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                               .start,
                                                       children: [
                                                         Text(
-                                                          'Patients',
+                                                          _model.showSearch
+                                                              ? 'Search Patients'
+                                                              : 'Patients',
                                                           textAlign:
                                                               TextAlign.start,
                                                           style: FlutterFlowTheme
@@ -476,7 +485,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                   .spaceBetween,
                                                           children: [
                                                             Text(
-                                                              'List of patients on the FHIR Server.',
+                                                              _model.showSearch
+                                                                  ? 'Find Patients on FHIR Server by typing all or part of a name.'
+                                                                  : 'List of patients on the FHIR Server.',
                                                               style: FlutterFlowTheme
                                                                       .of(context)
                                                                   .bodyMedium
@@ -512,8 +523,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                 text: TextSpan(
                                                                   children: [
                                                                     TextSpan(
-                                                                      text:
-                                                                          'Total ',
+                                                                      text: _model.showSearch &&
+                                                                              (_model.searchNameTextController.text != '')
+                                                                          ? 'Found '
+                                                                          : 'Total ',
                                                                       style:
                                                                           TextStyle(
                                                                         color: FlutterFlowTheme.of(context)
@@ -523,10 +536,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                       ),
                                                                     ),
                                                                     TextSpan(
-                                                                      text: _model
-                                                                          .allPatients
-                                                                          .length
-                                                                          .toString(),
+                                                                      text: _model.showSearch && (_model.searchNameTextController.text != '')
+                                                                          ? _model
+                                                                              .simpleSearchResults
+                                                                              .length
+                                                                              .toString()
+                                                                          : _model
+                                                                              .allPatients
+                                                                              .length
+                                                                              .toString(),
                                                                       style:
                                                                           TextStyle(
                                                                         color: FlutterFlowTheme.of(context)
@@ -795,6 +813,356 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                     .around(
                                                         SizedBox(width: 20.0)),
                                               ),
+                                              if (_model.showSearch)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        height: 60.0,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .secondaryBackground,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      10.0),
+                                                          border: Border.all(
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .secondary,
+                                                          ),
+                                                        ),
+                                                        alignment:
+                                                            AlignmentDirectional(
+                                                                -1.0, 0.0),
+                                                        child: TextFormField(
+                                                          controller: _model
+                                                              .searchNameTextController,
+                                                          focusNode: _model
+                                                              .searchNameFocusNode,
+                                                          onChanged: (_) =>
+                                                              EasyDebounce
+                                                                  .debounce(
+                                                            '_model.searchNameTextController',
+                                                            Duration(
+                                                                milliseconds:
+                                                                    200),
+                                                            () async {
+                                                              if (_model.searchNameTextController
+                                                                          .text !=
+                                                                      '') {
+                                                                safeSetState(
+                                                                    () {
+                                                                  _model
+                                                                      .simpleSearchResults = TextSearch((_model.sortedAllPatients.map((e) => e.combinedNames).toList()
+                                                                              as List)
+                                                                          .cast<
+                                                                              String>()
+                                                                          .map((str) =>
+                                                                              TextSearchItem.fromTerms(str, [
+                                                                                str
+                                                                              ]))
+                                                                          .toList())
+                                                                      .search(_model
+                                                                          .searchNameTextController
+                                                                          .text)
+                                                                      .map((r) =>
+                                                                          r.object)
+                                                                      .toList();
+                                                                  ;
+                                                                });
+                                                                _model.displaySearch =
+                                                                    true;
+                                                                safeSetState(
+                                                                    () {});
+                                                              } else {
+                                                                _model.displaySearch =
+                                                                    false;
+                                                                safeSetState(
+                                                                    () {});
+                                                              }
+                                                            },
+                                                          ),
+                                                          autofocus: false,
+                                                          enabled: true,
+                                                          obscureText: false,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            isDense: true,
+                                                            labelStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelMedium
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .labelMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .labelMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                            hintText:
+                                                                'Search Name',
+                                                            hintStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelMedium
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .labelMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .labelMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                            enabledBorder:
+                                                                OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: Color(
+                                                                    0x00000000),
+                                                                width: 1.0,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                            ),
+                                                            focusedBorder:
+                                                                OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: Color(
+                                                                    0x00000000),
+                                                                width: 1.0,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                            ),
+                                                            errorBorder:
+                                                                OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .error,
+                                                                width: 1.0,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                            ),
+                                                            focusedErrorBorder:
+                                                                OutlineInputBorder(
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .error,
+                                                                width: 1.0,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                            ),
+                                                            filled: true,
+                                                            fillColor: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .secondaryBackground,
+                                                            prefixIcon: Icon(
+                                                              FontAwesomeIcons
+                                                                  .search,
+                                                            ),
+                                                            suffixIcon: _model
+                                                                    .searchNameTextController!
+                                                                    .text
+                                                                    .isNotEmpty
+                                                                ? InkWell(
+                                                                    onTap:
+                                                                        () async {
+                                                                      _model
+                                                                          .searchNameTextController
+                                                                          ?.clear();
+                                                                      if (_model.searchNameTextController.text !=
+                                                                              '') {
+                                                                        safeSetState(
+                                                                            () {
+                                                                          _model.simpleSearchResults = TextSearch((_model.sortedAllPatients.map((e) => e.combinedNames).toList() as List).cast<String>().map((str) => TextSearchItem.fromTerms(str, [str])).toList())
+                                                                              .search(_model.searchNameTextController.text)
+                                                                              .map((r) => r.object)
+                                                                              .toList();
+                                                                          ;
+                                                                        });
+                                                                        _model.displaySearch =
+                                                                            true;
+                                                                        safeSetState(
+                                                                            () {});
+                                                                      } else {
+                                                                        _model.displaySearch =
+                                                                            false;
+                                                                        safeSetState(
+                                                                            () {});
+                                                                      }
+
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    },
+                                                                    child: Icon(
+                                                                      Icons
+                                                                          .clear,
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .alternate,
+                                                                      size:
+                                                                          24.0,
+                                                                    ),
+                                                                  )
+                                                                : null,
+                                                          ),
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontWeight,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                          cursorColor:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .primaryText,
+                                                          enableInteractiveSelection:
+                                                              true,
+                                                          validator: _model
+                                                              .searchNameTextControllerValidator
+                                                              .asValidator(
+                                                                  context),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      width: 250.0,
+                                                      height: 50.0,
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .cardBlue,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10.0),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        children: [
+                                                          Icon(
+                                                            Icons
+                                                                .check_circle_outline_rounded,
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .primary,
+                                                            size: 24.0,
+                                                          ),
+                                                          Text(
+                                                            'Supports Partial Match',
+                                                            style: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .bodyMedium
+                                                                .override(
+                                                                  font:
+                                                                      GoogleFonts
+                                                                          .inter(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primary,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                          ),
+                                                        ]
+                                                            .divide(SizedBox(
+                                                                width: 10.0))
+                                                            .around(SizedBox(
+                                                                width: 10.0)),
+                                                      ),
+                                                    ),
+                                                  ]
+                                                      .divide(
+                                                          SizedBox(width: 20.0))
+                                                      .around(SizedBox(
+                                                          width: 20.0)),
+                                                ),
                                               Expanded(
                                                 child: Padding(
                                                   padding: EdgeInsetsDirectional
@@ -802,10 +1170,29 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                           20.0, 0.0, 20.0, 0.0),
                                                   child: Builder(
                                                     builder: (context) {
-                                                      final allPatientsList =
-                                                          _model
-                                                              .sortedAllPatients
-                                                              .toList();
+                                                      final allPatientsList = (_model
+                                                                  .displaySearch
+                                                              ? _model
+                                                                  .allPatients
+                                                                  .where((e) => _model
+                                                                      .simpleSearchResults
+                                                                      .contains(e
+                                                                          .combinedNames))
+                                                                  .toList()
+                                                              : _model
+                                                                  .sortedAllPatients)
+                                                          .toList();
+                                                      if (allPatientsList
+                                                          .isEmpty) {
+                                                        return Center(
+                                                          child: Container(
+                                                            width: 350.0,
+                                                            height: 50.0,
+                                                            child:
+                                                                EmptyWidgetWidget(),
+                                                          ),
+                                                        );
+                                                      }
 
                                                       return FlutterFlowDataTable<
                                                           PatientStruct>(
@@ -1063,7 +1450,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                   ),
                                                                 ),
                                                                 Text(
-                                                                  '${allPatientsListItem.firstName}   ${allPatientsListItem.familyName}',
+                                                                  allPatientsListItem
+                                                                      .combinedNames,
                                                                   style: FlutterFlowTheme.of(
                                                                           context)
                                                                       .bodyMedium
@@ -1205,6 +1593,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                   DataCell(c))
                                                               .toList(),
                                                         ),
+                                                        emptyBuilder: () =>
+                                                            Center(
+                                                          child: Container(
+                                                            width: 350.0,
+                                                            height: 50.0,
+                                                            child:
+                                                                EmptyWidgetWidget(),
+                                                          ),
+                                                        ),
                                                         onSortChanged:
                                                             (columnIndex,
                                                                 ascending) async {
@@ -1341,7 +1738,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 .around(SizedBox(height: 10.0)),
                                           ),
                                         ),
-                                      if (_model.showSearch)
+                                      if (false)
                                         Container(
                                           decoration: BoxDecoration(),
                                           child: Text(

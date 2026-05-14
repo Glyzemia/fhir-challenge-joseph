@@ -30,16 +30,19 @@ List<PatientStruct>? parseFhirPatients(List<dynamic>? entries) {
     final telecomList = resource['telecom'];
     final firstTelecom =
         telecomList is List && telecomList.isNotEmpty ? telecomList.first : {};
+    final familyName = firstName['family']?.toString() ?? '';
+    final combinedNames = firstNameOnly + ' ' + familyName;
 
     return createPatientStruct(
         identifier: resource['id']?.toString() ?? '',
         givenNames: parsedGivenNames,
-        familyName: firstName['family']?.toString() ?? '',
+        familyName: familyName,
         telecomSystem: firstTelecom['system']?.toString() ?? '',
         telecomValue: firstTelecom['value']?.toString() ?? '',
         gender: resource['gender']?.toString() ?? '',
         birthDate: resource['birthDate']?.toString() ?? '',
-        firstName: firstNameOnly);
+        firstName: firstNameOnly,
+        combinedNames: combinedNames);
   }).toList();
 }
 
