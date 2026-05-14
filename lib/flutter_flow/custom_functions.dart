@@ -61,3 +61,46 @@ String capitalizeFirst(String text) {
       text.substring(
           1); // Capitalize the first letter and concatenate with the rest of the string
 }
+
+bool isValidPhoneNumberForCountry(
+  String phoneNumber,
+  String isoCode,
+) {
+  // Remove spaces, hyphens, brackets, plus signs, etc.
+  final digits = phoneNumber.replaceAll(RegExp(r'\D'), '');
+  final country = isoCode.toUpperCase().trim();
+
+  switch (country) {
+    case 'IN':
+      // India mobile number: 10 digits, usually starts with 6,7,8,9
+      return RegExp(r'^[6-9]\d{9}$').hasMatch(digits);
+
+    case 'US':
+    case 'CA':
+      // US / Canada: 10 digits without country code
+      return RegExp(r'^\d{10}$').hasMatch(digits);
+
+    case 'SG':
+      // Singapore: commonly 8 digits
+      return RegExp(r'^\d{8}$').hasMatch(digits);
+
+    case 'AE':
+      // UAE: commonly 9 digits without country code
+      return RegExp(r'^\d{9}$').hasMatch(digits);
+
+    case 'GB':
+      // UK numbers vary; allow 10 or 11 digits without +44
+      return RegExp(r'^\d{10,11}$').hasMatch(digits);
+
+    default:
+      // General fallback.
+      // E.164 full phone numbers can be up to 15 digits including country code.
+      // Since this field excludes country code, keep a broad but reasonable range.
+      return digits.length >= 6 && digits.length <= 14;
+  }
+}
+
+List<String> splitWords(String wordsString) {
+  // I want a function that takes in a single sentence, and split the words based on " " and return words list.
+  return wordsString.split(" ");
+}

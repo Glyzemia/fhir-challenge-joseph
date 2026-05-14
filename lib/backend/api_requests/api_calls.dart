@@ -95,6 +95,85 @@ class GetAllPatientsCall {
       ) as List?;
 }
 
+class CreateNewPatientCall {
+  static Future<ApiCallResponse> call({
+    List<String>? givenNameList,
+    String? familyName = '',
+    String? birthDate = '',
+    String? phoneNumber = '',
+    String? gender = '',
+    String? token = '',
+  }) async {
+    final givenName = _serializeList(givenNameList);
+
+    final ffApiRequestBody = '''
+{
+  "resourceType": "Patient",
+  "active": "true",
+  "name": [
+    {
+      "use": "official",
+      "family": "${escapeStringForJson(familyName)}",
+      "given": ${givenName}
+    }
+  ],
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "${escapeStringForJson(phoneNumber)}",
+      "use": "mobile"
+    }
+  ],
+  "gender": "${escapeStringForJson(gender)}",
+  "birthDate": "${escapeStringForJson(birthDate)}",
+  "deceasedBoolean": "false",
+  "multipleBirthBoolean": "false"
+}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Create New Patient',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Patient',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class DeletePatientCall {
+  static Future<ApiCallResponse> call({
+    String? id = '',
+    String? token = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Delete Patient',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Patient/${id}',
+      callType: ApiCallType.DELETE,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
 class ApiPagingParams {
   int nextPageNumber = 0;
   int numItems = 0;
@@ -137,4 +216,15 @@ String _serializeJson(dynamic jsonVar, [bool isList = false]) {
     }
     return isList ? '[]' : '{}';
   }
+}
+
+String? escapeStringForJson(String? input) {
+  if (input == null) {
+    return null;
+  }
+  return input
+      .replaceAll('\\', '\\\\')
+      .replaceAll('"', '\\"')
+      .replaceAll('\n', '\\n')
+      .replaceAll('\t', '\\t');
 }

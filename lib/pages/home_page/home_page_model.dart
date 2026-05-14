@@ -4,6 +4,7 @@ import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
 import '/flutter_flow/flutter_flow_data_table.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/form_field_controller.dart';
 import 'home_page_widget.dart' show HomePageWidget;
 import 'package:flutter/material.dart';
 
@@ -44,8 +45,11 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   bool displaySearch = false;
 
+  DateTime? selectedDob;
+
   ///  State fields for stateful widgets in this page.
 
+  final formKey = GlobalKey<FormState>();
   // Stores action output result for [Backend Call - API (Get All Patients)] action in HomePage widget.
   ApiCallResponse? allPatientsQuery1;
   // Model for fireComponent component.
@@ -70,6 +74,65 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // State field(s) for AllPatientsDataTable widget.
   final allPatientsDataTableController =
       FlutterFlowDataTableController<PatientStruct>();
+  // Stores action output result for [Backend Call - API (Delete Patient)] action in IconButton widget.
+  ApiCallResponse? deletePatient;
+  // Stores action output result for [Backend Call - API (Get All Patients)] action in IconButton widget.
+  ApiCallResponse? allPatientsQuery4;
+  // State field(s) for FirstName widget.
+  FocusNode? firstNameFocusNode;
+  TextEditingController? firstNameTextController;
+  String? Function(BuildContext, String?)? firstNameTextControllerValidator;
+  String? _firstNameTextControllerValidator(BuildContext context, String? val) {
+    if (val == null || val.isEmpty) {
+      return 'ⓘ First Name is required';
+    }
+
+    if (val.length < 3) {
+      return 'ⓘ First Name must contain at least 3 letters';
+    }
+
+    return null;
+  }
+
+  // State field(s) for LastName widget.
+  FocusNode? lastNameFocusNode;
+  TextEditingController? lastNameTextController;
+  String? Function(BuildContext, String?)? lastNameTextControllerValidator;
+  String? _lastNameTextControllerValidator(BuildContext context, String? val) {
+    if (val == null || val.isEmpty) {
+      return 'ⓘ Last Name is required';
+    }
+
+    if (val.length < 3) {
+      return 'ⓘ Last Name must contain at least 3 letters';
+    }
+
+    return null;
+  }
+
+  // State field(s) for GenderCC widget.
+  FormFieldController<List<String>>? genderCCValueController;
+  String? get genderCCValue => genderCCValueController?.value?.firstOrNull;
+  set genderCCValue(String? val) =>
+      genderCCValueController?.value = val != null ? [val] : [];
+  DateTime? datePicked;
+  // State field(s) for PhoneNumber widget.
+  FocusNode? phoneNumberFocusNode;
+  TextEditingController? phoneNumberTextController;
+  String? Function(BuildContext, String?)? phoneNumberTextControllerValidator;
+  String? _phoneNumberTextControllerValidator(
+      BuildContext context, String? val) {
+    if (val == null || val.isEmpty) {
+      return 'ⓘ Phone Number is required';
+    }
+
+    return null;
+  }
+
+  // Stores action output result for [Backend Call - API (Create New Patient)] action in Button widget.
+  ApiCallResponse? createNewPatient;
+  // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
+  ApiCallResponse? allPatientsQuery3;
 
   @override
   void initState(BuildContext context) {
@@ -79,6 +142,9 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     createPatientModel = createModel(context, () => MenuItemsComponentModel());
     activityModel = createModel(context, () => MenuItemsComponentModel());
     settingsModel = createModel(context, () => MenuItemsComponentModel());
+    firstNameTextControllerValidator = _firstNameTextControllerValidator;
+    lastNameTextControllerValidator = _lastNameTextControllerValidator;
+    phoneNumberTextControllerValidator = _phoneNumberTextControllerValidator;
   }
 
   @override
@@ -93,5 +159,13 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     searchNameTextController?.dispose();
 
     allPatientsDataTableController.dispose();
+    firstNameFocusNode?.dispose();
+    firstNameTextController?.dispose();
+
+    lastNameFocusNode?.dispose();
+    lastNameTextController?.dispose();
+
+    phoneNumberFocusNode?.dispose();
+    phoneNumberTextController?.dispose();
   }
 }

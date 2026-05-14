@@ -32,6 +32,7 @@ dependencies:
   cached_network_image_platform_interface: 4.1.1
   cached_network_image_web: 1.3.1
   collection: 1.19.1
+  country_picker: ^2.0.27
   data_table_2: 2.5.10
   easy_debounce: 2.0.1
   equatable: 2.0.7
