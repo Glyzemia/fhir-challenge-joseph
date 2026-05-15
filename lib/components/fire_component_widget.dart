@@ -42,7 +42,7 @@ class _FireComponentWidgetState extends State<FireComponentWidget>
             delay: 0.0.ms,
             duration: 4000.0.ms,
             color: Color(0x80FFFFFF),
-            angle: 0.524,
+            angle: 4.712,
           ),
         ],
       ),

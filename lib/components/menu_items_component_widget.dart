@@ -80,7 +80,7 @@ class _MenuItemsComponentWidgetState extends State<MenuItemsComponentWidget> {
                   ),
                 )
               ],
-              borderRadius: BorderRadius.circular(10.0),
+              borderRadius: BorderRadius.circular(30.0),
             ),
             child: Padding(
               padding: EdgeInsets.all(10.0),
@@ -106,6 +106,7 @@ class _MenuItemsComponentWidgetState extends State<MenuItemsComponentWidget> {
                           color: widget.isSelected
                               ? FlutterFlowTheme.of(context).primary
                               : FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: widget.isSelected ? 24.0 : 22.0,
                           letterSpacing: 0.0,
                           fontWeight: FlutterFlowTheme.of(context)
                               .headlineMedium

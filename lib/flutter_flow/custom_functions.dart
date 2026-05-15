@@ -9,13 +9,20 @@ import 'lat_lng.dart';
 import 'place.dart';
 import 'uploaded_file.dart';
 import '/backend/schema/structs/index.dart';
+import '/backend/schema/enums/enums.dart';
 
-List<PatientStruct>? parseFhirPatients(List<dynamic>? entries) {
+List<PatientStruct>? parseFhirPatients(
+  List<dynamic>? entries,
+  List<DateTime> lastUpdatedList,
+) {
   if (entries == null || entries is! List) {
     return [];
   }
 
-  return entries.map<PatientStruct>((entry) {
+  return entries.asMap().entries.map<PatientStruct>((mapEntry) {
+    final int index = mapEntry.key;
+    final entry = mapEntry.value;
+
     final resource = entry['resource'] ?? {};
 
     final nameList = resource['name'];
@@ -23,26 +30,35 @@ List<PatientStruct>? parseFhirPatients(List<dynamic>? entries) {
         nameList is List && nameList.isNotEmpty ? nameList.first : {};
 
     final givenRaw = firstName['given'];
-    final firstNameOnly = givenRaw.first;
+
+    final String firstNameOnly = givenRaw is List && givenRaw.isNotEmpty
+        ? givenRaw.first.toString()
+        : '';
+
     final String parsedGivenNames =
         givenRaw is List ? givenRaw.map((e) => e.toString()).join(' ') : '';
 
     final telecomList = resource['telecom'];
     final firstTelecom =
         telecomList is List && telecomList.isNotEmpty ? telecomList.first : {};
+
     final familyName = firstName['family']?.toString() ?? '';
-    final combinedNames = firstNameOnly + ' ' + familyName;
+    final combinedNames = '$firstNameOnly $familyName'.trim();
+
+    final DateTime? entryLastUpdated = lastUpdatedList[index];
 
     return createPatientStruct(
-        identifier: resource['id']?.toString() ?? '',
-        givenNames: parsedGivenNames,
-        familyName: familyName,
-        telecomSystem: firstTelecom['system']?.toString() ?? '',
-        telecomValue: firstTelecom['value']?.toString() ?? '',
-        gender: resource['gender']?.toString() ?? '',
-        birthDate: resource['birthDate']?.toString() ?? '',
-        firstName: firstNameOnly,
-        combinedNames: combinedNames);
+      identifier: resource['id']?.toString() ?? '',
+      givenNames: parsedGivenNames,
+      familyName: familyName,
+      telecomSystem: firstTelecom['system']?.toString() ?? '',
+      telecomValue: firstTelecom['value']?.toString() ?? '',
+      gender: resource['gender']?.toString() ?? '',
+      birthDate: resource['birthDate']?.toString() ?? '',
+      firstName: firstNameOnly,
+      combinedNames: combinedNames,
+      lastUpdated: entryLastUpdated,
+    );
   }).toList();
 }
 
@@ -103,4 +119,22 @@ bool isValidPhoneNumberForCountry(
 List<String> splitWords(String wordsString) {
   // I want a function that takes in a single sentence, and split the words based on " " and return words list.
   return wordsString.split(" ");
+}
+
+List<DateTime> convertDateStringListtoDateTimeList(List<String>? dateString) {
+  // A function that converts date string into a datetime object
+  if (dateString == null) return [];
+  return dateString.map((date) => DateTime.parse(date)).toList();
+}
+
+DateTime? convertSingleDateStringtoDateTime(String? dateString) {
+  // need a function that takes in a date string and converts it into a Datetime object
+  if (dateString == null || dateString.isEmpty) {
+    return null;
+  }
+  try {
+    return DateTime.parse(dateString);
+  } catch (e) {
+    return null;
+  }
 }

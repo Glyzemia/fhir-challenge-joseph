@@ -40,25 +40,25 @@ class FFAppState extends ChangeNotifier {
     _fhirBearerToken = value;
   }
 
-  String _selectedPhoneDialCode = '+91';
+  String _selectedPhoneDialCode = '+1';
   String get selectedPhoneDialCode => _selectedPhoneDialCode;
   set selectedPhoneDialCode(String value) {
     _selectedPhoneDialCode = value;
   }
 
-  String _selectedPhoneIsoCode = 'IN';
+  String _selectedPhoneIsoCode = 'US';
   String get selectedPhoneIsoCode => _selectedPhoneIsoCode;
   set selectedPhoneIsoCode(String value) {
     _selectedPhoneIsoCode = value;
   }
 
-  String _selectedPhoneCountryName = 'India';
+  String _selectedPhoneCountryName = 'United States';
   String get selectedPhoneCountryName => _selectedPhoneCountryName;
   set selectedPhoneCountryName(String value) {
     _selectedPhoneCountryName = value;
   }
 
-  String _selectedPhoneFlagEmoji = '🇮🇳';
+  String _selectedPhoneFlagEmoji = '🇺🇸';
   String get selectedPhoneFlagEmoji => _selectedPhoneFlagEmoji;
   set selectedPhoneFlagEmoji(String value) {
     _selectedPhoneFlagEmoji = value;

@@ -16,6 +16,7 @@ class PatientStruct extends BaseStruct {
     String? birthDate,
     String? firstName,
     String? combinedNames,
+    DateTime? lastUpdated,
   })  : _identifier = identifier,
         _givenNames = givenNames,
         _familyName = familyName,
@@ -24,7 +25,8 @@ class PatientStruct extends BaseStruct {
         _gender = gender,
         _birthDate = birthDate,
         _firstName = firstName,
-        _combinedNames = combinedNames;
+        _combinedNames = combinedNames,
+        _lastUpdated = lastUpdated;
 
   // "identifier" field.
   String? _identifier;
@@ -89,6 +91,13 @@ class PatientStruct extends BaseStruct {
 
   bool hasCombinedNames() => _combinedNames != null;
 
+  // "lastUpdated" field.
+  DateTime? _lastUpdated;
+  DateTime? get lastUpdated => _lastUpdated;
+  set lastUpdated(DateTime? val) => _lastUpdated = val;
+
+  bool hasLastUpdated() => _lastUpdated != null;
+
   static PatientStruct fromMap(Map<String, dynamic> data) => PatientStruct(
         identifier: data['identifier'] as String?,
         givenNames: data['givenNames'] as String?,
@@ -99,6 +108,7 @@ class PatientStruct extends BaseStruct {
         birthDate: data['birthDate'] as String?,
         firstName: data['firstName'] as String?,
         combinedNames: data['combinedNames'] as String?,
+        lastUpdated: data['lastUpdated'] as DateTime?,
       );
 
   static PatientStruct? maybeFromMap(dynamic data) =>
@@ -114,6 +124,7 @@ class PatientStruct extends BaseStruct {
         'birthDate': _birthDate,
         'firstName': _firstName,
         'combinedNames': _combinedNames,
+        'lastUpdated': _lastUpdated,
       }.withoutNulls;
 
   @override
@@ -153,6 +164,10 @@ class PatientStruct extends BaseStruct {
         'combinedNames': serializeParam(
           _combinedNames,
           ParamType.String,
+        ),
+        'lastUpdated': serializeParam(
+          _lastUpdated,
+          ParamType.DateTime,
         ),
       }.withoutNulls;
 
@@ -203,6 +218,11 @@ class PatientStruct extends BaseStruct {
           ParamType.String,
           false,
         ),
+        lastUpdated: deserializeParam(
+          data['lastUpdated'],
+          ParamType.DateTime,
+          false,
+        ),
       );
 
   @override
@@ -219,7 +239,8 @@ class PatientStruct extends BaseStruct {
         gender == other.gender &&
         birthDate == other.birthDate &&
         firstName == other.firstName &&
-        combinedNames == other.combinedNames;
+        combinedNames == other.combinedNames &&
+        lastUpdated == other.lastUpdated;
   }
 
   @override
@@ -232,7 +253,8 @@ class PatientStruct extends BaseStruct {
         gender,
         birthDate,
         firstName,
-        combinedNames
+        combinedNames,
+        lastUpdated
       ]);
 }
 
@@ -246,6 +268,7 @@ PatientStruct createPatientStruct({
   String? birthDate,
   String? firstName,
   String? combinedNames,
+  DateTime? lastUpdated,
 }) =>
     PatientStruct(
       identifier: identifier,
@@ -257,4 +280,5 @@ PatientStruct createPatientStruct({
       birthDate: birthDate,
       firstName: firstName,
       combinedNames: combinedNames,
+      lastUpdated: lastUpdated,
     );

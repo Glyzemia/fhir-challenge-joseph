@@ -1,8 +1,10 @@
 import '/backend/api_requests/api_calls.dart';
+import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/empty_widget_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
+import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_data_table.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -13,10 +15,12 @@ import '/flutter_flow/form_field_controller.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'dart:math' as math;
+import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -34,10 +38,13 @@ class HomePageWidget extends StatefulWidget {
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
 
-class _HomePageWidgetState extends State<HomePageWidget> {
+class _HomePageWidgetState extends State<HomePageWidget>
+    with TickerProviderStateMixin {
   late HomePageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final animationsMap = <String, AnimationInfo>{};
 
   @override
   void initState() {
@@ -53,18 +60,41 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
       if ((_model.allPatientsQuery1?.succeeded ?? true)) {
         _model.allPatients = functions
-            .parseFhirPatients(GetAllPatientsCall.entries(
-              (_model.allPatientsQuery1?.jsonBody ?? ''),
-            )?.toList())!
+            .parseFhirPatients(
+                GetAllPatientsCall.entries(
+                  (_model.allPatientsQuery1?.jsonBody ?? ''),
+                )?.toList(),
+                functions
+                    .convertDateStringListtoDateTimeList(
+                        GetAllPatientsCall.lastUpdated(
+                      (_model.allPatientsQuery1?.jsonBody ?? ''),
+                    )?.toList())
+                    .toList())!
             .toList()
             .cast<PatientStruct>();
         _model.sortedAllPatients = functions
-            .parseFhirPatients(GetAllPatientsCall.entries(
-              (_model.allPatientsQuery1?.jsonBody ?? ''),
-            )?.toList())!
+            .parseFhirPatients(
+                GetAllPatientsCall.entries(
+                  (_model.allPatientsQuery1?.jsonBody ?? ''),
+                )?.toList(),
+                functions
+                    .convertDateStringListtoDateTimeList(
+                        GetAllPatientsCall.lastUpdated(
+                      (_model.allPatientsQuery1?.jsonBody ?? ''),
+                    )?.toList())
+                    .toList())!
             .sortedList(keyOf: (e) => e.combinedNames, desc: false)
             .toList()
             .cast<PatientStruct>();
+        _model.selectedDob = null;
+        _model.patientSelectedForEdit = null;
+        _model.patientMode = PatientMode.create;
+        _model.showPatients = true;
+        _model.showSearch = false;
+        _model.showCreateEditPatient = false;
+        _model.showActivity = false;
+        _model.showSettings = false;
+        _model.displaySearch = false;
         safeSetState(() {});
         _model.allPatientsDataTableController.updateSort(
           columnIndex: 0,
@@ -86,6 +116,28 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
     _model.phoneNumberTextController ??= TextEditingController();
     _model.phoneNumberFocusNode ??= FocusNode();
+
+    animationsMap.addAll({
+      'containerOnActionTriggerAnimation': AnimationInfo(
+        trigger: AnimationTrigger.onActionTrigger,
+        applyInitialState: true,
+        effectsBuilder: () => [
+          ShimmerEffect(
+            curve: Curves.easeInOut,
+            delay: 0.0.ms,
+            duration: 1000.0.ms,
+            color: FlutterFlowTheme.of(context).success,
+            angle: 0.524,
+          ),
+        ],
+      ),
+    });
+    setupAnimations(
+      animationsMap.values.where((anim) =>
+          anim.trigger == AnimationTrigger.onActionTrigger ||
+          !anim.applyInitialState),
+      this,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -230,6 +282,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     padding:
                         EdgeInsetsDirectional.fromSTEB(0.0, 110.0, 0.0, 0.0),
                     child: Container(
+                      height: 850.0,
                       decoration: BoxDecoration(
                         color: FlutterFlowTheme.of(context).primaryBackground,
                         borderRadius: BorderRadius.only(
@@ -276,7 +329,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                           updateCallback: () =>
                                               safeSetState(() {}),
                                           child: MenuItemsComponentWidget(
-                                            isSelected: _model.showPatients,
+                                            isSelected: _model.showPatients ||
+                                                (_model.patientMode ==
+                                                    PatientMode.edit),
                                             text: 'Patients',
                                             icon: Icon(
                                               Icons.people,
@@ -285,12 +340,17 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       .primary
                                                   : FlutterFlowTheme.of(context)
                                                       .secondaryText,
-                                              size: 24.0,
+                                              size: _model.showPatients ||
+                                                      (_model.patientMode ==
+                                                          PatientMode.edit)
+                                                  ? 26.0
+                                                  : 24.0,
                                             ),
                                             onClick: () async {
                                               _model.showPatients = true;
                                               _model.showSearch = false;
-                                              _model.showCreatePatient = false;
+                                              _model.showCreateEditPatient =
+                                                  false;
                                               _model.showActivity = false;
                                               _model.showSettings = false;
                                               safeSetState(() {});
@@ -315,14 +375,19 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       .primary
                                                   : FlutterFlowTheme.of(context)
                                                       .secondaryText,
-                                              size: 24.0,
+                                              size: _model.showSearch
+                                                  ? 26.0
+                                                  : 24.0,
                                             ),
                                             onClick: () async {
                                               _model.showPatients = false;
                                               _model.showSearch = true;
-                                              _model.showCreatePatient = false;
+                                              _model.showCreateEditPatient =
+                                                  false;
                                               _model.showActivity = false;
                                               _model.showSettings = false;
+                                              _model.patientMode =
+                                                  PatientMode.create;
                                               safeSetState(() {});
                                             },
                                           ),
@@ -337,23 +402,43 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               safeSetState(() {}),
                                           child: MenuItemsComponentWidget(
                                             isSelected:
-                                                _model.showCreatePatient,
+                                                _model.showCreateEditPatient,
                                             text: 'Create Patient',
                                             icon: Icon(
                                               Icons.person_add_alt_rounded,
-                                              color: _model.showCreatePatient
+                                              color: _model
+                                                      .showCreateEditPatient
                                                   ? FlutterFlowTheme.of(context)
                                                       .primary
                                                   : FlutterFlowTheme.of(context)
                                                       .secondaryText,
-                                              size: 24.0,
+                                              size: _model.showCreateEditPatient
+                                                  ? 26.0
+                                                  : 24.0,
                                             ),
                                             onClick: () async {
+                                              safeSetState(() {
+                                                _model.firstNameTextController
+                                                    ?.clear();
+                                                _model.lastNameTextController
+                                                    ?.clear();
+                                                _model.phoneNumberTextController
+                                                    ?.clear();
+                                              });
+                                              safeSetState(() {
+                                                _model.genderCCValueController
+                                                    ?.reset();
+                                              });
+                                              _model.selectedDob = null;
+                                              safeSetState(() {});
                                               _model.showPatients = false;
                                               _model.showSearch = false;
-                                              _model.showCreatePatient = true;
+                                              _model.showCreateEditPatient =
+                                                  true;
                                               _model.showActivity = false;
                                               _model.showSettings = false;
+                                              _model.patientMode =
+                                                  PatientMode.create;
                                               safeSetState(() {});
                                             },
                                           ),
@@ -376,12 +461,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       .primary
                                                   : FlutterFlowTheme.of(context)
                                                       .secondaryText,
-                                              size: 24.0,
+                                              size: _model.showActivity
+                                                  ? 26.0
+                                                  : 24.0,
                                             ),
                                             onClick: () async {
                                               _model.showPatients = false;
                                               _model.showSearch = false;
-                                              _model.showCreatePatient = false;
+                                              _model.showCreateEditPatient =
+                                                  false;
                                               _model.showActivity = true;
                                               _model.showSettings = false;
                                               safeSetState(() {});
@@ -406,12 +494,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       .primary
                                                   : FlutterFlowTheme.of(context)
                                                       .secondaryText,
-                                              size: 24.0,
+                                              size: _model.showSettings
+                                                  ? 26.0
+                                                  : 24.0,
                                             ),
                                             onClick: () async {
                                               _model.showPatients = false;
                                               _model.showSearch = false;
-                                              _model.showCreatePatient = false;
+                                              _model.showCreateEditPatient =
+                                                  false;
                                               _model.showActivity = false;
                                               _model.showSettings = true;
                                               safeSetState(() {});
@@ -440,7 +531,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         if (_model.showPatients ||
                                             _model.showSearch)
                                           Container(
-                                            height: 750.0,
+                                            height: 835.0,
                                             decoration: BoxDecoration(),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.max,
@@ -623,27 +714,38 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                 .allPatientsQuery2
                                                                 ?.succeeded ??
                                                             true)) {
-                                                          _model.allPatients =
-                                                              functions
-                                                                  .parseFhirPatients(
-                                                                      GetAllPatientsCall
-                                                                          .entries(
+                                                          _model.allPatients = functions
+                                                              .parseFhirPatients(
+                                                                  GetAllPatientsCall.entries(
                                                                     (_model.allPatientsQuery2
                                                                             ?.jsonBody ??
                                                                         ''),
-                                                                  )?.toList())!
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
+                                                                  )?.toList(),
+                                                                  functions
+                                                                      .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                        (_model.allPatientsQuery2?.jsonBody ??
+                                                                            ''),
+                                                                      )?.toList())
+                                                                      .toList())!
+                                                              .toList()
+                                                              .cast<PatientStruct>();
                                                           _model.sortedAllPatients =
                                                               functions
                                                                   .parseFhirPatients(
                                                                       GetAllPatientsCall
-                                                                          .entries(
-                                                                    (_model.allPatientsQuery2
-                                                                            ?.jsonBody ??
-                                                                        ''),
-                                                                  )?.toList())!
+                                                                              .entries(
+                                                                        (_model.allPatientsQuery2?.jsonBody ??
+                                                                            ''),
+                                                                      )
+                                                                          ?.toList(),
+                                                                      functions
+                                                                          .convertDateStringListtoDateTimeList(GetAllPatientsCall
+                                                                                  .lastUpdated(
+                                                                            (_model.allPatientsQuery2?.jsonBody ??
+                                                                                ''),
+                                                                          )
+                                                                              ?.toList())
+                                                                          .toList())!
                                                                   .sortedList(
                                                                       keyOf: (e) => e
                                                                           .combinedNames,
@@ -669,7 +771,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         size: 22.0,
                                                       ),
                                                       options: FFButtonOptions(
-                                                        height: 40.0,
+                                                        height: 50.0,
                                                         padding:
                                                             EdgeInsetsDirectional
                                                                 .fromSTEB(
@@ -721,11 +823,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         borderSide: BorderSide(
                                                           color: Colors
                                                               .transparent,
-                                                          width: 2.0,
+                                                          width: 1.0,
                                                         ),
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(8.0),
+                                                                .circular(25.0),
                                                         hoverColor:
                                                             FlutterFlowTheme.of(
                                                                     context)
@@ -735,13 +837,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                           color: FlutterFlowTheme
                                                                   .of(context)
                                                               .primary,
-                                                          width: 2.0,
+                                                          width: 1.0,
                                                         ),
                                                         hoverTextColor:
                                                             FlutterFlowTheme.of(
                                                                     context)
                                                                 .primary,
-                                                        hoverElevation: 2.0,
                                                       ),
                                                     ),
                                                     FFButtonWidget(
@@ -750,13 +851,34 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                             false;
                                                         _model.showSearch =
                                                             false;
-                                                        _model.showCreatePatient =
+                                                        _model.showCreateEditPatient =
                                                             true;
                                                         _model.showActivity =
                                                             false;
                                                         _model.showSettings =
                                                             false;
+                                                        _model.patientMode =
+                                                            PatientMode.create;
                                                         safeSetState(() {});
+                                                        safeSetState(() {
+                                                          _model
+                                                              .firstNameTextController
+                                                              ?.clear();
+                                                          _model
+                                                              .lastNameTextController
+                                                              ?.clear();
+                                                          _model
+                                                              .phoneNumberTextController
+                                                              ?.clear();
+                                                        });
+                                                        _model.selectedDob =
+                                                            null;
+                                                        safeSetState(() {});
+                                                        safeSetState(() {
+                                                          _model
+                                                              .genderCCValueController
+                                                              ?.reset();
+                                                        });
                                                       },
                                                       text: 'Create Patient',
                                                       icon: Icon(
@@ -764,7 +886,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         size: 15.0,
                                                       ),
                                                       options: FFButtonOptions(
-                                                        height: 40.0,
+                                                        height: 50.0,
                                                         padding:
                                                             EdgeInsetsDirectional
                                                                 .fromSTEB(
@@ -816,7 +938,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         elevation: 0.0,
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(8.0),
+                                                                .circular(25.0),
                                                       ),
                                                     ),
                                                   ]
@@ -1169,195 +1291,166 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         .around(SizedBox(
                                                             width: 20.0)),
                                                   ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Builder(
-                                                      builder: (context) {
-                                                        final allPatientsList = (_model
-                                                                    .displaySearch
-                                                                ? _model
-                                                                    .allPatients
-                                                                    .where((e) => _model
-                                                                        .simpleSearchResults
-                                                                        .contains(e
-                                                                            .combinedNames))
-                                                                    .toList()
-                                                                : _model
-                                                                    .sortedAllPatients)
-                                                            .toList();
-                                                        if (allPatientsList
-                                                            .isEmpty) {
-                                                          return Center(
-                                                            child: Container(
-                                                              width: 350.0,
-                                                              height: 50.0,
-                                                              child:
-                                                                  EmptyWidgetWidget(),
-                                                            ),
-                                                          );
-                                                        }
+                                                Padding(
+                                                  padding: EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                          20.0, 0.0, 20.0, 0.0),
+                                                  child: Builder(
+                                                    builder: (context) {
+                                                      final allPatientsList = (_model
+                                                                  .displaySearch
+                                                              ? _model
+                                                                  .allPatients
+                                                                  .where((e) => _model
+                                                                      .simpleSearchResults
+                                                                      .contains(e
+                                                                          .combinedNames))
+                                                                  .toList()
+                                                              : _model
+                                                                  .sortedAllPatients)
+                                                          .toList();
+                                                      if (allPatientsList
+                                                          .isEmpty) {
+                                                        return Center(
+                                                          child: Container(
+                                                            width: 350.0,
+                                                            height: 50.0,
+                                                            child:
+                                                                EmptyWidgetWidget(),
+                                                          ),
+                                                        );
+                                                      }
 
-                                                        return FlutterFlowDataTable<
-                                                            PatientStruct>(
-                                                          controller: _model
-                                                              .allPatientsDataTableController,
-                                                          data: allPatientsList,
-                                                          numRows: _model
-                                                              .allPatients
-                                                              .length,
-                                                          columnsBuilder:
-                                                              (onSortChanged) =>
-                                                                  [
-                                                            DataColumn2(
-                                                              label:
-                                                                  DefaultTextStyle
-                                                                      .merge(
-                                                                softWrap: true,
-                                                                child: Text(
-                                                                  'Name',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelLarge
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .secondaryText,
-                                                                        letterSpacing:
-                                                                            0.0,
+                                                      return FlutterFlowDataTable<
+                                                          PatientStruct>(
+                                                        controller: _model
+                                                            .allPatientsDataTableController,
+                                                        data: allPatientsList,
+                                                        numRows: _model
+                                                            .allPatients.length,
+                                                        columnsBuilder:
+                                                            (onSortChanged) => [
+                                                          DataColumn2(
+                                                            label:
+                                                                DefaultTextStyle
+                                                                    .merge(
+                                                              softWrap: true,
+                                                              child: Text(
+                                                                'Name',
+                                                                style: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelLarge
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
                                                                         fontWeight:
                                                                             FontWeight.w600,
                                                                         fontStyle: FlutterFlowTheme.of(context)
                                                                             .labelLarge
                                                                             .fontStyle,
                                                                       ),
-                                                                ),
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryText,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelLarge
+                                                                          .fontStyle,
+                                                                    ),
                                                               ),
-                                                              onSort:
-                                                                  onSortChanged,
                                                             ),
-                                                            DataColumn2(
-                                                              label:
-                                                                  DefaultTextStyle
-                                                                      .merge(
-                                                                softWrap: true,
-                                                                child: Text(
-                                                                  'Gender',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelLarge
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .secondaryText,
-                                                                        letterSpacing:
-                                                                            0.0,
+                                                            onSort:
+                                                                onSortChanged,
+                                                          ),
+                                                          DataColumn2(
+                                                            label:
+                                                                DefaultTextStyle
+                                                                    .merge(
+                                                              softWrap: true,
+                                                              child: Text(
+                                                                'Gender',
+                                                                style: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelLarge
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
                                                                         fontWeight:
                                                                             FontWeight.w600,
                                                                         fontStyle: FlutterFlowTheme.of(context)
                                                                             .labelLarge
                                                                             .fontStyle,
                                                                       ),
-                                                                ),
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryText,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelLarge
+                                                                          .fontStyle,
+                                                                    ),
                                                               ),
-                                                              onSort:
-                                                                  onSortChanged,
                                                             ),
-                                                            DataColumn2(
-                                                              label:
-                                                                  DefaultTextStyle
-                                                                      .merge(
-                                                                softWrap: true,
-                                                                child: Text(
-                                                                  'Date of Birth',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelLarge
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .secondaryText,
-                                                                        letterSpacing:
-                                                                            0.0,
+                                                            onSort:
+                                                                onSortChanged,
+                                                          ),
+                                                          DataColumn2(
+                                                            label:
+                                                                DefaultTextStyle
+                                                                    .merge(
+                                                              softWrap: true,
+                                                              child: Text(
+                                                                'Date of Birth',
+                                                                style: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelLarge
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
                                                                         fontWeight:
                                                                             FontWeight.w600,
                                                                         fontStyle: FlutterFlowTheme.of(context)
                                                                             .labelLarge
                                                                             .fontStyle,
                                                                       ),
-                                                                ),
-                                                              ),
-                                                              onSort:
-                                                                  onSortChanged,
-                                                            ),
-                                                            DataColumn2(
-                                                              label:
-                                                                  DefaultTextStyle
-                                                                      .merge(
-                                                                softWrap: true,
-                                                                child:
-                                                                    Visibility(
-                                                                  visible: _model
-                                                                      .showSearch,
-                                                                  child: Text(
-                                                                    'Phone Number',
-                                                                    style: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .labelLarge
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.inter(
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).labelLarge.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).labelLarge.fontStyle,
-                                                                          ),
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).secondaryText,
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                  ),
-                                                                ),
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryText,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelLarge
+                                                                          .fontStyle,
+                                                                    ),
                                                               ),
                                                             ),
-                                                            DataColumn2(
-                                                              label:
-                                                                  DefaultTextStyle
-                                                                      .merge(
-                                                                softWrap: true,
+                                                            onSort:
+                                                                onSortChanged,
+                                                          ),
+                                                          DataColumn2(
+                                                            label:
+                                                                DefaultTextStyle
+                                                                    .merge(
+                                                              softWrap: true,
+                                                              child: Visibility(
+                                                                visible: _model
+                                                                    .showSearch,
                                                                 child: Text(
-                                                                  'Actions',
+                                                                  'Phone Number',
                                                                   style: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelLarge
@@ -1371,6 +1464,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               .labelLarge
                                                                               .fontStyle,
                                                                         ),
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .secondaryText,
                                                                         letterSpacing:
                                                                             0.0,
                                                                         fontWeight: FlutterFlowTheme.of(context)
@@ -1383,108 +1478,143 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                 ),
                                                               ),
                                                             ),
-                                                          ],
-                                                          dataRowBuilder:
-                                                              (allPatientsListItem,
-                                                                      allPatientsListIndex,
-                                                                      selected,
-                                                                      onSelectChanged) =>
-                                                                  DataRow(
-                                                            color:
-                                                                WidgetStateProperty
-                                                                    .all(
-                                                              allPatientsListIndex %
-                                                                          2 ==
-                                                                      0
-                                                                  ? FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .secondaryBackground
-                                                                  : FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .secondaryBackground,
-                                                            ),
-                                                            cells: [
-                                                              Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  Align(
-                                                                    alignment:
-                                                                        AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                    child:
-                                                                        Container(
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color:
-                                                                            () {
-                                                                          if (allPatientsListItem.gender ==
-                                                                              'male') {
-                                                                            return FlutterFlowTheme.of(context).cardBlue;
-                                                                          } else if (allPatientsListItem.gender ==
-                                                                              'female') {
-                                                                            return FlutterFlowTheme.of(context).cardSuccess;
-                                                                          } else {
-                                                                            return FlutterFlowTheme.of(context).cardTertiary;
-                                                                          }
-                                                                        }(),
-                                                                        shape: BoxShape
-                                                                            .circle,
+                                                          ),
+                                                          DataColumn2(
+                                                            label:
+                                                                DefaultTextStyle
+                                                                    .merge(
+                                                              softWrap: true,
+                                                              child: Text(
+                                                                'Actions',
+                                                                style: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .labelLarge
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .labelLarge
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .labelLarge
+                                                                            .fontStyle,
                                                                       ),
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelLarge
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .labelLarge
+                                                                          .fontStyle,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                        dataRowBuilder:
+                                                            (allPatientsListItem,
+                                                                    allPatientsListIndex,
+                                                                    selected,
+                                                                    onSelectChanged) =>
+                                                                DataRow(
+                                                          color:
+                                                              WidgetStateProperty
+                                                                  .all(
+                                                            allPatientsListIndex %
+                                                                        2 ==
+                                                                    0
+                                                                ? FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .secondaryBackground
+                                                                : FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .secondaryBackground,
+                                                          ),
+                                                          cells: [
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Align(
+                                                                  alignment:
+                                                                      AlignmentDirectional(
+                                                                          0.0,
+                                                                          0.0),
+                                                                  child:
+                                                                      Container(
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      color:
+                                                                          () {
+                                                                        if (allPatientsListItem.gender ==
+                                                                            'male') {
+                                                                          return FlutterFlowTheme.of(context)
+                                                                              .cardBlue;
+                                                                        } else if (allPatientsListItem.gender ==
+                                                                            'female') {
+                                                                          return FlutterFlowTheme.of(context)
+                                                                              .cardSuccess;
+                                                                        } else {
+                                                                          return FlutterFlowTheme.of(context)
+                                                                              .cardTertiary;
+                                                                        }
+                                                                      }(),
+                                                                      shape: BoxShape
+                                                                          .circle,
+                                                                    ),
+                                                                    child:
+                                                                        Align(
+                                                                      alignment:
+                                                                          AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0),
                                                                       child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
+                                                                          Padding(
+                                                                        padding:
+                                                                            EdgeInsets.all(10.0),
                                                                         child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
-                                                                          child:
-                                                                              Text(
-                                                                            functions.getInitials(allPatientsListItem.firstName,
-                                                                                allPatientsListItem.familyName),
-                                                                            style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                                                  font: GoogleFonts.readexPro(
-                                                                                    fontWeight: FontWeight.normal,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).titleMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: () {
-                                                                                    if (allPatientsListItem.gender == 'male') {
-                                                                                      return FlutterFlowTheme.of(context).primary;
-                                                                                    } else if (allPatientsListItem.gender == 'female') {
-                                                                                      return FlutterFlowTheme.of(context).success;
-                                                                                    } else {
-                                                                                      return FlutterFlowTheme.of(context).tertiary;
-                                                                                    }
-                                                                                  }(),
-                                                                                  letterSpacing: 0.0,
+                                                                            Text(
+                                                                          functions.getInitials(
+                                                                              allPatientsListItem.firstName,
+                                                                              allPatientsListItem.familyName),
+                                                                          style: FlutterFlowTheme.of(context)
+                                                                              .titleMedium
+                                                                              .override(
+                                                                                font: GoogleFonts.readexPro(
                                                                                   fontWeight: FontWeight.normal,
                                                                                   fontStyle: FlutterFlowTheme.of(context).titleMedium.fontStyle,
                                                                                 ),
-                                                                          ),
+                                                                                color: () {
+                                                                                  if (allPatientsListItem.gender == 'male') {
+                                                                                    return FlutterFlowTheme.of(context).primary;
+                                                                                  } else if (allPatientsListItem.gender == 'female') {
+                                                                                    return FlutterFlowTheme.of(context).success;
+                                                                                  } else {
+                                                                                    return FlutterFlowTheme.of(context).tertiary;
+                                                                                  }
+                                                                                }(),
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.normal,
+                                                                                fontStyle: FlutterFlowTheme.of(context).titleMedium.fontStyle,
+                                                                              ),
                                                                         ),
                                                                       ),
                                                                     ),
                                                                   ),
-                                                                  Text(
-                                                                    allPatientsListItem
-                                                                        .combinedNames,
-                                                                    style: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.inter(
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
-                                                                          letterSpacing:
-                                                                              0.0,
+                                                                ),
+                                                                Text(
+                                                                  allPatientsListItem
+                                                                      .combinedNames,
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
                                                                           fontWeight: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontWeight,
@@ -1492,70 +1622,71 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        10.0)),
-                                                              ),
-                                                              Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  Builder(
-                                                                    builder:
-                                                                        (context) {
-                                                                      if (allPatientsListItem
-                                                                              .gender ==
-                                                                          'male') {
-                                                                        return Icon(
-                                                                          Icons
-                                                                              .male_rounded,
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).primary,
-                                                                          size:
-                                                                              24.0,
-                                                                        );
-                                                                      } else if (allPatientsListItem
-                                                                              .gender ==
-                                                                          'female') {
-                                                                        return Icon(
-                                                                          Icons
-                                                                              .female_rounded,
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).success,
-                                                                          size:
-                                                                              24.0,
-                                                                        );
-                                                                      } else {
-                                                                        return Icon(
-                                                                          Icons
-                                                                              .transgender_rounded,
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).tertiary,
-                                                                          size:
-                                                                              24.0,
-                                                                        );
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                  Text(
-                                                                    functions.capitalizeFirst(
-                                                                        allPatientsListItem
-                                                                            .gender),
-                                                                    style: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.inter(
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
-                                                                          letterSpacing:
-                                                                              0.0,
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Builder(
+                                                                  builder:
+                                                                      (context) {
+                                                                    if (allPatientsListItem
+                                                                            .gender ==
+                                                                        'male') {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .male_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .primary,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    } else if (allPatientsListItem
+                                                                            .gender ==
+                                                                        'female') {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .female_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .success,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    } else {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .transgender_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .tertiary,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                ),
+                                                                Text(
+                                                                  functions.capitalizeFirst(
+                                                                      allPatientsListItem
+                                                                          .gender),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
                                                                           fontWeight: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontWeight,
@@ -1563,14 +1694,55 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                            Text(
+                                                              allPatientsListItem
+                                                                  .birthDate,
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
                                                                   ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        10.0)),
-                                                              ),
-                                                              Text(
+                                                            ),
+                                                            Visibility(
+                                                              visible: _model
+                                                                  .showSearch,
+                                                              child: Text(
                                                                 allPatientsListItem
-                                                                    .birthDate,
+                                                                    .telecomValue,
                                                                 style: FlutterFlowTheme.of(
                                                                         context)
                                                                     .bodyMedium
@@ -1596,42 +1768,225 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                           .fontStyle,
                                                                     ),
                                                               ),
-                                                              Visibility(
-                                                                visible: _model
-                                                                    .showSearch,
-                                                                child: Text(
-                                                                  allPatientsListItem
-                                                                      .telecomValue,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                AlignedTooltip(
+                                                                  content:
+                                                                      Padding(
+                                                                    padding:
+                                                                        EdgeInsets.all(
+                                                                            4.0),
+                                                                    child: Text(
+                                                                      'Edit Patient',
+                                                                      style: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyLarge
+                                                                          .override(
+                                                                            font:
+                                                                                GoogleFonts.inter(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                            ),
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                          ),
+                                                                    ),
+                                                                  ),
+                                                                  offset: 4.0,
+                                                                  preferredDirection:
+                                                                      AxisDirection
+                                                                          .down,
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8.0),
+                                                                  backgroundColor:
+                                                                      FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryBackground,
+                                                                  elevation:
+                                                                      4.0,
+                                                                  tailBaseWidth:
+                                                                      24.0,
+                                                                  tailLength:
+                                                                      12.0,
+                                                                  waitDuration:
+                                                                      Duration(
+                                                                          milliseconds:
+                                                                              100),
+                                                                  showDuration:
+                                                                      Duration(
+                                                                          milliseconds:
+                                                                              1500),
+                                                                  triggerMode:
+                                                                      TooltipTriggerMode
+                                                                          .tap,
+                                                                  child:
+                                                                      FlutterFlowIconButton(
+                                                                    borderColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .tertiary,
+                                                                    borderRadius:
+                                                                        20.0,
+                                                                    buttonSize:
+                                                                        40.0,
+                                                                    hoverColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .tertiary,
+                                                                    hoverIconColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .info,
+                                                                    hoverBorderColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .tertiary,
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .edit_note_rounded,
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .tertiary,
+                                                                      size:
+                                                                          24.0,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () async {
+                                                                      _model.showPatients =
+                                                                          false;
+                                                                      _model.showSearch =
+                                                                          false;
+                                                                      _model.showCreateEditPatient =
+                                                                          false;
+                                                                      _model.showActivity =
+                                                                          false;
+                                                                      _model.showSettings =
+                                                                          false;
+                                                                      _model.patientMode =
+                                                                          PatientMode
+                                                                              .edit;
+                                                                      _model.patientSelectedForEdit =
+                                                                          allPatientsListItem;
+                                                                      _model.selectedDob =
+                                                                          functions
+                                                                              .convertSingleDateStringtoDateTime(allPatientsListItem.birthDate);
+                                                                      safeSetState(
+                                                                          () {});
+                                                                      await Future
+                                                                          .delayed(
+                                                                        Duration(
+                                                                          milliseconds:
+                                                                              100,
                                                                         ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
+                                                                      );
+                                                                      safeSetState(
+                                                                          () {
+                                                                        _model.firstNameTextController?.text = _model
+                                                                            .patientSelectedForEdit!
+                                                                            .givenNames;
+                                                                      });
+                                                                      safeSetState(
+                                                                          () {
+                                                                        _model.lastNameTextController?.text = _model
+                                                                            .patientSelectedForEdit!
+                                                                            .familyName;
+                                                                      });
+                                                                      safeSetState(
+                                                                          () {
+                                                                        _model
+                                                                            .genderCCValueController
+                                                                            ?.value = [
+                                                                          functions.capitalizeFirst(_model
+                                                                              .patientSelectedForEdit!
+                                                                              .gender)
+                                                                        ];
+                                                                      });
+                                                                      safeSetState(
+                                                                          () {
+                                                                        _model.phoneNumberTextController?.text = _model
+                                                                            .patientSelectedForEdit!
+                                                                            .telecomValue;
+                                                                      });
+                                                                      if (animationsMap[
+                                                                              'containerOnActionTriggerAnimation'] !=
+                                                                          null) {
+                                                                        await animationsMap['containerOnActionTriggerAnimation']!
+                                                                            .controller
+                                                                            .forward(from: 0.0);
+                                                                      }
+                                                                      if (animationsMap[
+                                                                              'containerOnActionTriggerAnimation'] !=
+                                                                          null) {
+                                                                        await animationsMap['containerOnActionTriggerAnimation']!
+                                                                            .controller
+                                                                            .reverse();
+                                                                      }
+                                                                    },
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                              Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  FlutterFlowIconButton(
+                                                                AlignedTooltip(
+                                                                  content:
+                                                                      Padding(
+                                                                    padding:
+                                                                        EdgeInsets.all(
+                                                                            4.0),
+                                                                    child: Text(
+                                                                      'Delete Patient',
+                                                                      style: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyLarge
+                                                                          .override(
+                                                                            font:
+                                                                                GoogleFonts.inter(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                            ),
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                          ),
+                                                                    ),
+                                                                  ),
+                                                                  offset: 4.0,
+                                                                  preferredDirection:
+                                                                      AxisDirection
+                                                                          .down,
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8.0),
+                                                                  backgroundColor:
+                                                                      FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryBackground,
+                                                                  elevation:
+                                                                      4.0,
+                                                                  tailBaseWidth:
+                                                                      24.0,
+                                                                  tailLength:
+                                                                      12.0,
+                                                                  waitDuration:
+                                                                      Duration(
+                                                                          milliseconds:
+                                                                              100),
+                                                                  showDuration:
+                                                                      Duration(
+                                                                          milliseconds:
+                                                                              1500),
+                                                                  triggerMode:
+                                                                      TooltipTriggerMode
+                                                                          .tap,
+                                                                  child:
+                                                                      FlutterFlowIconButton(
                                                                     borderColor:
                                                                         FlutterFlowTheme.of(context)
                                                                             .error,
@@ -1639,9 +1994,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                         20.0,
                                                                     buttonSize:
                                                                         40.0,
-                                                                    fillColor: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .cardTertiary,
                                                                     hoverColor:
                                                                         FlutterFlowTheme.of(context)
                                                                             .error,
@@ -1763,15 +2115,27 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               ?.succeeded ??
                                                                           true)) {
                                                                         _model.allPatients = functions
-                                                                            .parseFhirPatients(GetAllPatientsCall.entries(
-                                                                              (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                            )?.toList())!
+                                                                            .parseFhirPatients(
+                                                                                GetAllPatientsCall.entries(
+                                                                                  (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                )?.toList(),
+                                                                                functions
+                                                                                    .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                      (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                    )?.toList())
+                                                                                    .toList())!
                                                                             .toList()
                                                                             .cast<PatientStruct>();
                                                                         _model.sortedAllPatients = functions
-                                                                            .parseFhirPatients(GetAllPatientsCall.entries(
-                                                                              (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                            )?.toList())!
+                                                                            .parseFhirPatients(
+                                                                                GetAllPatientsCall.entries(
+                                                                                  (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                )?.toList(),
+                                                                                functions
+                                                                                    .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                      (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                    )?.toList())
+                                                                                    .toList())!
                                                                             .sortedList(keyOf: (e) => e.combinedNames, desc: false)
                                                                             .toList()
                                                                             .cast<PatientStruct>();
@@ -1791,153 +2155,152 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                             () {});
                                                                     },
                                                                   ),
-                                                                ],
-                                                              ),
-                                                            ]
-                                                                .map((c) =>
-                                                                    DataCell(c))
-                                                                .toList(),
-                                                          ),
-                                                          emptyBuilder: () =>
-                                                              Center(
-                                                            child: Container(
-                                                              width: 350.0,
-                                                              height: 50.0,
-                                                              child:
-                                                                  EmptyWidgetWidget(),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
                                                             ),
+                                                          ]
+                                                              .map((c) =>
+                                                                  DataCell(c))
+                                                              .toList(),
+                                                        ),
+                                                        emptyBuilder: () =>
+                                                            Center(
+                                                          child: Container(
+                                                            width: 350.0,
+                                                            height: 50.0,
+                                                            child:
+                                                                EmptyWidgetWidget(),
                                                           ),
-                                                          onSortChanged:
-                                                              (columnIndex,
-                                                                  ascending) async {
-                                                            if (columnIndex ==
-                                                                0) {
-                                                              if (ascending) {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .combinedNames,
-                                                                        desc:
-                                                                            false)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              } else {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .combinedNames,
-                                                                        desc:
-                                                                            true)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              }
-                                                            } else if (columnIndex ==
-                                                                1) {
-                                                              if (ascending) {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .gender,
-                                                                        desc:
-                                                                            false)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              } else {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .gender,
-                                                                        desc:
-                                                                            true)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              }
-                                                            } else if (columnIndex ==
-                                                                2) {
-                                                              if (ascending) {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .birthDate,
-                                                                        desc:
-                                                                            false)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              } else {
-                                                                _model.sortedAllPatients = _model
-                                                                    .allPatients
-                                                                    .sortedList(
-                                                                        keyOf: (e) => e
-                                                                            .birthDate,
-                                                                        desc:
-                                                                            true)
-                                                                    .toList()
-                                                                    .cast<
-                                                                        PatientStruct>();
-                                                                safeSetState(
-                                                                    () {});
-                                                              }
+                                                        ),
+                                                        onSortChanged:
+                                                            (columnIndex,
+                                                                ascending) async {
+                                                          if (columnIndex ==
+                                                              0) {
+                                                            if (ascending) {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .combinedNames,
+                                                                      desc:
+                                                                          false)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
+                                                            } else {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .combinedNames,
+                                                                      desc:
+                                                                          true)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
                                                             }
-                                                          },
-                                                          paginated: true,
-                                                          selectable: false,
-                                                          hidePaginator: false,
-                                                          showFirstLastButtons:
-                                                              true,
-                                                          height: 800.0,
-                                                          headingRowHeight:
-                                                              56.0,
-                                                          dataRowHeight: 56.0,
-                                                          columnSpacing: 20.0,
-                                                          headingRowColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .cardAlternate,
-                                                          sortIconColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      8.0),
-                                                          addHorizontalDivider:
-                                                              true,
-                                                          addTopAndBottomDivider:
-                                                              false,
-                                                          hideDefaultHorizontalDivider:
-                                                              true,
-                                                          horizontalDividerColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .alternate,
-                                                          horizontalDividerThickness:
-                                                              1.0,
-                                                          addVerticalDivider:
-                                                              false,
-                                                        );
-                                                      },
-                                                    ),
+                                                          } else if (columnIndex ==
+                                                              1) {
+                                                            if (ascending) {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .gender,
+                                                                      desc:
+                                                                          false)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
+                                                            } else {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .gender,
+                                                                      desc:
+                                                                          true)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
+                                                            }
+                                                          } else if (columnIndex ==
+                                                              2) {
+                                                            if (ascending) {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .birthDate,
+                                                                      desc:
+                                                                          false)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
+                                                            } else {
+                                                              _model.sortedAllPatients = _model
+                                                                  .allPatients
+                                                                  .sortedList(
+                                                                      keyOf: (e) => e
+                                                                          .birthDate,
+                                                                      desc:
+                                                                          true)
+                                                                  .toList()
+                                                                  .cast<
+                                                                      PatientStruct>();
+                                                              safeSetState(
+                                                                  () {});
+                                                            }
+                                                          }
+                                                        },
+                                                        paginated: true,
+                                                        selectable: false,
+                                                        hidePaginator: false,
+                                                        showFirstLastButtons:
+                                                            true,
+                                                        height: 668.0,
+                                                        headingRowHeight: 56.0,
+                                                        dataRowHeight: 56.0,
+                                                        columnSpacing: 20.0,
+                                                        headingRowColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .cardAlternate,
+                                                        sortIconColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                        addHorizontalDivider:
+                                                            true,
+                                                        addTopAndBottomDivider:
+                                                            false,
+                                                        hideDefaultHorizontalDivider:
+                                                            true,
+                                                        horizontalDividerColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .alternate,
+                                                        horizontalDividerThickness:
+                                                            1.0,
+                                                        addVerticalDivider:
+                                                            false,
+                                                      );
+                                                    },
                                                   ),
                                                 ),
                                               ]
@@ -1947,69 +2310,304 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       SizedBox(height: 10.0)),
                                             ),
                                           ),
-                                        if (_model.showCreatePatient)
+                                        if (_model.showCreateEditPatient ||
+                                            (_model.patientMode ==
+                                                PatientMode.edit))
                                           Container(
-                                            height: 780.0,
+                                            height: 835.0,
                                             decoration: BoxDecoration(),
                                             child: SingleChildScrollView(
                                               primary: false,
                                               child: Column(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    children: [
-                                                      Text(
-                                                        'Create Patient',
-                                                        style:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .headlineLarge
-                                                                .override(
-                                                                  font: GoogleFonts
-                                                                      .readexPro(
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .headlineLarge
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .headlineLarge
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .headlineLarge
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .headlineLarge
-                                                                      .fontStyle,
-                                                                ),
-                                                      ),
-                                                    ]
-                                                        .divide(SizedBox(
-                                                            width: 20.0))
-                                                        .around(SizedBox(
-                                                            width: 20.0)),
-                                                  ),
-                                                  Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    children: [
-                                                      Text(
-                                                        'Add a New Patient to the FHIR Server.',
-                                                        style:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
+                                                  if (_model.patientMode ==
+                                                      PatientMode.edit)
+                                                    Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        InkWell(
+                                                          splashColor: Colors
+                                                              .transparent,
+                                                          focusColor: Colors
+                                                              .transparent,
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          highlightColor: Colors
+                                                              .transparent,
+                                                          onTap: () async {
+                                                            safeSetState(() {
+                                                              _model
+                                                                  .firstNameTextController
+                                                                  ?.clear();
+                                                              _model
+                                                                  .lastNameTextController
+                                                                  ?.clear();
+                                                              _model
+                                                                  .phoneNumberTextController
+                                                                  ?.clear();
+                                                            });
+                                                            safeSetState(() {
+                                                              _model
+                                                                  .genderCCValueController
+                                                                  ?.reset();
+                                                            });
+                                                            _model.showPatients =
+                                                                true;
+                                                            _model.showSearch =
+                                                                false;
+                                                            _model.showCreateEditPatient =
+                                                                false;
+                                                            _model.showActivity =
+                                                                false;
+                                                            _model.showSettings =
+                                                                false;
+                                                            _model.selectedDob =
+                                                                null;
+                                                            _model.patientMode =
+                                                                PatientMode
+                                                                    .create;
+                                                            _model.patientSelectedForEdit =
+                                                                null;
+                                                            safeSetState(() {});
+                                                          },
+                                                          child: Text(
+                                                            'Patient',
+                                                            style: FlutterFlowTheme
+                                                                    .of(context)
                                                                 .bodyMedium
                                                                 .override(
                                                                   font:
                                                                       GoogleFonts
                                                                           .inter(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primary,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '/',
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                        ),
+                                                        Text(
+                                                          valueOrDefault<
+                                                              String>(
+                                                            _model
+                                                                .patientSelectedForEdit
+                                                                ?.combinedNames,
+                                                            'Name',
+                                                          ),
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                        ),
+                                                        Text(
+                                                          '/',
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                        ),
+                                                        Text(
+                                                          'Edit',
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .secondaryText,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                        ),
+                                                      ]
+                                                          .divide(SizedBox(
+                                                              width: 20.0))
+                                                          .around(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.max,
+                                                    children: [
+                                                      Expanded(
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              _model.patientMode ==
+                                                                      PatientMode
+                                                                          .edit
+                                                                  ? 'Edit Patient'
+                                                                  : 'Create Patient',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .headlineLarge
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .readexPro(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .headlineLarge
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .headlineLarge
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .headlineLarge
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .headlineLarge
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                            Text(
+                                                              _model.patientMode ==
+                                                                      PatientMode
+                                                                          .edit
+                                                                  ? 'Edit Details of a Patient already existing in FHIR server.'
+                                                                  : 'Add a New Patient to the FHIR Server.',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    letterSpacing:
+                                                                        0.0,
                                                                     fontWeight: FlutterFlowTheme.of(
                                                                             context)
                                                                         .bodyMedium
@@ -2019,24 +2617,394 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                         .bodyMedium
                                                                         .fontStyle,
                                                                   ),
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
+                                                            ),
+                                                          ]
+                                                              .divide(SizedBox(
+                                                                  height: 10.0))
+                                                              .addToStart(
+                                                                  SizedBox(
+                                                                      height:
+                                                                          5.0))
+                                                              .addToEnd(
+                                                                  SizedBox(
+                                                                      height:
+                                                                          5.0)),
+                                                        ),
                                                       ),
+                                                      if (_model.patientMode ==
+                                                          PatientMode.edit)
+                                                        FFButtonWidget(
+                                                          onPressed: () async {
+                                                            safeSetState(() {
+                                                              _model
+                                                                  .firstNameTextController
+                                                                  ?.clear();
+                                                              _model
+                                                                  .lastNameTextController
+                                                                  ?.clear();
+                                                              _model
+                                                                  .phoneNumberTextController
+                                                                  ?.clear();
+                                                            });
+                                                            safeSetState(() {
+                                                              _model
+                                                                  .genderCCValueController
+                                                                  ?.reset();
+                                                            });
+                                                            _model.showPatients =
+                                                                true;
+                                                            _model.showSearch =
+                                                                false;
+                                                            _model.showCreateEditPatient =
+                                                                false;
+                                                            _model.showActivity =
+                                                                false;
+                                                            _model.showSettings =
+                                                                false;
+                                                            _model.selectedDob =
+                                                                null;
+                                                            _model.patientMode =
+                                                                PatientMode
+                                                                    .create;
+                                                            _model.patientSelectedForEdit =
+                                                                null;
+                                                            safeSetState(() {});
+                                                          },
+                                                          text:
+                                                              'Back to Patients',
+                                                          icon: Icon(
+                                                            Icons
+                                                                .arrow_back_rounded,
+                                                            size: 24.0,
+                                                          ),
+                                                          options:
+                                                              FFButtonOptions(
+                                                            width: 200.0,
+                                                            height: 40.0,
+                                                            padding:
+                                                                EdgeInsetsDirectional
+                                                                    .fromSTEB(
+                                                                        16.0,
+                                                                        0.0,
+                                                                        16.0,
+                                                                        0.0),
+                                                            iconPadding:
+                                                                EdgeInsetsDirectional
+                                                                    .fromSTEB(
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0),
+                                                            iconColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                            color: Colors
+                                                                .transparent,
+                                                            textStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleSmall
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .titleSmall
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .titleSmall
+                                                                            .fontStyle,
+                                                                      ),
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .primary,
+                                                                      fontSize:
+                                                                          18.0,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .titleSmall
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .titleSmall
+                                                                          .fontStyle,
+                                                                    ),
+                                                            elevation: 0.0,
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color: Colors
+                                                                  .transparent,
+                                                              width: 1.0,
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20.0),
+                                                            hoverColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .cardBlue,
+                                                            hoverBorderSide:
+                                                                BorderSide(
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .primary,
+                                                              width: 1.0,
+                                                            ),
+                                                            hoverTextColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                          ),
+                                                        ),
                                                     ]
                                                         .divide(SizedBox(
                                                             width: 20.0))
                                                         .around(SizedBox(
                                                             width: 20.0)),
                                                   ),
+                                                  if (_model.patientMode ==
+                                                      PatientMode.edit)
+                                                    Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Container(
+                                                          width: 1399.0,
+                                                          height: 50.0,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Color(
+                                                                0x8AD0FFEE),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        25.0),
+                                                            border: Border.all(
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .success,
+                                                              width: 0.5,
+                                                            ),
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .max,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons
+                                                                        .check_circle_outline_rounded,
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .success,
+                                                                    size: 24.0,
+                                                                  ),
+                                                                  Text(
+                                                                    'Loaded From FHIR Server',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).secondaryText,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                ].divide(SizedBox(
+                                                                    width:
+                                                                        20.0)),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 20.0,
+                                                                child:
+                                                                    VerticalDivider(
+                                                                  thickness:
+                                                                      2.0,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .alternate,
+                                                                ),
+                                                              ),
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Patient ID:',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).secondaryText,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                  SelectionArea(
+                                                                      child:
+                                                                          Text(
+                                                                    valueOrDefault<
+                                                                        String>(
+                                                                      _model
+                                                                          .patientSelectedForEdit
+                                                                          ?.identifier,
+                                                                      'ID',
+                                                                    ),
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).secondaryText,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  )),
+                                                                ].divide(SizedBox(
+                                                                    width:
+                                                                        20.0)),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 20.0,
+                                                                child:
+                                                                    VerticalDivider(
+                                                                  thickness:
+                                                                      2.0,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .alternate,
+                                                                ),
+                                                              ),
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Last Updated:',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).secondaryText,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                  Text(
+                                                                    '${dateTimeFormat("yMMMd", _model.patientSelectedForEdit?.lastUpdated)} at ${dateTimeFormat("jm", _model.patientSelectedForEdit?.lastUpdated)}',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).secondaryText,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                ].divide(SizedBox(
+                                                                    width:
+                                                                        20.0)),
+                                                              ),
+                                                            ]
+                                                                .divide(SizedBox(
+                                                                    width:
+                                                                        10.0))
+                                                                .around(SizedBox(
+                                                                    width:
+                                                                        10.0)),
+                                                          ),
+                                                        ).animateOnActionTrigger(
+                                                          animationsMap[
+                                                              'containerOnActionTriggerAnimation']!,
+                                                        ),
+                                                      ]
+                                                          .divide(SizedBox(
+                                                              width: 20.0))
+                                                          .around(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
                                                   Form(
                                                     key: _model.formKey,
                                                     autovalidateMode:
@@ -2215,6 +3183,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                                       fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                                                                                       fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                     ),
+                                                                                    color: FlutterFlowTheme.of(context).secondaryText,
                                                                                     fontSize: 20.0,
                                                                                     letterSpacing: 0.0,
                                                                                     fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
@@ -2472,12 +3441,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               .headlineSmall
                                                                               .override(
                                                                                 font: GoogleFonts.readexPro(
-                                                                                  fontWeight: FlutterFlowTheme.of(context).headlineSmall.fontWeight,
+                                                                                  fontWeight: FontWeight.normal,
                                                                                   fontStyle: FlutterFlowTheme.of(context).headlineSmall.fontStyle,
                                                                                 ),
                                                                                 color: FlutterFlowTheme.of(context).info,
                                                                                 letterSpacing: 0.0,
-                                                                                fontWeight: FlutterFlowTheme.of(context).headlineSmall.fontWeight,
+                                                                                fontWeight: FontWeight.normal,
                                                                                 fontStyle: FlutterFlowTheme.of(context).headlineSmall.fontStyle,
                                                                               ),
                                                                           iconColor:
@@ -2499,12 +3468,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               .headlineSmall
                                                                               .override(
                                                                                 font: GoogleFonts.readexPro(
-                                                                                  fontWeight: FlutterFlowTheme.of(context).headlineSmall.fontWeight,
+                                                                                  fontWeight: FontWeight.normal,
                                                                                   fontStyle: FlutterFlowTheme.of(context).headlineSmall.fontStyle,
                                                                                 ),
                                                                                 color: FlutterFlowTheme.of(context).secondaryText,
                                                                                 letterSpacing: 0.0,
-                                                                                fontWeight: FlutterFlowTheme.of(context).headlineSmall.fontWeight,
+                                                                                fontWeight: FontWeight.normal,
                                                                                 fontStyle: FlutterFlowTheme.of(context).headlineSmall.fontStyle,
                                                                               ),
                                                                           iconColor:
@@ -2670,10 +3639,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               _model.datePicked = getCurrentTimestamp;
                                                                             });
                                                                           }
-                                                                          _model.selectedDob =
-                                                                              _model.datePicked;
-                                                                          safeSetState(
-                                                                              () {});
+                                                                          if (_model.patientMode ==
+                                                                              PatientMode.create) {
+                                                                            _model.selectedDob =
+                                                                                _model.datePicked;
+                                                                            safeSetState(() {});
+                                                                          }
                                                                         },
                                                                         text: _model.selectedDob !=
                                                                                 null
@@ -2706,26 +3677,46 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               0.0,
                                                                               0.0),
                                                                           iconColor:
-                                                                              FlutterFlowTheme.of(context).info,
-                                                                          color:
                                                                               FlutterFlowTheme.of(context).primary,
+                                                                          color:
+                                                                              Colors.transparent,
                                                                           textStyle: FlutterFlowTheme.of(context)
                                                                               .titleLarge
                                                                               .override(
                                                                                 font: GoogleFonts.readexPro(
-                                                                                  fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                  fontWeight: FontWeight.normal,
                                                                                   fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
                                                                                 ),
-                                                                                color: FlutterFlowTheme.of(context).info,
+                                                                                color: FlutterFlowTheme.of(context).primary,
+                                                                                fontSize: 20.0,
                                                                                 letterSpacing: 0.0,
-                                                                                fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                fontWeight: FontWeight.normal,
                                                                                 fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
                                                                               ),
-                                                                          elevation: _model.datePicked != null
-                                                                              ? 0.0
-                                                                              : 8.0,
+                                                                          elevation:
+                                                                              0.0,
+                                                                          borderSide:
+                                                                              BorderSide(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).primary,
+                                                                            width:
+                                                                                1.0,
+                                                                          ),
                                                                           borderRadius:
                                                                               BorderRadius.circular(25.0),
+                                                                          hoverColor:
+                                                                              FlutterFlowTheme.of(context).cardBlue,
+                                                                          hoverBorderSide:
+                                                                              BorderSide(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).primary,
+                                                                            width:
+                                                                                1.0,
+                                                                          ),
+                                                                          hoverTextColor:
+                                                                              FlutterFlowTheme.of(context).primary,
+                                                                          hoverElevation:
+                                                                              8.0,
                                                                         ),
                                                                       ),
                                                                     ]
@@ -2844,6 +3835,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                                 ),
                                                                                 autofocus: false,
                                                                                 enabled: true,
+                                                                                textCapitalization: TextCapitalization.none,
                                                                                 obscureText: false,
                                                                                 decoration: InputDecoration(
                                                                                   isDense: true,
@@ -2923,12 +3915,19 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                                 maxLength: 14,
                                                                                 maxLengthEnforcement: MaxLengthEnforcement.enforced,
                                                                                 buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
-                                                                                keyboardType: TextInputType.phone,
+                                                                                keyboardType: TextInputType.number,
                                                                                 cursorColor: FlutterFlowTheme.of(context).primaryText,
                                                                                 enableInteractiveSelection: true,
                                                                                 validator: _model.phoneNumberTextControllerValidator.asValidator(context),
                                                                                 inputFormatters: [
-                                                                                  FilteringTextInputFormatter.allow(RegExp('[0-9]'))
+                                                                                  if (!isAndroid && !isiOS)
+                                                                                    TextInputFormatter.withFunction((oldValue, newValue) {
+                                                                                      return TextEditingValue(
+                                                                                        selection: newValue.selection,
+                                                                                        text: newValue.text.toCapitalization(TextCapitalization.none),
+                                                                                      );
+                                                                                    }),
+                                                                                  FilteringTextInputFormatter.allow(RegExp('^[0-9-]+\$'))
                                                                                 ],
                                                                               ),
                                                                             ),
@@ -2991,13 +3990,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                         true;
                                                                     _model.showSearch =
                                                                         false;
-                                                                    _model.showCreatePatient =
+                                                                    _model.showCreateEditPatient =
                                                                         false;
                                                                     _model.showActivity =
                                                                         false;
                                                                     _model.showSettings =
                                                                         false;
                                                                     _model.selectedDob =
+                                                                        null;
+                                                                    _model.patientMode =
+                                                                        PatientMode
+                                                                            .create;
+                                                                    _model.patientSelectedForEdit =
                                                                         null;
                                                                     safeSetState(
                                                                         () {});
@@ -3067,11 +4071,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               context)
                                                                           .alternate,
                                                                       width:
-                                                                          2.0,
+                                                                          1.0,
                                                                     ),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
-                                                                            10.0),
+                                                                            25.0),
                                                                     hoverColor:
                                                                         FlutterFlowTheme.of(context)
                                                                             .cardTertiary,
@@ -3081,7 +4085,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                               context)
                                                                           .tertiary,
                                                                       width:
-                                                                          2.0,
+                                                                          1.0,
                                                                     ),
                                                                     hoverTextColor:
                                                                         FlutterFlowTheme.of(context)
@@ -3111,6 +4115,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                     });
                                                                     _model.selectedDob =
                                                                         null;
+                                                                    _model.patientMode =
+                                                                        PatientMode
+                                                                            .create;
+                                                                    _model.patientSelectedForEdit =
+                                                                        null;
+                                                                    _model.showCreateEditPatient =
+                                                                        true;
                                                                     safeSetState(
                                                                         () {});
                                                                   },
@@ -3174,10 +4185,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                       color: FlutterFlowTheme.of(
                                                                               context)
                                                                           .primary,
+                                                                      width:
+                                                                          1.0,
                                                                     ),
                                                                     borderRadius:
                                                                         BorderRadius.circular(
-                                                                            8.0),
+                                                                            25.0),
                                                                     hoverColor:
                                                                         FlutterFlowTheme.of(context)
                                                                             .cardBlue,
@@ -3186,6 +4199,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                       color: FlutterFlowTheme.of(
                                                                               context)
                                                                           .primary,
+                                                                      width:
+                                                                          1.0,
                                                                     ),
                                                                     hoverTextColor:
                                                                         FlutterFlowTheme.of(context)
@@ -3203,30 +4218,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                             .formKey
                                                                             .currentState!
                                                                             .validate()) {
-                                                                      return;
-                                                                    }
-                                                                    if (_model
-                                                                            .datePicked ==
-                                                                        null) {
-                                                                      await showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (alertDialogContext) {
-                                                                          return AlertDialog(
-                                                                            title:
-                                                                                Text('ⓘ Error'),
-                                                                            content:
-                                                                                Text('Date of Birth must be chosen..!!'),
-                                                                            actions: [
-                                                                              TextButton(
-                                                                                onPressed: () => Navigator.pop(alertDialogContext),
-                                                                                child: Text('Ok'),
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
-                                                                      );
                                                                       return;
                                                                     }
                                                                     if (!(_model.genderCCValue !=
@@ -3269,7 +4260,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                             title:
                                                                                 Text('ⓘ Error'),
                                                                             content:
-                                                                                Text('Date of Birth must be chosen..!!'),
+                                                                                Text('Date of Birth must -${dateTimeFormat("d/M/y", _model.selectedDob)}  -be chosen..!! '),
                                                                             actions: [
                                                                               TextButton(
                                                                                 onPressed: () => Navigator.pop(alertDialogContext),
@@ -3314,57 +4305,27 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                             () {});
                                                                       return;
                                                                     }
-                                                                    _model.createNewPatient =
-                                                                        await CreateNewPatientCall
-                                                                            .call(
-                                                                      givenNameList: functions.splitWords(_model
-                                                                          .firstNameTextController
-                                                                          .text),
-                                                                      familyName: _model
-                                                                          .lastNameTextController
-                                                                          .text,
-                                                                      birthDate: dateTimeFormat(
-                                                                          "y-MM-dd",
-                                                                          _model
-                                                                              .selectedDob),
-                                                                      gender: (_model
-                                                                              .genderCCValue!)
-                                                                          .toLowerCase(),
-                                                                      phoneNumber:
-                                                                          '${FFAppState().selectedPhoneDialCode}${_model.phoneNumberTextController.text}',
-                                                                      token: FFAppState()
-                                                                          .fhirBearerToken,
-                                                                    );
-
-                                                                    _shouldSetState =
-                                                                        true;
-                                                                    if ((_model
-                                                                            .createNewPatient
-                                                                            ?.succeeded ??
-                                                                        true)) {
-                                                                      ScaffoldMessenger.of(
-                                                                              context)
-                                                                          .showSnackBar(
-                                                                        SnackBar(
-                                                                          content:
-                                                                              Text(
-                                                                            'Patient added successfully..!!',
-                                                                            style:
-                                                                                TextStyle(
-                                                                              color: FlutterFlowTheme.of(context).info,
-                                                                            ),
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                          ),
-                                                                          duration:
-                                                                              Duration(milliseconds: 4000),
-                                                                          backgroundColor:
-                                                                              FlutterFlowTheme.of(context).success,
-                                                                        ),
-                                                                      );
-                                                                      _model.allPatientsQuery3 =
-                                                                          await GetAllPatientsCall
+                                                                    if (_model
+                                                                            .patientMode ==
+                                                                        PatientMode
+                                                                            .create) {
+                                                                      _model.createNewPatient =
+                                                                          await CreateNewPatientCall
                                                                               .call(
+                                                                        givenNameList: functions.splitWords(_model
+                                                                            .firstNameTextController
+                                                                            .text),
+                                                                        familyName: _model
+                                                                            .lastNameTextController
+                                                                            .text,
+                                                                        birthDate: dateTimeFormat(
+                                                                            "y-MM-dd",
+                                                                            _model.selectedDob),
+                                                                        gender:
+                                                                            (_model.genderCCValue!).toLowerCase(),
+                                                                        phoneNumber: _model
+                                                                            .phoneNumberTextController
+                                                                            .text,
                                                                         token: FFAppState()
                                                                             .fhirBearerToken,
                                                                       );
@@ -3372,59 +4333,193 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                       _shouldSetState =
                                                                           true;
                                                                       if ((_model
-                                                                              .allPatientsQuery3
+                                                                              .createNewPatient
                                                                               ?.succeeded ??
                                                                           true)) {
-                                                                        _model.allPatients = functions
-                                                                            .parseFhirPatients(GetAllPatientsCall.entries(
-                                                                              (_model.allPatientsQuery3?.jsonBody ?? ''),
-                                                                            )?.toList())!
-                                                                            .toList()
-                                                                            .cast<PatientStruct>();
-                                                                        _model.sortedAllPatients = functions
-                                                                            .parseFhirPatients(GetAllPatientsCall.entries(
-                                                                              (_model.allPatientsQuery3?.jsonBody ?? ''),
-                                                                            )?.toList())!
-                                                                            .sortedList(keyOf: (e) => e.combinedNames, desc: false)
-                                                                            .toList()
-                                                                            .cast<PatientStruct>();
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          SnackBar(
+                                                                            content:
+                                                                                Text(
+                                                                              'Patient added successfully..!!',
+                                                                              style: TextStyle(
+                                                                                color: FlutterFlowTheme.of(context).info,
+                                                                              ),
+                                                                              textAlign: TextAlign.center,
+                                                                            ),
+                                                                            duration:
+                                                                                Duration(milliseconds: 4000),
+                                                                            backgroundColor:
+                                                                                FlutterFlowTheme.of(context).success,
+                                                                          ),
+                                                                        );
+                                                                      } else {
+                                                                        await showDialog(
+                                                                          context:
+                                                                              context,
+                                                                          builder:
+                                                                              (alertDialogContext) {
+                                                                            return AlertDialog(
+                                                                              title: Text('Error'),
+                                                                              content: Text((_model.createNewPatient?.bodyText ?? '')),
+                                                                              actions: [
+                                                                                TextButton(
+                                                                                  onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                  child: Text('Ok'),
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
+                                                                        );
+                                                                        if (_shouldSetState)
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        return;
+                                                                      }
+                                                                    } else if (_model
+                                                                            .patientMode ==
+                                                                        PatientMode
+                                                                            .edit) {
+                                                                      _model.editPatient =
+                                                                          await EditPatientCall
+                                                                              .call(
+                                                                        givenNameList: functions.splitWords(_model
+                                                                            .firstNameTextController
+                                                                            .text),
+                                                                        familyName: _model
+                                                                            .lastNameTextController
+                                                                            .text,
+                                                                        birthDate: dateTimeFormat(
+                                                                            "y-MM-dd",
+                                                                            _model.selectedDob),
+                                                                        phoneNumber: _model
+                                                                            .phoneNumberTextController
+                                                                            .text,
+                                                                        gender:
+                                                                            (_model.genderCCValue!).toLowerCase(),
+                                                                        token: FFAppState()
+                                                                            .fhirBearerToken,
+                                                                        id: _model
+                                                                            .patientSelectedForEdit
+                                                                            ?.identifier,
+                                                                      );
+
+                                                                      _shouldSetState =
+                                                                          true;
+                                                                      if ((_model
+                                                                              .editPatient
+                                                                              ?.succeeded ??
+                                                                          true)) {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          SnackBar(
+                                                                            content:
+                                                                                Text(
+                                                                              'Patient Edited successfully..!!',
+                                                                              style: TextStyle(
+                                                                                color: FlutterFlowTheme.of(context).info,
+                                                                              ),
+                                                                              textAlign: TextAlign.center,
+                                                                            ),
+                                                                            duration:
+                                                                                Duration(milliseconds: 4000),
+                                                                            backgroundColor:
+                                                                                FlutterFlowTheme.of(context).success,
+                                                                          ),
+                                                                        );
+                                                                        _model.showPatients =
+                                                                            true;
+                                                                        _model.showSearch =
+                                                                            false;
+                                                                        _model.showCreateEditPatient =
+                                                                            false;
+                                                                        _model.showActivity =
+                                                                            false;
+                                                                        _model.showSettings =
+                                                                            false;
+                                                                        _model.patientMode =
+                                                                            PatientMode.create;
                                                                         safeSetState(
                                                                             () {});
-                                                                        _model
-                                                                            .allPatientsDataTableController
-                                                                            .updateSort(
-                                                                          columnIndex:
-                                                                              0,
-                                                                          ascending:
-                                                                              true,
+                                                                      } else {
+                                                                        await showDialog(
+                                                                          context:
+                                                                              context,
+                                                                          builder:
+                                                                              (alertDialogContext) {
+                                                                            return AlertDialog(
+                                                                              title: Text('Error'),
+                                                                              content: Text((_model.editPatient?.bodyText ?? '')),
+                                                                              actions: [
+                                                                                TextButton(
+                                                                                  onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                  child: Text('Ok'),
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
                                                                         );
+                                                                        if (_shouldSetState)
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        return;
                                                                       }
                                                                     } else {
-                                                                      await showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (alertDialogContext) {
-                                                                          return AlertDialog(
-                                                                            title:
-                                                                                Text('Error'),
-                                                                            content:
-                                                                                Text((_model.createNewPatient?.bodyText ?? '')),
-                                                                            actions: [
-                                                                              TextButton(
-                                                                                onPressed: () => Navigator.pop(alertDialogContext),
-                                                                                child: Text('Ok'),
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
-                                                                      );
                                                                       if (_shouldSetState)
                                                                         safeSetState(
                                                                             () {});
                                                                       return;
                                                                     }
 
+                                                                    _model.allPatientsQuery3 =
+                                                                        await GetAllPatientsCall
+                                                                            .call(
+                                                                      token: FFAppState()
+                                                                          .fhirBearerToken,
+                                                                    );
+
+                                                                    _shouldSetState =
+                                                                        true;
+                                                                    if ((_model
+                                                                            .allPatientsQuery3
+                                                                            ?.succeeded ??
+                                                                        true)) {
+                                                                      _model.allPatients = functions
+                                                                          .parseFhirPatients(
+                                                                              GetAllPatientsCall.entries(
+                                                                                (_model.allPatientsQuery3?.jsonBody ?? ''),
+                                                                              )?.toList(),
+                                                                              functions
+                                                                                  .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                    (_model.allPatientsQuery3?.jsonBody ?? ''),
+                                                                                  )?.toList())
+                                                                                  .toList())!
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      _model.sortedAllPatients = functions
+                                                                          .parseFhirPatients(
+                                                                              GetAllPatientsCall.entries(
+                                                                                (_model.allPatientsQuery3?.jsonBody ?? ''),
+                                                                              )?.toList(),
+                                                                              functions
+                                                                                  .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                    (_model.allPatientsQuery3?.jsonBody ?? ''),
+                                                                                  )?.toList())
+                                                                                  .toList())!
+                                                                          .sortedList(keyOf: (e) => e.combinedNames, desc: false)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      safeSetState(
+                                                                          () {});
+                                                                      _model
+                                                                          .allPatientsDataTableController
+                                                                          .updateSort(
+                                                                        columnIndex:
+                                                                            0,
+                                                                        ascending:
+                                                                            true,
+                                                                      );
+                                                                    }
                                                                     safeSetState(
                                                                         () {
                                                                       _model
@@ -3451,8 +4546,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                       safeSetState(
                                                                           () {});
                                                                   },
-                                                                  text:
-                                                                      'Create Patient',
+                                                                  text: _model.patientMode ==
+                                                                          PatientMode
+                                                                              .edit
+                                                                      ? 'Edit Patient'
+                                                                      : 'Create Patient',
                                                                   icon: Icon(
                                                                     Icons
                                                                         .add_rounded,
@@ -3505,7 +4603,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                         0.0,
                                                                     borderRadius:
                                                                         BorderRadius.circular(
-                                                                            8.0),
+                                                                            25.0),
                                                                   ),
                                                                 ),
                                                               ]
@@ -3528,9 +4626,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                   ),
                                                 ]
                                                     .divide(
-                                                        SizedBox(height: 10.0))
+                                                        SizedBox(height: 8.0))
                                                     .around(
-                                                        SizedBox(height: 10.0)),
+                                                        SizedBox(height: 8.0)),
                                               ),
                                             ),
                                           ),

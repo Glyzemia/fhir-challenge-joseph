@@ -169,7 +169,7 @@ class LightModeTheme extends FlutterFlowTheme {
 
   late Color fireOrange = const Color(0xFFFF7700);
   late Color cardBlue = const Color(0xFFE2F3FF);
-  late Color cardTertiary = const Color(0xFFFFD8B3);
+  late Color cardTertiary = const Color(0xFFFFEDE5);
   late Color cardSuccess = const Color(0xFFD0FFEE);
   late Color cardAlternate = const Color(0xFFEBEDF0);
 }
@@ -360,7 +360,7 @@ class DarkModeTheme extends FlutterFlowTheme {
 
   late Color fireOrange = const Color(0xFFFF7700);
   late Color cardBlue = const Color(0xFFE2F3FF);
-  late Color cardTertiary = const Color(0xFFFFD8B3);
+  late Color cardTertiary = const Color(0xFFFFEDE5);
   late Color cardSuccess = const Color(0xFFD0FFEE);
   late Color cardAlternate = const Color(0xFFEBEDF0);
 }

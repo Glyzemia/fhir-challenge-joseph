@@ -1,4 +1,5 @@
 import '/backend/api_requests/api_calls.dart';
+import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
@@ -15,7 +16,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   bool showSearch = false;
 
-  bool showCreatePatient = false;
+  bool showCreateEditPatient = false;
 
   bool showActivity = false;
 
@@ -47,6 +48,15 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   DateTime? selectedDob;
 
+  PatientMode? patientMode = PatientMode.create;
+
+  ObservationMode? observationMode = ObservationMode.create;
+
+  PatientStruct? patientSelectedForEdit;
+  void updatePatientSelectedForEditStruct(Function(PatientStruct) updateFn) {
+    updateFn(patientSelectedForEdit ??= PatientStruct());
+  }
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();
@@ -74,9 +84,9 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // State field(s) for AllPatientsDataTable widget.
   final allPatientsDataTableController =
       FlutterFlowDataTableController<PatientStruct>();
-  // Stores action output result for [Backend Call - API (Delete Patient)] action in IconButton widget.
+  // Stores action output result for [Backend Call - API (Delete Patient)] action in DeleteIconButton widget.
   ApiCallResponse? deletePatient;
-  // Stores action output result for [Backend Call - API (Get All Patients)] action in IconButton widget.
+  // Stores action output result for [Backend Call - API (Get All Patients)] action in DeleteIconButton widget.
   ApiCallResponse? allPatientsQuery4;
   // State field(s) for FirstName widget.
   FocusNode? firstNameFocusNode;
@@ -126,11 +136,16 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
       return 'ⓘ Phone Number is required';
     }
 
+    if (!RegExp('^\\d{3}-\\d{3}-\\d{4}\$').hasMatch(val)) {
+      return 'Invalid US Phone Format.';
+    }
     return null;
   }
 
   // Stores action output result for [Backend Call - API (Create New Patient)] action in Button widget.
   ApiCallResponse? createNewPatient;
+  // Stores action output result for [Backend Call - API (Edit Patient)] action in Button widget.
+  ApiCallResponse? editPatient;
   // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
   ApiCallResponse? allPatientsQuery3;
 

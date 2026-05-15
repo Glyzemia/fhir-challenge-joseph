@@ -93,6 +93,15 @@ class GetAllPatientsCall {
         r'''$.entry''',
         true,
       ) as List?;
+  static List<String>? lastUpdated(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.meta.lastUpdated''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
 }
 
 class CreateNewPatientCall {
@@ -136,6 +145,69 @@ class CreateNewPatientCall {
       callType: ApiCallType.POST,
       headers: {
         'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class EditPatientCall {
+  static Future<ApiCallResponse> call({
+    List<String>? givenNameList,
+    String? familyName = '',
+    String? birthDate = '',
+    String? phoneNumber = '',
+    String? gender = '',
+    String? token = '',
+    String? id = '',
+  }) async {
+    final givenName = _serializeList(givenNameList);
+
+    final ffApiRequestBody = '''
+[
+  {
+    "op": "replace",
+    "path": "/name/0/given",
+    "value": ${givenName}
+  },
+  {
+    "op": "replace",
+    "path": "/name/0/family",
+    "value": "${escapeStringForJson(familyName)}"
+  },
+  {
+    "op": "replace",
+    "path": "/gender",
+    "value": "${escapeStringForJson(gender)}"
+  },
+  {
+    "op": "replace",
+    "path": "/birthDate",
+    "value": "${escapeStringForJson(birthDate)}"
+  },
+  {
+    "op": "replace",
+    "path": "/telecom/0/value",
+    "value": "${escapeStringForJson(phoneNumber)}"
+  }
+]''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Edit Patient',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Patient/${id}',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+        'Content-Type': 'application/json-patch+json',
+        'Accept': 'application/fhir+json',
       },
       params: {},
       body: ffApiRequestBody,
