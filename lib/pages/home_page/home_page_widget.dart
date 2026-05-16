@@ -121,7 +121,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
           ShimmerEffect(
             curve: Curves.easeInOut,
             delay: 0.0.ms,
-            duration: 1000.0.ms,
+            duration: 700.0.ms,
             color: FlutterFlowTheme.of(context).success,
             angle: 0.524,
           ),
@@ -4856,6 +4856,17 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         null;
                                                                     safeSetState(
                                                                         () {});
+                                                                    await _model
+                                                                        .pageViewController
+                                                                        ?.animateToPage(
+                                                                      _model
+                                                                          .currentPatientPage,
+                                                                      duration: Duration(
+                                                                          milliseconds:
+                                                                              500),
+                                                                      curve: Curves
+                                                                          .ease,
+                                                                    );
                                                                     if (_shouldSetState)
                                                                       safeSetState(
                                                                           () {});

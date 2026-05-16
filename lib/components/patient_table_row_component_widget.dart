@@ -4,7 +4,10 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:aligned_tooltip/aligned_tooltip.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'patient_table_row_component_model.dart';
 export 'patient_table_row_component_model.dart';
@@ -222,39 +225,129 @@ class _PatientTableRowComponentWidgetState
                                 ),
                               ),
                             ),
-                            Text(
-                              valueOrDefault<String>(
-                                widget.patientRow?.combinedNames,
-                                'Name',
-                              ),
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color: _model.isRowHovered
-                                        ? FlutterFlowTheme.of(context).primary
-                                        : FlutterFlowTheme.of(context)
-                                            .primaryText,
-                                    fontSize: _model.isRowHovered ? 15.0 : 14.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(),
+                                child: SelectionArea(
+                                    child: AutoSizeText(
+                                  valueOrDefault<String>(
+                                    widget.patientRow?.combinedNames,
+                                    'Name',
                                   ),
+                                  minFontSize: 8.0,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                        color: _model.isRowHovered
+                                            ? FlutterFlowTheme.of(context)
+                                                .primary
+                                            : FlutterFlowTheme.of(context)
+                                                .primaryText,
+                                        fontSize:
+                                            _model.isRowHovered ? 15.0 : 14.0,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontStyle,
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                )),
+                              ),
                             ),
+                            if (kDebugMode)
+                              AlignedTooltip(
+                                content: Padding(
+                                  padding: EdgeInsets.all(4.0),
+                                  child: Text(
+                                    'Copy ID',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyLarge
+                                        .override(
+                                          font: GoogleFonts.inter(
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                          ),
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                  ),
+                                ),
+                                offset: 4.0,
+                                preferredDirection: AxisDirection.up,
+                                borderRadius: BorderRadius.circular(8.0),
+                                backgroundColor: FlutterFlowTheme.of(context)
+                                    .secondaryBackground,
+                                elevation: 4.0,
+                                tailBaseWidth: 24.0,
+                                tailLength: 12.0,
+                                waitDuration: Duration(milliseconds: 100),
+                                showDuration: Duration(milliseconds: 1500),
+                                triggerMode: TooltipTriggerMode.tap,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    await Clipboard.setData(ClipboardData(
+                                        text: widget.patientRow!.identifier));
+                                    ScaffoldMessenger.of(context)
+                                        .clearSnackBars();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Copied Patient ID',
+                                          style: TextStyle(
+                                            color: FlutterFlowTheme.of(context)
+                                                .info,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        duration: Duration(milliseconds: 2000),
+                                        backgroundColor:
+                                            FlutterFlowTheme.of(context)
+                                                .tertiary,
+                                      ),
+                                    );
+                                  },
+                                  child: Icon(
+                                    Icons.content_copy_rounded,
+                                    color:
+                                        FlutterFlowTheme.of(context).alternate,
+                                    size: 24.0,
+                                  ),
+                                ),
+                              ),
                           ]
                               .divide(SizedBox(width: 15.0))
-                              .addToStart(SizedBox(width: 60.0)),
+                              .addToStart(SizedBox(width: 20.0))
+                              .addToEnd(SizedBox(width: 20.0)),
                         ),
                       ),
                     ),
@@ -293,7 +386,8 @@ class _PatientTableRowComponentWidgetState
                               }
                             },
                           ),
-                          Text(
+                          SelectionArea(
+                              child: Text(
                             functions
                                 .capitalizeFirst(widget.patientRow!.gender),
                             style: FlutterFlowTheme.of(context)
@@ -320,7 +414,7 @@ class _PatientTableRowComponentWidgetState
                                       .bodyMedium
                                       .fontStyle,
                                 ),
-                          ),
+                          )),
                         ]
                             .divide(SizedBox(width: 10.0))
                             .addToStart(SizedBox(width: 100.0)),
@@ -333,7 +427,8 @@ class _PatientTableRowComponentWidgetState
                       height: 50.0,
                       decoration: BoxDecoration(),
                       alignment: AlignmentDirectional(0.0, 0.0),
-                      child: Text(
+                      child: SelectionArea(
+                          child: Text(
                         dateTimeFormat(
                             "y-MM-dd",
                             functions.convertSingleDateStringtoDateTime(
@@ -360,7 +455,7 @@ class _PatientTableRowComponentWidgetState
                                   .bodyMedium
                                   .fontStyle,
                             ),
-                      ),
+                      )),
                     ),
                   ),
                   if (widget.showPhoneNumber)
@@ -370,7 +465,8 @@ class _PatientTableRowComponentWidgetState
                         height: 50.0,
                         decoration: BoxDecoration(),
                         alignment: AlignmentDirectional(0.0, 0.0),
-                        child: Text(
+                        child: SelectionArea(
+                            child: Text(
                           valueOrDefault<String>(
                             widget.patientRow?.telecomValue,
                             'Phone Number',
@@ -398,7 +494,7 @@ class _PatientTableRowComponentWidgetState
                                     .bodyMedium
                                     .fontStyle,
                               ),
-                        ),
+                        )),
                       ),
                     ),
                   Expanded(
