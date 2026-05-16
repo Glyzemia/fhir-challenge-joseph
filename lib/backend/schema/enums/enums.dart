@@ -10,6 +10,14 @@ enum ObservationMode {
   edit,
 }
 
+enum BorderSideToCurve {
+  TopLeft,
+  TopRight,
+  BottomLeft,
+  BottomRight,
+  None,
+}
+
 extension FFEnumExtensions<T extends Enum> on T {
   String serialize() => name;
 }
@@ -25,6 +33,8 @@ T? deserializeEnum<T>(String? value) {
       return PatientMode.values.deserialize(value) as T?;
     case (ObservationMode):
       return ObservationMode.values.deserialize(value) as T?;
+    case (BorderSideToCurve):
+      return BorderSideToCurve.values.deserialize(value) as T?;
     default:
       return null;
   }

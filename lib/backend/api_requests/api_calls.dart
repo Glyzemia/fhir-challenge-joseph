@@ -104,6 +104,48 @@ class GetAllPatientsCall {
           .toList();
 }
 
+class SearchPatientsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? searchTerm = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Search Patients',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Patient',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {
+        '_total': "accurate",
+        'name': searchTerm,
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static List<String>? lastUpdated(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.meta.lastUpdated''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
+}
+
 class CreateNewPatientCall {
   static Future<ApiCallResponse> call({
     List<String>? givenNameList,

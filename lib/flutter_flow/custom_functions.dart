@@ -138,3 +138,22 @@ DateTime? convertSingleDateStringtoDateTime(String? dateString) {
     return null;
   }
 }
+
+List<int> createPageIndices(int items) {
+  final int numPages = ((items - 1) ~/ 10) + 1;
+  List<int> pages = List.generate(numPages, (index) => index);
+  return pages;
+}
+
+List<PatientStruct>? slicePatientsListForTablePages(
+  List<PatientStruct>? patients,
+  int startIndex,
+  int endIndex,
+) {
+  // I want the function to take in patients list, and return the sublist from startIndex to endIndex. If endIndex is greater that patients length, return only up to the patients length.
+  if (patients == null || startIndex >= patients.length) {
+    return [];
+  }
+  endIndex = endIndex > patients.length ? patients.length : endIndex;
+  return patients.sublist(startIndex, endIndex);
+}

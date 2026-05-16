@@ -87,6 +87,19 @@ class _MenuItemsComponentWidgetState extends State<MenuItemsComponentWidget> {
               child: Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
+                  Padding(
+                    padding:
+                        EdgeInsetsDirectional.fromSTEB(10.0, 0.0, 0.0, 0.0),
+                    child: Container(
+                      width: 4.0,
+                      height: 30.0,
+                      decoration: BoxDecoration(
+                        color: widget.isSelected
+                            ? FlutterFlowTheme.of(context).accent1
+                            : FlutterFlowTheme.of(context).secondaryBackground,
+                      ),
+                    ),
+                  ),
                   widget.icon!,
                   Text(
                     valueOrDefault<String>(

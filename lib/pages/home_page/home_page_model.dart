@@ -1,9 +1,11 @@
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
+import '/components/custom_dot_component_page_view_widget.dart';
+import '/components/custom_table_header_component_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
-import '/flutter_flow/flutter_flow_data_table.dart';
+import '/components/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'home_page_widget.dart' show HomePageWidget;
@@ -44,7 +46,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
           int index, Function(PatientStruct) updateFn) =>
       sortedAllPatients[index] = updateFn(sortedAllPatients[index]);
 
-  bool displaySearch = false;
+  bool displaySimpleSearchPatients = false;
 
   DateTime? selectedDob;
 
@@ -56,6 +58,27 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   void updatePatientSelectedForEditStruct(Function(PatientStruct) updateFn) {
     updateFn(patientSelectedForEdit ??= PatientStruct());
   }
+
+  bool displayFHIRSearchPatients = false;
+
+  List<PatientStruct> allFHIRSearchPatients = [];
+  void addToAllFHIRSearchPatients(PatientStruct item) =>
+      allFHIRSearchPatients.add(item);
+  void removeFromAllFHIRSearchPatients(PatientStruct item) =>
+      allFHIRSearchPatients.remove(item);
+  void removeAtIndexFromAllFHIRSearchPatients(int index) =>
+      allFHIRSearchPatients.removeAt(index);
+  void insertAtIndexInAllFHIRSearchPatients(int index, PatientStruct item) =>
+      allFHIRSearchPatients.insert(index, item);
+  void updateAllFHIRSearchPatientsAtIndex(
+          int index, Function(PatientStruct) updateFn) =>
+      allFHIRSearchPatients[index] = updateFn(allFHIRSearchPatients[index]);
+
+  String? selectedTableColumn = 'Name';
+
+  bool isAscendingSelectedTableColumn = true;
+
+  int currentPatientPage = 0;
 
   ///  State fields for stateful widgets in this page.
 
@@ -76,18 +99,43 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late MenuItemsComponentModel settingsModel;
   // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
   ApiCallResponse? allPatientsQuery2;
+  // State field(s) for SearchType widget.
+  FormFieldController<String>? searchTypeValueController;
   // State field(s) for SearchName widget.
   FocusNode? searchNameFocusNode;
   TextEditingController? searchNameTextController;
   String? Function(BuildContext, String?)? searchNameTextControllerValidator;
   List<String> simpleSearchResults = [];
-  // State field(s) for AllPatientsDataTable widget.
-  final allPatientsDataTableController =
-      FlutterFlowDataTableController<PatientStruct>();
-  // Stores action output result for [Backend Call - API (Delete Patient)] action in DeleteIconButton widget.
+  // Stores action output result for [Backend Call - API (Search Patients)] action in IconButton widget.
+  ApiCallResponse? fHIRSearchPatients;
+  // Model for TableHeaderComponentName.
+  late CustomTableHeaderComponentModel tableHeaderComponentNameModel;
+  // Model for TableHeaderComponentGender.
+  late CustomTableHeaderComponentModel tableHeaderComponentGenderModel;
+  // Model for TableHeaderComponentDOB.
+  late CustomTableHeaderComponentModel tableHeaderComponentDOBModel;
+  // Model for TableHeaderComponentPhoneNumber.
+  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel;
+  // Model for TableHeaderComponentActions.
+  late CustomTableHeaderComponentModel tableHeaderComponentActionsModel;
+  // State field(s) for PageView widget.
+  PageController? pageViewController;
+
+  int get pageViewCurrentIndex => pageViewController != null &&
+          pageViewController!.hasClients &&
+          pageViewController!.page != null
+      ? pageViewController!.page!.round()
+      : 0;
+  // Models for PatientTableRowComponent dynamic component.
+  late FlutterFlowDynamicModels<PatientTableRowComponentModel>
+      patientTableRowComponentModels;
+  // Stores action output result for [Backend Call - API (Delete Patient)] action in PatientTableRowComponent widget.
   ApiCallResponse? deletePatient;
-  // Stores action output result for [Backend Call - API (Get All Patients)] action in DeleteIconButton widget.
+  // Stores action output result for [Backend Call - API (Get All Patients)] action in PatientTableRowComponent widget.
   ApiCallResponse? allPatientsQuery4;
+  // Models for CustomDotComponentPageView dynamic component.
+  late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
+      customDotComponentPageViewModels;
   // State field(s) for FirstName widget.
   FocusNode? firstNameFocusNode;
   TextEditingController? firstNameTextController;
@@ -157,6 +205,20 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     createPatientModel = createModel(context, () => MenuItemsComponentModel());
     activityModel = createModel(context, () => MenuItemsComponentModel());
     settingsModel = createModel(context, () => MenuItemsComponentModel());
+    tableHeaderComponentNameModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentGenderModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentDOBModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentPhoneNumberModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentActionsModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    patientTableRowComponentModels =
+        FlutterFlowDynamicModels(() => PatientTableRowComponentModel());
+    customDotComponentPageViewModels =
+        FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
     firstNameTextControllerValidator = _firstNameTextControllerValidator;
     lastNameTextControllerValidator = _lastNameTextControllerValidator;
     phoneNumberTextControllerValidator = _phoneNumberTextControllerValidator;
@@ -173,7 +235,13 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     searchNameFocusNode?.dispose();
     searchNameTextController?.dispose();
 
-    allPatientsDataTableController.dispose();
+    tableHeaderComponentNameModel.dispose();
+    tableHeaderComponentGenderModel.dispose();
+    tableHeaderComponentDOBModel.dispose();
+    tableHeaderComponentPhoneNumberModel.dispose();
+    tableHeaderComponentActionsModel.dispose();
+    patientTableRowComponentModels.dispose();
+    customDotComponentPageViewModels.dispose();
     firstNameFocusNode?.dispose();
     firstNameTextController?.dispose();
 
@@ -183,4 +251,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     phoneNumberFocusNode?.dispose();
     phoneNumberTextController?.dispose();
   }
+
+  /// Additional helper methods.
+  String? get searchTypeValue => searchTypeValueController?.value;
 }

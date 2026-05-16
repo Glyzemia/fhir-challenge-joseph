@@ -1,13 +1,16 @@
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
+import '/components/custom_dot_component_page_view_widget.dart';
+import '/components/custom_table_header_component_widget.dart';
 import '/components/empty_widget_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
+import '/components/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
-import '/flutter_flow/flutter_flow_data_table.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/flutter_flow/flutter_flow_radio_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -15,7 +18,6 @@ import '/flutter_flow/form_field_controller.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'dart:math' as math;
-import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -94,14 +96,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
         _model.showCreateEditPatient = false;
         _model.showActivity = false;
         _model.showSettings = false;
-        _model.displaySearch = false;
+        _model.displaySimpleSearchPatients = false;
         safeSetState(() {});
-        _model.allPatientsDataTableController.updateSort(
-          columnIndex: 0,
-          ascending: true,
-        );
-        _model.allPatientsDataTableController.paginatorController
-            .setRowsPerPage(10);
       }
     });
 
@@ -353,7 +349,17 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                   false;
                                               _model.showActivity = false;
                                               _model.showSettings = false;
+                                              _model.displaySimpleSearchPatients =
+                                                  false;
+                                              _model.displayFHIRSearchPatients =
+                                                  false;
+                                              _model.patientMode =
+                                                  PatientMode.create;
                                               safeSetState(() {});
+                                              safeSetState(() {
+                                                _model.searchNameTextController
+                                                    ?.clear();
+                                              });
                                             },
                                           ),
                                         ),
@@ -534,7 +540,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             height: 835.0,
                                             decoration: BoxDecoration(),
                                             child: Column(
-                                              mainAxisSize: MainAxisSize.max,
+                                              mainAxisSize: MainAxisSize.min,
                                               mainAxisAlignment:
                                                   MainAxisAlignment.start,
                                               children: [
@@ -547,7 +553,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                     Expanded(
                                                       child: Column(
                                                         mainAxisSize:
-                                                            MainAxisSize.max,
+                                                            MainAxisSize.min,
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
                                                                 .start,
@@ -610,6 +616,9 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             .bodyMedium
                                                                             .fontStyle,
                                                                       ),
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .secondaryText,
                                                                       letterSpacing:
                                                                           0.0,
                                                                       fontWeight: FlutterFlowTheme.of(
@@ -755,13 +764,17 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                   .cast<
                                                                       PatientStruct>();
                                                           safeSetState(() {});
-                                                          _model
-                                                              .allPatientsDataTableController
-                                                              .updateSort(
-                                                            columnIndex: 0,
-                                                            ascending: true,
-                                                          );
                                                         }
+                                                        safeSetState(() {
+                                                          _model
+                                                              .searchNameTextController
+                                                              ?.clear();
+                                                        });
+                                                        _model.displaySimpleSearchPatients =
+                                                            false;
+                                                        _model.displayFHIRSearchPatients =
+                                                            false;
+                                                        safeSetState(() {});
 
                                                         safeSetState(() {});
                                                       },
@@ -952,9 +965,107 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                     mainAxisSize:
                                                         MainAxisSize.max,
                                                     children: [
+                                                      FlutterFlowRadioButton(
+                                                        options: [
+                                                          'FHIR Query',
+                                                          'Simple Search'
+                                                        ].toList(),
+                                                        onChanged: (val) async {
+                                                          safeSetState(() {});
+                                                          safeSetState(() {
+                                                            _model
+                                                                .searchNameTextController
+                                                                ?.clear();
+                                                          });
+                                                          _model.displaySimpleSearchPatients =
+                                                              false;
+                                                          safeSetState(() {});
+                                                        },
+                                                        controller: _model
+                                                                .searchTypeValueController ??=
+                                                            FormFieldController<
+                                                                    String>(
+                                                                'FHIR Query'),
+                                                        optionHeight: 28.0,
+                                                        textStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font:
+                                                                      GoogleFonts
+                                                                          .inter(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .labelMedium
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .labelMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                        selectedTextStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .override(
+                                                                  font:
+                                                                      GoogleFonts
+                                                                          .inter(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                        buttonPosition:
+                                                            RadioButtonPosition
+                                                                .left,
+                                                        direction:
+                                                            Axis.vertical,
+                                                        radioButtonColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                        inactiveRadioButtonColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .secondaryText,
+                                                        toggleable: false,
+                                                        horizontalAlignment:
+                                                            WrapAlignment.start,
+                                                        verticalAlignment:
+                                                            WrapCrossAlignment
+                                                                .start,
+                                                      ),
                                                       Expanded(
                                                         child: Container(
-                                                          height: 60.0,
+                                                          height: 50.0,
                                                           decoration:
                                                               BoxDecoration(
                                                             color: FlutterFlowTheme
@@ -987,37 +1098,53 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                       200),
                                                               () async {
                                                                 if (_model.searchNameTextController
-                                                                            .text !=
+                                                                            .text ==
                                                                         '') {
-                                                                  safeSetState(
-                                                                      () {
-                                                                    _model
-                                                                        .simpleSearchResults = TextSearch((_model.sortedAllPatients.map((e) => e.combinedNames).toList()
-                                                                                as List)
-                                                                            .cast<
-                                                                                String>()
-                                                                            .map((str) =>
-                                                                                TextSearchItem.fromTerms(str, [
-                                                                                  str
-                                                                                ]))
-                                                                            .toList())
-                                                                        .search(_model
-                                                                            .searchNameTextController
-                                                                            .text)
-                                                                        .map((r) =>
-                                                                            r.object)
-                                                                        .toList();
-                                                                    ;
-                                                                  });
-                                                                  _model.displaySearch =
-                                                                      true;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                } else {
-                                                                  _model.displaySearch =
+                                                                  _model.displaySimpleSearchPatients =
                                                                       false;
+                                                                  _model.displayFHIRSearchPatients =
+                                                                      false;
+                                                                  _model.currentPatientPage =
+                                                                      0;
                                                                   safeSetState(
                                                                       () {});
+                                                                  await _model
+                                                                      .pageViewController
+                                                                      ?.animateToPage(
+                                                                    0,
+                                                                    duration: Duration(
+                                                                        milliseconds:
+                                                                            500),
+                                                                    curve: Curves
+                                                                        .ease,
+                                                                  );
+                                                                } else {
+                                                                  if (_model
+                                                                          .searchTypeValue ==
+                                                                      'Simple Search') {
+                                                                    if (_model.searchNameTextController.text !=
+                                                                            '') {
+                                                                      safeSetState(
+                                                                          () {
+                                                                        _model
+                                                                            .simpleSearchResults = TextSearch(
+                                                                                (_model.sortedAllPatients.map((e) => e.combinedNames).toList() as List).cast<String>().map((str) => TextSearchItem.fromTerms(str, [str])).toList())
+                                                                            .search(_model.searchNameTextController.text)
+                                                                            .map((r) => r.object)
+                                                                            .toList();
+                                                                        ;
+                                                                      });
+                                                                      _model.displaySimpleSearchPatients =
+                                                                          true;
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    } else {
+                                                                      _model.displaySimpleSearchPatients =
+                                                                          false;
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    }
+                                                                  }
                                                                 }
                                                               },
                                                             ),
@@ -1050,8 +1177,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             .labelMedium
                                                                             .fontStyle,
                                                                       ),
-                                                              hintText:
-                                                                  'Search Name',
+                                                              hintText: _model
+                                                                          .searchTypeValue ==
+                                                                      'FHIR Query'
+                                                                  ? 'Enter the Patient\'s Name and Click the Search Button.'
+                                                                  : 'Enter the Patient\'s Name',
                                                               hintStyle:
                                                                   FlutterFlowTheme.of(
                                                                           context)
@@ -1147,23 +1277,40 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         _model
                                                                             .searchNameTextController
                                                                             ?.clear();
-                                                                        if (_model.searchNameTextController.text !=
+                                                                        if (_model.searchNameTextController.text ==
                                                                                 '') {
-                                                                          safeSetState(
-                                                                              () {
-                                                                            _model.simpleSearchResults =
-                                                                                TextSearch((_model.sortedAllPatients.map((e) => e.combinedNames).toList() as List).cast<String>().map((str) => TextSearchItem.fromTerms(str, [str])).toList()).search(_model.searchNameTextController.text).map((r) => r.object).toList();
-                                                                            ;
-                                                                          });
-                                                                          _model.displaySearch =
-                                                                              true;
-                                                                          safeSetState(
-                                                                              () {});
-                                                                        } else {
-                                                                          _model.displaySearch =
+                                                                          _model.displaySimpleSearchPatients =
                                                                               false;
+                                                                          _model.displayFHIRSearchPatients =
+                                                                              false;
+                                                                          _model.currentPatientPage =
+                                                                              0;
                                                                           safeSetState(
                                                                               () {});
+                                                                          await _model
+                                                                              .pageViewController
+                                                                              ?.animateToPage(
+                                                                            0,
+                                                                            duration:
+                                                                                Duration(milliseconds: 500),
+                                                                            curve:
+                                                                                Curves.ease,
+                                                                          );
+                                                                        } else {
+                                                                          if (_model.searchTypeValue ==
+                                                                              'Simple Search') {
+                                                                            if (_model.searchNameTextController.text != '') {
+                                                                              safeSetState(() {
+                                                                                _model.simpleSearchResults = TextSearch((_model.sortedAllPatients.map((e) => e.combinedNames).toList() as List).cast<String>().map((str) => TextSearchItem.fromTerms(str, [str])).toList()).search(_model.searchNameTextController.text).map((r) => r.object).toList();
+                                                                                ;
+                                                                              });
+                                                                              _model.displaySimpleSearchPatients = true;
+                                                                              safeSetState(() {});
+                                                                            } else {
+                                                                              _model.displaySimpleSearchPatients = false;
+                                                                              safeSetState(() {});
+                                                                            }
+                                                                          }
                                                                         }
 
                                                                         safeSetState(
@@ -1221,6 +1368,100 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                           ),
                                                         ),
                                                       ),
+                                                      if (_model
+                                                              .searchTypeValue ==
+                                                          'FHIR Query')
+                                                        FlutterFlowIconButton(
+                                                          borderRadius: 20.0,
+                                                          borderWidth: 1.0,
+                                                          buttonSize: 40.0,
+                                                          hoverColor:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .cardBlue,
+                                                          hoverIconColor:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .primary,
+                                                          hoverBorderColor:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .primary,
+                                                          icon: FaIcon(
+                                                            FontAwesomeIcons
+                                                                .search,
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .primary,
+                                                            size: 24.0,
+                                                          ),
+                                                          showLoadingIndicator:
+                                                              true,
+                                                          onPressed: () async {
+                                                            _model.fHIRSearchPatients =
+                                                                await SearchPatientsCall
+                                                                    .call(
+                                                              token: FFAppState()
+                                                                  .fhirBearerToken,
+                                                              searchTerm: _model
+                                                                  .searchNameTextController
+                                                                  .text,
+                                                            );
+
+                                                            if ((_model
+                                                                    .fHIRSearchPatients
+                                                                    ?.succeeded ??
+                                                                true)) {
+                                                              _model.allFHIRSearchPatients = functions
+                                                                  .parseFhirPatients(
+                                                                      SearchPatientsCall.entries(
+                                                                        (_model.fHIRSearchPatients?.jsonBody ??
+                                                                            ''),
+                                                                      )?.toList(),
+                                                                      functions
+                                                                          .convertDateStringListtoDateTimeList(SearchPatientsCall.lastUpdated(
+                                                                            (_model.fHIRSearchPatients?.jsonBody ??
+                                                                                ''),
+                                                                          )?.toList())
+                                                                          .toList())!
+                                                                  .toList()
+                                                                  .cast<PatientStruct>();
+                                                              _model.displaySimpleSearchPatients =
+                                                                  false;
+                                                              _model.displayFHIRSearchPatients =
+                                                                  true;
+                                                              safeSetState(
+                                                                  () {});
+                                                            } else {
+                                                              await showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (alertDialogContext) {
+                                                                  return AlertDialog(
+                                                                    title: Text(
+                                                                        'Error'),
+                                                                    content: Text((_model
+                                                                            .fHIRSearchPatients
+                                                                            ?.bodyText ??
+                                                                        '')),
+                                                                    actions: [
+                                                                      TextButton(
+                                                                        onPressed:
+                                                                            () =>
+                                                                                Navigator.pop(alertDialogContext),
+                                                                        child: Text(
+                                                                            'Ok'),
+                                                                      ),
+                                                                    ],
+                                                                  );
+                                                                },
+                                                              );
+                                                            }
+
+                                                            safeSetState(() {});
+                                                          },
+                                                        ),
                                                       Container(
                                                         width: 250.0,
                                                         height: 50.0,
@@ -1291,1017 +1532,1098 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                         .around(SizedBox(
                                                             width: 20.0)),
                                                   ),
-                                                Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .fromSTEB(
-                                                          20.0, 0.0, 20.0, 0.0),
-                                                  child: Builder(
-                                                    builder: (context) {
-                                                      final allPatientsList = (_model
-                                                                  .displaySearch
-                                                              ? _model
-                                                                  .allPatients
-                                                                  .where((e) => _model
-                                                                      .simpleSearchResults
-                                                                      .contains(e
-                                                                          .combinedNames))
-                                                                  .toList()
-                                                              : _model
-                                                                  .sortedAllPatients)
-                                                          .toList();
-                                                      if (allPatientsList
-                                                          .isEmpty) {
-                                                        return Center(
-                                                          child: Container(
-                                                            width: 350.0,
-                                                            height: 50.0,
+                                                Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: wrapWithModel(
+                                                            model: _model
+                                                                .tableHeaderComponentNameModel,
+                                                            updateCallback: () =>
+                                                                safeSetState(
+                                                                    () {}),
                                                             child:
-                                                                EmptyWidgetWidget(),
-                                                          ),
-                                                        );
-                                                      }
+                                                                CustomTableHeaderComponentWidget(
+                                                              columnName:
+                                                                  'Name',
+                                                              isSelected: _model
+                                                                      .selectedTableColumn ==
+                                                                  'Name',
+                                                              isAscending: _model
+                                                                  .isAscendingSelectedTableColumn,
+                                                              topLeftBorderRadius:
+                                                                  10.0,
+                                                              onClick:
+                                                                  (columnName) async {
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    columnName) {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      !_model
+                                                                          .isAscendingSelectedTableColumn;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                } else {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      true;
+                                                                  _model.selectedTableColumn =
+                                                                      columnName;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                }
 
-                                                      return FlutterFlowDataTable<
-                                                          PatientStruct>(
-                                                        controller: _model
-                                                            .allPatientsDataTableController,
-                                                        data: allPatientsList,
-                                                        numRows: _model
-                                                            .allPatients.length,
-                                                        columnsBuilder:
-                                                            (onSortChanged) => [
-                                                          DataColumn2(
-                                                            label:
-                                                                DefaultTextStyle
-                                                                    .merge(
-                                                              softWrap: true,
-                                                              child: Text(
-                                                                'Name',
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelLarge
-                                                                    .override(
-                                                                      font: GoogleFonts
-                                                                          .inter(
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontStyle,
-                                                                      ),
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelLarge
-                                                                          .fontStyle,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                            onSort:
-                                                                onSortChanged,
-                                                          ),
-                                                          DataColumn2(
-                                                            label:
-                                                                DefaultTextStyle
-                                                                    .merge(
-                                                              softWrap: true,
-                                                              child: Text(
-                                                                'Gender',
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelLarge
-                                                                    .override(
-                                                                      font: GoogleFonts
-                                                                          .inter(
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontStyle,
-                                                                      ),
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelLarge
-                                                                          .fontStyle,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                            onSort:
-                                                                onSortChanged,
-                                                          ),
-                                                          DataColumn2(
-                                                            label:
-                                                                DefaultTextStyle
-                                                                    .merge(
-                                                              softWrap: true,
-                                                              child: Text(
-                                                                'Date of Birth',
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelLarge
-                                                                    .override(
-                                                                      font: GoogleFonts
-                                                                          .inter(
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontStyle,
-                                                                      ),
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelLarge
-                                                                          .fontStyle,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                            onSort:
-                                                                onSortChanged,
-                                                          ),
-                                                          DataColumn2(
-                                                            label:
-                                                                DefaultTextStyle
-                                                                    .merge(
-                                                              softWrap: true,
-                                                              child: Visibility(
-                                                                visible: _model
-                                                                    .showSearch,
-                                                                child: Text(
-                                                                  'Phone Number',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelLarge
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .labelLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .secondaryText,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                              ),
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Name') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Gender') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Date of Birth') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Phone Number') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                }
+                                                              },
                                                             ),
                                                           ),
-                                                          DataColumn2(
-                                                            label:
-                                                                DefaultTextStyle
-                                                                    .merge(
-                                                              softWrap: true,
-                                                              child: Text(
-                                                                'Actions',
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelLarge
-                                                                    .override(
-                                                                      font: GoogleFonts
-                                                                          .inter(
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .labelLarge
-                                                                            .fontStyle,
-                                                                      ),
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelLarge
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelLarge
-                                                                          .fontStyle,
-                                                                    ),
-                                                              ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: wrapWithModel(
+                                                            model: _model
+                                                                .tableHeaderComponentGenderModel,
+                                                            updateCallback: () =>
+                                                                safeSetState(
+                                                                    () {}),
+                                                            child:
+                                                                CustomTableHeaderComponentWidget(
+                                                              columnName:
+                                                                  'Gender',
+                                                              isSelected: _model
+                                                                      .selectedTableColumn ==
+                                                                  'Gender',
+                                                              isAscending: _model
+                                                                  .isAscendingSelectedTableColumn,
+                                                              onClick:
+                                                                  (columnName) async {
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    columnName) {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      !_model
+                                                                          .isAscendingSelectedTableColumn;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                } else {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      true;
+                                                                  _model.selectedTableColumn =
+                                                                      columnName;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                }
+
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Name') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Gender') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Date of Birth') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Phone Number') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                }
+                                                              },
                                                             ),
                                                           ),
-                                                        ],
-                                                        dataRowBuilder:
-                                                            (allPatientsListItem,
-                                                                    allPatientsListIndex,
-                                                                    selected,
-                                                                    onSelectChanged) =>
-                                                                DataRow(
-                                                          color:
-                                                              WidgetStateProperty
-                                                                  .all(
-                                                            allPatientsListIndex %
-                                                                        2 ==
-                                                                    0
-                                                                ? FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryBackground
-                                                                : FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryBackground,
+                                                        ),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: wrapWithModel(
+                                                            model: _model
+                                                                .tableHeaderComponentDOBModel,
+                                                            updateCallback: () =>
+                                                                safeSetState(
+                                                                    () {}),
+                                                            child:
+                                                                CustomTableHeaderComponentWidget(
+                                                              columnName:
+                                                                  'Date of Birth',
+                                                              isSelected: _model
+                                                                      .selectedTableColumn ==
+                                                                  'Date of Birth',
+                                                              isAscending: _model
+                                                                  .isAscendingSelectedTableColumn,
+                                                              onClick:
+                                                                  (columnName) async {
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    columnName) {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      !_model
+                                                                          .isAscendingSelectedTableColumn;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                } else {
+                                                                  _model.isAscendingSelectedTableColumn =
+                                                                      true;
+                                                                  _model.selectedTableColumn =
+                                                                      columnName;
+                                                                  safeSetState(
+                                                                      () {});
+                                                                }
+
+                                                                if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Name') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .combinedNames,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Gender') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .gender,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Date of Birth') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .birthDate,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                } else if (_model
+                                                                        .selectedTableColumn ==
+                                                                    'Phone Number') {
+                                                                  if (_model
+                                                                      .isAscendingSelectedTableColumn) {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                false)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.sortedAllPatients = _model
+                                                                        .allPatients
+                                                                        .sortedList(
+                                                                            keyOf: (e) => e
+                                                                                .telecomValue,
+                                                                            desc:
+                                                                                true)
+                                                                        .toList()
+                                                                        .cast<
+                                                                            PatientStruct>();
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+                                                                }
+                                                              },
+                                                            ),
                                                           ),
-                                                          cells: [
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Align(
-                                                                  alignment:
-                                                                      AlignmentDirectional(
-                                                                          0.0,
-                                                                          0.0),
-                                                                  child:
-                                                                      Container(
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color:
-                                                                          () {
-                                                                        if (allPatientsListItem.gender ==
-                                                                            'male') {
-                                                                          return FlutterFlowTheme.of(context)
-                                                                              .cardBlue;
-                                                                        } else if (allPatientsListItem.gender ==
-                                                                            'female') {
-                                                                          return FlutterFlowTheme.of(context)
-                                                                              .cardSuccess;
-                                                                        } else {
-                                                                          return FlutterFlowTheme.of(context)
-                                                                              .cardTertiary;
-                                                                        }
-                                                                      }(),
-                                                                      shape: BoxShape
-                                                                          .circle,
-                                                                    ),
-                                                                    child:
-                                                                        Align(
-                                                                      alignment:
-                                                                          AlignmentDirectional(
-                                                                              0.0,
-                                                                              0.0),
-                                                                      child:
-                                                                          Padding(
-                                                                        padding:
-                                                                            EdgeInsets.all(10.0),
-                                                                        child:
-                                                                            Text(
-                                                                          functions.getInitials(
-                                                                              allPatientsListItem.firstName,
-                                                                              allPatientsListItem.familyName),
-                                                                          style: FlutterFlowTheme.of(context)
-                                                                              .titleMedium
-                                                                              .override(
-                                                                                font: GoogleFonts.readexPro(
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).titleMedium.fontStyle,
-                                                                                ),
-                                                                                color: () {
-                                                                                  if (allPatientsListItem.gender == 'male') {
-                                                                                    return FlutterFlowTheme.of(context).primary;
-                                                                                  } else if (allPatientsListItem.gender == 'female') {
-                                                                                    return FlutterFlowTheme.of(context).success;
-                                                                                  } else {
-                                                                                    return FlutterFlowTheme.of(context).tertiary;
-                                                                                  }
-                                                                                }(),
-                                                                                letterSpacing: 0.0,
-                                                                                fontWeight: FontWeight.normal,
-                                                                                fontStyle: FlutterFlowTheme.of(context).titleMedium.fontStyle,
-                                                                              ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Text(
-                                                                  allPatientsListItem
-                                                                      .combinedNames,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                              ].divide(SizedBox(
-                                                                  width: 10.0)),
-                                                            ),
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    if (allPatientsListItem
-                                                                            .gender ==
-                                                                        'male') {
-                                                                      return Icon(
-                                                                        Icons
-                                                                            .male_rounded,
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .primary,
-                                                                        size:
-                                                                            24.0,
-                                                                      );
-                                                                    } else if (allPatientsListItem
-                                                                            .gender ==
-                                                                        'female') {
-                                                                      return Icon(
-                                                                        Icons
-                                                                            .female_rounded,
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .success,
-                                                                        size:
-                                                                            24.0,
-                                                                      );
-                                                                    } else {
-                                                                      return Icon(
-                                                                        Icons
-                                                                            .transgender_rounded,
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .tertiary,
-                                                                        size:
-                                                                            24.0,
-                                                                      );
-                                                                    }
-                                                                  },
-                                                                ),
-                                                                Text(
-                                                                  functions.capitalizeFirst(
-                                                                      allPatientsListItem
-                                                                          .gender),
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                              ].divide(SizedBox(
-                                                                  width: 10.0)),
-                                                            ),
-                                                            Text(
-                                                              allPatientsListItem
-                                                                  .birthDate,
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                            Visibility(
-                                                              visible: _model
-                                                                  .showSearch,
-                                                              child: Text(
-                                                                allPatientsListItem
-                                                                    .telecomValue,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      font: GoogleFonts
-                                                                          .inter(
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                              ),
-                                                            ),
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                AlignedTooltip(
-                                                                  content:
-                                                                      Padding(
-                                                                    padding:
-                                                                        EdgeInsets.all(
-                                                                            4.0),
-                                                                    child: Text(
-                                                                      'Edit Patient',
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyLarge
-                                                                          .override(
-                                                                            font:
-                                                                                GoogleFonts.inter(
-                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                            ),
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                  offset: 4.0,
-                                                                  preferredDirection:
-                                                                      AxisDirection
-                                                                          .down,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              8.0),
-                                                                  backgroundColor:
-                                                                      FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryBackground,
-                                                                  elevation:
-                                                                      4.0,
-                                                                  tailBaseWidth:
-                                                                      24.0,
-                                                                  tailLength:
-                                                                      12.0,
-                                                                  waitDuration:
-                                                                      Duration(
-                                                                          milliseconds:
-                                                                              100),
-                                                                  showDuration:
-                                                                      Duration(
-                                                                          milliseconds:
-                                                                              1500),
-                                                                  triggerMode:
-                                                                      TooltipTriggerMode
-                                                                          .tap,
-                                                                  child:
-                                                                      FlutterFlowIconButton(
-                                                                    borderColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .tertiary,
-                                                                    borderRadius:
-                                                                        20.0,
-                                                                    buttonSize:
-                                                                        40.0,
-                                                                    hoverColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .tertiary,
-                                                                    hoverIconColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .info,
-                                                                    hoverBorderColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .tertiary,
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .edit_note_rounded,
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .tertiary,
-                                                                      size:
-                                                                          24.0,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () async {
-                                                                      _model.showPatients =
-                                                                          false;
-                                                                      _model.showSearch =
-                                                                          false;
-                                                                      _model.showCreateEditPatient =
-                                                                          false;
-                                                                      _model.showActivity =
-                                                                          false;
-                                                                      _model.showSettings =
-                                                                          false;
-                                                                      _model.patientMode =
-                                                                          PatientMode
-                                                                              .edit;
-                                                                      _model.patientSelectedForEdit =
-                                                                          allPatientsListItem;
-                                                                      _model.selectedDob =
-                                                                          functions
-                                                                              .convertSingleDateStringtoDateTime(allPatientsListItem.birthDate);
+                                                        ),
+                                                        if (_model.showSearch)
+                                                          Expanded(
+                                                            flex: 1,
+                                                            child:
+                                                                wrapWithModel(
+                                                              model: _model
+                                                                  .tableHeaderComponentPhoneNumberModel,
+                                                              updateCallback: () =>
+                                                                  safeSetState(
+                                                                      () {}),
+                                                              child:
+                                                                  CustomTableHeaderComponentWidget(
+                                                                columnName:
+                                                                    'Phone Number',
+                                                                isSelected: _model
+                                                                        .selectedTableColumn ==
+                                                                    'Phone Number',
+                                                                isAscending: _model
+                                                                    .isAscendingSelectedTableColumn,
+                                                                onClick:
+                                                                    (columnName) async {
+                                                                  if (_model
+                                                                          .selectedTableColumn ==
+                                                                      columnName) {
+                                                                    _model.isAscendingSelectedTableColumn =
+                                                                        !_model
+                                                                            .isAscendingSelectedTableColumn;
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    _model.isAscendingSelectedTableColumn =
+                                                                        true;
+                                                                    _model.selectedTableColumn =
+                                                                        columnName;
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  }
+
+                                                                  if (_model
+                                                                          .selectedTableColumn ==
+                                                                      'Name') {
+                                                                    if (_model
+                                                                        .isAscendingSelectedTableColumn) {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.combinedNames,
+                                                                              desc: false)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
                                                                       safeSetState(
                                                                           () {});
-                                                                      await Future
-                                                                          .delayed(
-                                                                        Duration(
-                                                                          milliseconds:
-                                                                              100,
-                                                                        ),
-                                                                      );
+                                                                    } else {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.combinedNames,
+                                                                              desc: true)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
                                                                       safeSetState(
-                                                                          () {
-                                                                        _model.firstNameTextController?.text = _model
-                                                                            .patientSelectedForEdit!
-                                                                            .givenNames;
-                                                                      });
+                                                                          () {});
+                                                                    }
+                                                                  } else if (_model
+                                                                          .selectedTableColumn ==
+                                                                      'Gender') {
+                                                                    if (_model
+                                                                        .isAscendingSelectedTableColumn) {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.gender,
+                                                                              desc: false)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
                                                                       safeSetState(
-                                                                          () {
-                                                                        _model.lastNameTextController?.text = _model
-                                                                            .patientSelectedForEdit!
-                                                                            .familyName;
-                                                                      });
+                                                                          () {});
+                                                                    } else {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.gender,
+                                                                              desc: true)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
                                                                       safeSetState(
-                                                                          () {
-                                                                        _model
-                                                                            .genderCCValueController
-                                                                            ?.value = [
-                                                                          functions.capitalizeFirst(_model
-                                                                              .patientSelectedForEdit!
-                                                                              .gender)
-                                                                        ];
-                                                                      });
+                                                                          () {});
+                                                                    }
+                                                                  } else if (_model
+                                                                          .selectedTableColumn ==
+                                                                      'Date of Birth') {
+                                                                    if (_model
+                                                                        .isAscendingSelectedTableColumn) {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.birthDate,
+                                                                              desc: false)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
                                                                       safeSetState(
-                                                                          () {
-                                                                        _model.phoneNumberTextController?.text = _model
-                                                                            .patientSelectedForEdit!
-                                                                            .telecomValue;
-                                                                      });
-                                                                      if (animationsMap[
-                                                                              'containerOnActionTriggerAnimation'] !=
-                                                                          null) {
-                                                                        await animationsMap['containerOnActionTriggerAnimation']!
-                                                                            .controller
-                                                                            .forward(from: 0.0);
-                                                                      }
-                                                                      if (animationsMap[
-                                                                              'containerOnActionTriggerAnimation'] !=
-                                                                          null) {
-                                                                        await animationsMap['containerOnActionTriggerAnimation']!
-                                                                            .controller
-                                                                            .reverse();
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                                AlignedTooltip(
-                                                                  content:
-                                                                      Padding(
-                                                                    padding:
-                                                                        EdgeInsets.all(
-                                                                            4.0),
-                                                                    child: Text(
-                                                                      'Delete Patient',
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyLarge
-                                                                          .override(
-                                                                            font:
-                                                                                GoogleFonts.inter(
-                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                            ),
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                  offset: 4.0,
-                                                                  preferredDirection:
-                                                                      AxisDirection
-                                                                          .down,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              8.0),
-                                                                  backgroundColor:
-                                                                      FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryBackground,
-                                                                  elevation:
-                                                                      4.0,
-                                                                  tailBaseWidth:
-                                                                      24.0,
-                                                                  tailLength:
-                                                                      12.0,
-                                                                  waitDuration:
-                                                                      Duration(
-                                                                          milliseconds:
-                                                                              100),
-                                                                  showDuration:
-                                                                      Duration(
-                                                                          milliseconds:
-                                                                              1500),
-                                                                  triggerMode:
-                                                                      TooltipTriggerMode
-                                                                          .tap,
-                                                                  child:
-                                                                      FlutterFlowIconButton(
-                                                                    borderColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .error,
-                                                                    borderRadius:
-                                                                        20.0,
-                                                                    buttonSize:
-                                                                        40.0,
-                                                                    hoverColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .error,
-                                                                    hoverIconColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .info,
-                                                                    hoverBorderColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .error,
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .delete_outline_rounded,
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .error,
-                                                                      size:
-                                                                          24.0,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () async {
-                                                                      var _shouldSetState =
-                                                                          false;
-                                                                      var confirmDialogResponse = await showDialog<
-                                                                              bool>(
-                                                                            context:
-                                                                                context,
-                                                                            builder:
-                                                                                (alertDialogContext) {
-                                                                              return AlertDialog(
-                                                                                title: Text('Warning'),
-                                                                                content: Text('Are you sure you want to delete this patient..?? This process is irreversible..!!'),
-                                                                                actions: [
-                                                                                  TextButton(
-                                                                                    onPressed: () => Navigator.pop(alertDialogContext, false),
-                                                                                    child: Text('Cancel'),
-                                                                                  ),
-                                                                                  TextButton(
-                                                                                    onPressed: () => Navigator.pop(alertDialogContext, true),
-                                                                                    child: Text('Delete'),
-                                                                                  ),
-                                                                                ],
-                                                                              );
-                                                                            },
-                                                                          ) ??
-                                                                          false;
-                                                                      if (!confirmDialogResponse) {
-                                                                        if (_shouldSetState)
-                                                                          safeSetState(
-                                                                              () {});
-                                                                        return;
-                                                                      }
-                                                                      _model.deletePatient =
-                                                                          await DeletePatientCall
-                                                                              .call(
-                                                                        id: allPatientsListItem
-                                                                            .identifier,
-                                                                        token: FFAppState()
-                                                                            .fhirBearerToken,
-                                                                      );
-
-                                                                      _shouldSetState =
-                                                                          true;
-                                                                      if ((_model
-                                                                              .deletePatient
-                                                                              ?.succeeded ??
-                                                                          true)) {
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .showSnackBar(
-                                                                          SnackBar(
-                                                                            content:
-                                                                                Text(
-                                                                              'Patient Deleted successfully..!!',
-                                                                              style: TextStyle(
-                                                                                color: FlutterFlowTheme.of(context).info,
-                                                                              ),
-                                                                              textAlign: TextAlign.center,
-                                                                            ),
-                                                                            duration:
-                                                                                Duration(milliseconds: 4000),
-                                                                            backgroundColor:
-                                                                                FlutterFlowTheme.of(context).success,
-                                                                          ),
-                                                                        );
-                                                                      } else {
-                                                                        await showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (alertDialogContext) {
-                                                                            return AlertDialog(
-                                                                              title: Text('Delete Failed'),
-                                                                              content: Text((_model.deletePatient?.bodyText ?? '')),
-                                                                              actions: [
-                                                                                TextButton(
-                                                                                  onPressed: () => Navigator.pop(alertDialogContext),
-                                                                                  child: Text('Ok'),
-                                                                                ),
-                                                                              ],
-                                                                            );
-                                                                          },
-                                                                        );
-                                                                        if (_shouldSetState)
-                                                                          safeSetState(
-                                                                              () {});
-                                                                        return;
-                                                                      }
-
-                                                                      _model.allPatientsQuery4 =
-                                                                          await GetAllPatientsCall
-                                                                              .call(
-                                                                        token: FFAppState()
-                                                                            .fhirBearerToken,
-                                                                      );
-
-                                                                      _shouldSetState =
-                                                                          true;
-                                                                      if ((_model
-                                                                              .allPatientsQuery4
-                                                                              ?.succeeded ??
-                                                                          true)) {
-                                                                        _model.allPatients = functions
-                                                                            .parseFhirPatients(
-                                                                                GetAllPatientsCall.entries(
-                                                                                  (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                                )?.toList(),
-                                                                                functions
-                                                                                    .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
-                                                                                      (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                                    )?.toList())
-                                                                                    .toList())!
-                                                                            .toList()
-                                                                            .cast<PatientStruct>();
-                                                                        _model.sortedAllPatients = functions
-                                                                            .parseFhirPatients(
-                                                                                GetAllPatientsCall.entries(
-                                                                                  (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                                )?.toList(),
-                                                                                functions
-                                                                                    .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
-                                                                                      (_model.allPatientsQuery4?.jsonBody ?? ''),
-                                                                                    )?.toList())
-                                                                                    .toList())!
-                                                                            .sortedList(keyOf: (e) => e.combinedNames, desc: false)
-                                                                            .toList()
-                                                                            .cast<PatientStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        _model
-                                                                            .allPatientsDataTableController
-                                                                            .updateSort(
-                                                                          columnIndex:
-                                                                              0,
-                                                                          ascending:
-                                                                              true,
-                                                                        );
-                                                                      }
-                                                                      if (_shouldSetState)
-                                                                        safeSetState(
-                                                                            () {});
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                              ].divide(SizedBox(
-                                                                  width: 10.0)),
+                                                                          () {});
+                                                                    } else {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.birthDate,
+                                                                              desc: true)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    }
+                                                                  } else if (_model
+                                                                          .selectedTableColumn ==
+                                                                      'Phone Number') {
+                                                                    if (_model
+                                                                        .isAscendingSelectedTableColumn) {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.telecomValue,
+                                                                              desc: false)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    } else {
+                                                                      _model.sortedAllPatients = _model
+                                                                          .allPatients
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.telecomValue,
+                                                                              desc: true)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    }
+                                                                  }
+                                                                },
+                                                              ),
                                                             ),
-                                                          ]
-                                                              .map((c) =>
-                                                                  DataCell(c))
-                                                              .toList(),
-                                                        ),
-                                                        emptyBuilder: () =>
-                                                            Center(
-                                                          child: Container(
-                                                            width: 350.0,
-                                                            height: 50.0,
+                                                          ),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: wrapWithModel(
+                                                            model: _model
+                                                                .tableHeaderComponentActionsModel,
+                                                            updateCallback: () =>
+                                                                safeSetState(
+                                                                    () {}),
                                                             child:
-                                                                EmptyWidgetWidget(),
+                                                                CustomTableHeaderComponentWidget(
+                                                              columnName:
+                                                                  'Actions',
+                                                              isSelected: false,
+                                                              isAscending:
+                                                                  false,
+                                                              topRIghtBorderRadius:
+                                                                  10.0,
+                                                              onClick:
+                                                                  (columnName) async {},
+                                                            ),
                                                           ),
                                                         ),
-                                                        onSortChanged:
-                                                            (columnIndex,
-                                                                ascending) async {
-                                                          if (columnIndex ==
-                                                              0) {
-                                                            if (ascending) {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .combinedNames,
-                                                                      desc:
-                                                                          false)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            } else {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .combinedNames,
-                                                                      desc:
-                                                                          true)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            }
-                                                          } else if (columnIndex ==
-                                                              1) {
-                                                            if (ascending) {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .gender,
-                                                                      desc:
-                                                                          false)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            } else {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .gender,
-                                                                      desc:
-                                                                          true)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            }
-                                                          } else if (columnIndex ==
-                                                              2) {
-                                                            if (ascending) {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .birthDate,
-                                                                      desc:
-                                                                          false)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            } else {
-                                                              _model.sortedAllPatients = _model
-                                                                  .allPatients
-                                                                  .sortedList(
-                                                                      keyOf: (e) => e
-                                                                          .birthDate,
-                                                                      desc:
-                                                                          true)
-                                                                  .toList()
-                                                                  .cast<
-                                                                      PatientStruct>();
-                                                              safeSetState(
-                                                                  () {});
-                                                            }
+                                                      ]
+                                                          .addToStart(SizedBox(
+                                                              width: 20.0))
+                                                          .addToEnd(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                    Builder(
+                                                      builder: (context) {
+                                                        final pages = functions
+                                                            .createPageIndices(
+                                                                () {
+                                                          if (_model
+                                                              .displaySimpleSearchPatients) {
+                                                            return _model
+                                                                .allPatients
+                                                                .where((e) => _model
+                                                                    .simpleSearchResults
+                                                                    .contains(e
+                                                                        .combinedNames))
+                                                                .toList()
+                                                                .length;
+                                                          } else if (_model
+                                                              .displayFHIRSearchPatients) {
+                                                            return _model
+                                                                .allFHIRSearchPatients
+                                                                .length;
+                                                          } else {
+                                                            return _model
+                                                                .sortedAllPatients
+                                                                .length;
                                                           }
-                                                        },
-                                                        paginated: true,
-                                                        selectable: false,
-                                                        hidePaginator: false,
-                                                        showFirstLastButtons:
-                                                            true,
-                                                        height: 668.0,
-                                                        headingRowHeight: 56.0,
-                                                        dataRowHeight: 56.0,
-                                                        columnSpacing: 20.0,
-                                                        headingRowColor:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .cardAlternate,
-                                                        sortIconColor:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primary,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8.0),
-                                                        addHorizontalDivider:
-                                                            true,
-                                                        addTopAndBottomDivider:
-                                                            false,
-                                                        hideDefaultHorizontalDivider:
-                                                            true,
-                                                        horizontalDividerColor:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .alternate,
-                                                        horizontalDividerThickness:
-                                                            1.0,
-                                                        addVerticalDivider:
-                                                            false,
-                                                      );
-                                                    },
-                                                  ),
+                                                        }()).toList();
+                                                        if (pages.isEmpty) {
+                                                          return Center(
+                                                            child:
+                                                                EmptyWidgetWidget(),
+                                                          );
+                                                        }
+
+                                                        return Container(
+                                                          width:
+                                                              MediaQuery.sizeOf(
+                                                                          context)
+                                                                      .width *
+                                                                  1.0,
+                                                          height: 540.0,
+                                                          child:
+                                                              PageView.builder(
+                                                            controller: _model
+                                                                    .pageViewController ??=
+                                                                PageController(
+                                                                    initialPage: max(
+                                                                        0,
+                                                                        min(
+                                                                            0,
+                                                                            pages.length -
+                                                                                1))),
+                                                            scrollDirection:
+                                                                Axis.horizontal,
+                                                            itemCount:
+                                                                pages.length,
+                                                            itemBuilder:
+                                                                (context,
+                                                                    pagesIndex) {
+                                                              final pagesItem =
+                                                                  pages[
+                                                                      pagesIndex];
+                                                              return Builder(
+                                                                builder:
+                                                                    (context) {
+                                                                  final allPatientsListTable =
+                                                                      () {
+                                                                            if (_model.displaySimpleSearchPatients) {
+                                                                              return functions.slicePatientsListForTablePages(_model.allPatients.where((e) => _model.simpleSearchResults.contains(e.combinedNames)).toList(), pagesIndex * 10, (pagesIndex + 1) * 10);
+                                                                            } else if (_model.displayFHIRSearchPatients) {
+                                                                              return functions.slicePatientsListForTablePages(_model.allFHIRSearchPatients.toList(), pagesIndex * 10, (pagesIndex + 1) * 10);
+                                                                            } else {
+                                                                              return functions.slicePatientsListForTablePages(_model.sortedAllPatients.toList(), pagesIndex * 10, (pagesIndex + 1) * 10);
+                                                                            }
+                                                                          }()
+                                                                              ?.toList() ??
+                                                                          [];
+
+                                                                  return Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: List.generate(
+                                                                        allPatientsListTable
+                                                                            .length,
+                                                                        (allPatientsListTableIndex) {
+                                                                      final allPatientsListTableItem =
+                                                                          allPatientsListTable[
+                                                                              allPatientsListTableIndex];
+                                                                      return wrapWithModel(
+                                                                        model: _model
+                                                                            .patientTableRowComponentModels
+                                                                            .getModel(
+                                                                          allPatientsListTableIndex
+                                                                              .toString(),
+                                                                          allPatientsListTableIndex,
+                                                                        ),
+                                                                        updateCallback:
+                                                                            () =>
+                                                                                safeSetState(() {}),
+                                                                        child:
+                                                                            PatientTableRowComponentWidget(
+                                                                          key:
+                                                                              Key(
+                                                                            'Key4mq_${allPatientsListTableIndex.toString()}',
+                                                                          ),
+                                                                          patientRow:
+                                                                              allPatientsListTableItem,
+                                                                          showPhoneNumber:
+                                                                              _model.showSearch,
+                                                                          onEditAction:
+                                                                              (patientRow) async {
+                                                                            _model.showPatients =
+                                                                                false;
+                                                                            _model.showSearch =
+                                                                                false;
+                                                                            _model.showCreateEditPatient =
+                                                                                false;
+                                                                            _model.showActivity =
+                                                                                false;
+                                                                            _model.showSettings =
+                                                                                false;
+                                                                            _model.patientMode =
+                                                                                PatientMode.edit;
+                                                                            _model.patientSelectedForEdit =
+                                                                                patientRow;
+                                                                            _model.selectedDob =
+                                                                                functions.convertSingleDateStringtoDateTime(patientRow.birthDate);
+                                                                            safeSetState(() {});
+                                                                            await Future.delayed(
+                                                                              Duration(
+                                                                                milliseconds: 100,
+                                                                              ),
+                                                                            );
+                                                                            safeSetState(() {
+                                                                              _model.firstNameTextController?.text = patientRow.givenNames;
+                                                                            });
+                                                                            safeSetState(() {
+                                                                              _model.lastNameTextController?.text = patientRow.familyName;
+                                                                            });
+                                                                            safeSetState(() {
+                                                                              _model.genderCCValueController?.value = [
+                                                                                functions.capitalizeFirst(patientRow.gender)
+                                                                              ];
+                                                                            });
+                                                                            safeSetState(() {
+                                                                              _model.phoneNumberTextController?.text = patientRow.telecomValue;
+                                                                            });
+                                                                            if (animationsMap['containerOnActionTriggerAnimation'] !=
+                                                                                null) {
+                                                                              await animationsMap['containerOnActionTriggerAnimation']!.controller.forward(from: 0.0);
+                                                                            }
+                                                                            if (animationsMap['containerOnActionTriggerAnimation'] !=
+                                                                                null) {
+                                                                              await animationsMap['containerOnActionTriggerAnimation']!.controller.reverse();
+                                                                            }
+                                                                          },
+                                                                          onDeleteAction:
+                                                                              (patientRow) async {
+                                                                            var _shouldSetState =
+                                                                                false;
+                                                                            var confirmDialogResponse = await showDialog<bool>(
+                                                                                  context: context,
+                                                                                  builder: (alertDialogContext) {
+                                                                                    return AlertDialog(
+                                                                                      title: Text('Warning'),
+                                                                                      content: Text('Are you sure you want to delete this patient..?? This process is irreversible..!!'),
+                                                                                      actions: [
+                                                                                        TextButton(
+                                                                                          onPressed: () => Navigator.pop(alertDialogContext, false),
+                                                                                          child: Text('Cancel'),
+                                                                                        ),
+                                                                                        TextButton(
+                                                                                          onPressed: () => Navigator.pop(alertDialogContext, true),
+                                                                                          child: Text('Delete'),
+                                                                                        ),
+                                                                                      ],
+                                                                                    );
+                                                                                  },
+                                                                                ) ??
+                                                                                false;
+                                                                            if (!confirmDialogResponse) {
+                                                                              if (_shouldSetState)
+                                                                                safeSetState(() {});
+                                                                              return;
+                                                                            }
+                                                                            _model.deletePatient =
+                                                                                await DeletePatientCall.call(
+                                                                              id: patientRow.identifier,
+                                                                              token: FFAppState().fhirBearerToken,
+                                                                            );
+
+                                                                            _shouldSetState =
+                                                                                true;
+                                                                            if ((_model.deletePatient?.succeeded ??
+                                                                                true)) {
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                SnackBar(
+                                                                                  content: Text(
+                                                                                    'Patient Deleted successfully..!!',
+                                                                                    style: TextStyle(
+                                                                                      color: FlutterFlowTheme.of(context).info,
+                                                                                    ),
+                                                                                    textAlign: TextAlign.center,
+                                                                                  ),
+                                                                                  duration: Duration(milliseconds: 4000),
+                                                                                  backgroundColor: FlutterFlowTheme.of(context).success,
+                                                                                ),
+                                                                              );
+                                                                            } else {
+                                                                              await showDialog(
+                                                                                context: context,
+                                                                                builder: (alertDialogContext) {
+                                                                                  return AlertDialog(
+                                                                                    title: Text('Delete Failed'),
+                                                                                    content: Text((_model.deletePatient?.bodyText ?? '')),
+                                                                                    actions: [
+                                                                                      TextButton(
+                                                                                        onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                        child: Text('Ok'),
+                                                                                      ),
+                                                                                    ],
+                                                                                  );
+                                                                                },
+                                                                              );
+                                                                              if (_shouldSetState)
+                                                                                safeSetState(() {});
+                                                                              return;
+                                                                            }
+
+                                                                            _model.allPatientsQuery4 =
+                                                                                await GetAllPatientsCall.call(
+                                                                              token: FFAppState().fhirBearerToken,
+                                                                            );
+
+                                                                            _shouldSetState =
+                                                                                true;
+                                                                            if ((_model.allPatientsQuery4?.succeeded ??
+                                                                                true)) {
+                                                                              _model.allPatients = functions
+                                                                                  .parseFhirPatients(
+                                                                                      GetAllPatientsCall.entries(
+                                                                                        (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                      )?.toList(),
+                                                                                      functions
+                                                                                          .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                            (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                          )?.toList())
+                                                                                          .toList())!
+                                                                                  .toList()
+                                                                                  .cast<PatientStruct>();
+                                                                              _model.sortedAllPatients = functions
+                                                                                  .parseFhirPatients(
+                                                                                      GetAllPatientsCall.entries(
+                                                                                        (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                      )?.toList(),
+                                                                                      functions
+                                                                                          .convertDateStringListtoDateTimeList(GetAllPatientsCall.lastUpdated(
+                                                                                            (_model.allPatientsQuery4?.jsonBody ?? ''),
+                                                                                          )?.toList())
+                                                                                          .toList())!
+                                                                                  .sortedList(keyOf: (e) => e.combinedNames, desc: false)
+                                                                                  .toList()
+                                                                                  .cast<PatientStruct>();
+                                                                              safeSetState(() {});
+                                                                            }
+                                                                            if (_shouldSetState)
+                                                                              safeSetState(() {});
+                                                                          },
+                                                                        ),
+                                                                      );
+                                                                    }),
+                                                                  );
+                                                                },
+                                                              );
+                                                            },
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                    Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          'Pages',
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .fontStyle,
+                                                                ),
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontWeight,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                              ),
+                                                        ),
+                                                        Builder(
+                                                          builder: (context) {
+                                                            final pages2 = functions
+                                                                .createPageIndices(
+                                                                    () {
+                                                              if (_model
+                                                                  .displaySimpleSearchPatients) {
+                                                                return _model
+                                                                    .allPatients
+                                                                    .where((e) => _model
+                                                                        .simpleSearchResults
+                                                                        .contains(
+                                                                            e.combinedNames))
+                                                                    .toList()
+                                                                    .length;
+                                                              } else if (_model
+                                                                  .displayFHIRSearchPatients) {
+                                                                return _model
+                                                                    .allFHIRSearchPatients
+                                                                    .length;
+                                                              } else {
+                                                                return _model
+                                                                    .sortedAllPatients
+                                                                    .length;
+                                                              }
+                                                            }()).toList();
+
+                                                            return Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: List.generate(
+                                                                  pages2.length,
+                                                                  (pages2Index) {
+                                                                final pages2Item =
+                                                                    pages2[
+                                                                        pages2Index];
+                                                                return InkWell(
+                                                                  splashColor:
+                                                                      Colors
+                                                                          .transparent,
+                                                                  focusColor: Colors
+                                                                      .transparent,
+                                                                  hoverColor: Colors
+                                                                      .transparent,
+                                                                  highlightColor:
+                                                                      Colors
+                                                                          .transparent,
+                                                                  onTap:
+                                                                      () async {
+                                                                    _model.currentPatientPage =
+                                                                        pages2Item;
+                                                                    safeSetState(
+                                                                        () {});
+                                                                    await _model
+                                                                        .pageViewController
+                                                                        ?.animateToPage(
+                                                                      _model
+                                                                          .currentPatientPage,
+                                                                      duration: Duration(
+                                                                          milliseconds:
+                                                                              500),
+                                                                      curve: Curves
+                                                                          .ease,
+                                                                    );
+                                                                  },
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .customDotComponentPageViewModels
+                                                                        .getModel(
+                                                                      pages2Item
+                                                                          .toString(),
+                                                                      pages2Index,
+                                                                    ),
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomDotComponentPageViewWidget(
+                                                                      key: Key(
+                                                                        'Keycvo_${pages2Item.toString()}',
+                                                                      ),
+                                                                      isSelected:
+                                                                          _model.currentPatientPage ==
+                                                                              pages2Item,
+                                                                      assignedIdx:
+                                                                          pages2Item,
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              }).divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            );
+                                                          },
+                                                        ),
+                                                      ].divide(SizedBox(
+                                                          width: 10.0)),
+                                                    ),
+                                                  ],
                                                 ),
                                               ]
                                                   .divide(
@@ -4511,14 +4833,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                           .cast<PatientStruct>();
                                                                       safeSetState(
                                                                           () {});
-                                                                      _model
-                                                                          .allPatientsDataTableController
-                                                                          .updateSort(
-                                                                        columnIndex:
-                                                                            0,
-                                                                        ascending:
-                                                                            true,
-                                                                      );
                                                                     }
                                                                     safeSetState(
                                                                         () {
@@ -4632,7 +4946,14 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                               ),
                                             ),
                                           ),
-                                        if (_model.showActivity)
+                                        if (_model.showActivity &&
+                                            responsiveVisibility(
+                                              context: context,
+                                              phone: false,
+                                              tablet: false,
+                                              tabletLandscape: false,
+                                              desktop: false,
+                                            ))
                                           Container(
                                             decoration: BoxDecoration(),
                                             child: Text(
@@ -4667,7 +4988,14 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       ),
                                             ),
                                           ),
-                                        if (_model.showSettings)
+                                        if (_model.showSettings &&
+                                            responsiveVisibility(
+                                              context: context,
+                                              phone: false,
+                                              tablet: false,
+                                              tabletLandscape: false,
+                                              desktop: false,
+                                            ))
                                           Container(
                                             decoration: BoxDecoration(),
                                             child: Text(
