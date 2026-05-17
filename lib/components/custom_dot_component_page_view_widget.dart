@@ -54,10 +54,17 @@ class _CustomDotComponentPageViewWidgetState
         color: widget.isSelected
             ? FlutterFlowTheme.of(context).primary
             : FlutterFlowTheme.of(context).cardBlue,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: widget.isSelected ? 0.0 : 4.0,
+            color: Color(0x33000000),
+            offset: Offset(
+              widget.isSelected ? 0.0 : 2.0,
+              widget.isSelected ? 0.0 : 2.0,
+            ),
+          )
+        ],
         borderRadius: BorderRadius.circular(10.0),
-        border: Border.all(
-          color: FlutterFlowTheme.of(context).primary,
-        ),
       ),
       alignment: AlignmentDirectional(0.0, 0.0),
       child: Text(

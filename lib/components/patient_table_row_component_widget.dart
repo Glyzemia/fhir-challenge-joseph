@@ -8,6 +8,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'patient_table_row_component_model.dart';
 export 'patient_table_row_component_model.dart';
@@ -20,6 +21,7 @@ class PatientTableRowComponentWidget extends StatefulWidget {
     required this.onDeleteAction,
     bool? showPhoneNumber,
     bool? isLastRow,
+    required this.showDetailsCallBack,
   })  : this.showPhoneNumber = showPhoneNumber ?? false,
         this.isLastRow = isLastRow ?? false;
 
@@ -28,6 +30,7 @@ class PatientTableRowComponentWidget extends StatefulWidget {
   final Future Function(PatientStruct patientRow)? onDeleteAction;
   final bool showPhoneNumber;
   final bool isLastRow;
+  final Future Function(PatientStruct patientRow)? showDetailsCallBack;
 
   @override
   State<PatientTableRowComponentWidget> createState() =>
@@ -61,14 +64,13 @@ class _PatientTableRowComponentWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Expanded(
-          child: MouseRegion(
-            opaque: false,
-            cursor: MouseCursor.defer ?? MouseCursor.defer,
+    return MouseRegion(
+      opaque: false,
+      cursor: MouseCursor.defer ?? MouseCursor.defer,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
             child: Container(
               height: 50.0,
               decoration: BoxDecoration(
@@ -640,19 +642,46 @@ class _PatientTableRowComponentWidgetState
                 ],
               ),
             ),
-            onEnter: ((event) async {
-              safeSetState(() => _model.mouseRegionHovered = true);
-              _model.isRowHovered = true;
-              safeSetState(() {});
-            }),
-            onExit: ((event) async {
-              safeSetState(() => _model.mouseRegionHovered = false);
-              _model.isRowHovered = false;
-              safeSetState(() {});
-            }),
           ),
-        ),
-      ].addToStart(SizedBox(width: 20.0)).addToEnd(SizedBox(width: 20.0)),
+          if (_model.isRowHovered)
+            AnimatedContainer(
+              duration: Duration(milliseconds: 2000),
+              curve: Curves.easeIn,
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                color: _model.isRowHovered
+                    ? FlutterFlowTheme.of(context).primary
+                    : FlutterFlowTheme.of(context).cardBlue,
+              ),
+              child: FlutterFlowIconButton(
+                borderRadius: 0.0,
+                buttonSize: 40.0,
+                fillColor: FlutterFlowTheme.of(context).primary,
+                icon: FaIcon(
+                  FontAwesomeIcons.filePrescription,
+                  color: FlutterFlowTheme.of(context).info,
+                  size: 24.0,
+                ),
+                onPressed: () async {
+                  await widget.showDetailsCallBack?.call(
+                    widget.patientRow!,
+                  );
+                },
+              ),
+            ),
+        ].addToStart(SizedBox(width: 20.0)).addToEnd(SizedBox(width: 20.0)),
+      ),
+      onEnter: ((event) async {
+        safeSetState(() => _model.mouseRegionHovered = true);
+        _model.isRowHovered = true;
+        safeSetState(() {});
+      }),
+      onExit: ((event) async {
+        safeSetState(() => _model.mouseRegionHovered = false);
+        _model.isRowHovered = false;
+        safeSetState(() {});
+      }),
     );
   }
 }

@@ -9,20 +9,23 @@ export 'api_manager.dart' show ApiCallResponse;
 
 const _kPrivateApiFunctionName = 'ffPrivateApiCall';
 
-class GetPatientByIDCall {
+class GetPatientObservationByIDCall {
   static Future<ApiCallResponse> call({
     String? token = '',
     String? id = '',
+    String? optionalQueries = '',
   }) async {
     return ApiManager.instance.makeApiCall(
-      callName: 'Get Patient by ID',
+      callName: 'Get Patient Observation by ID',
       apiUrl:
-          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Patient/${id}',
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?subject=Patient/${id}&${optionalQueries}',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
       },
-      params: {},
+      params: {
+        '_total': "accurate",
+      },
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -32,37 +35,88 @@ class GetPatientByIDCall {
     );
   }
 
-  static List<String>? givenNames(dynamic response) => (getJsonField(
+  static List? entries(dynamic response) => getJsonField(
         response,
-        r'''$.name[:].given''',
+        r'''$.entry''',
         true,
-      ) as List?)
-          ?.withoutNulls
-          .map((x) => castToType<String>(x))
-          .withoutNulls
-          .toList();
-  static String? familyName(dynamic response) =>
-      castToType<String>(getJsonField(
+      ) as List?;
+  static int? total(dynamic response) => castToType<int>(getJsonField(
         response,
-        r'''$.name[:].family''',
+        r'''$.total''',
       ));
-  static String? telecomSystem(dynamic response) =>
-      castToType<String>(getJsonField(
+}
+
+class GetPatientConditionByIDCopyCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+    String? optionalQueries = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get Patient Condition by ID Copy',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Condition?subject=Patient/${id}&${optionalQueries}',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {
+        '_total': "accurate",
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
         response,
-        r'''$.telecom[:].system''',
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.total''',
       ));
-  static String? telecomValue(dynamic response) =>
-      castToType<String>(getJsonField(
+}
+
+class GetPatientMedicationsByIDCopyCopyCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+    String? optionalQueries = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get Patient Medications by ID Copy Copy',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/MedicationRequest?subject=Patient/${id}&${optionalQueries}',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {
+        '_total': "accurate",
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
         response,
-        r'''$.telecom[:].value''',
-      ));
-  static String? gender(dynamic response) => castToType<String>(getJsonField(
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static int? total(dynamic response) => castToType<int>(getJsonField(
         response,
-        r'''$.gender''',
-      ));
-  static String? birthDate(dynamic response) => castToType<String>(getJsonField(
-        response,
-        r'''$.birthDate''',
+        r'''$.total''',
       ));
 }
 
@@ -102,6 +156,10 @@ class GetAllPatientsCall {
           .map((x) => castToType<String>(x))
           .withoutNulls
           .toList();
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.total''',
+      ));
 }
 
 class SearchPatientsCall {
@@ -286,6 +344,86 @@ class DeletePatientCall {
       alwaysAllowBody: false,
     );
   }
+}
+
+class PatientBundleRequestsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+  }) async {
+    final ffApiRequestBody = '''
+{
+  "resourceType": "Bundle",
+  "type": "batch",
+  "entry": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "Observation?subject=Patient/${escapeStringForJson(id)}&category=vital-signs&_total=accurate"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "Condition?subject=Patient/${escapeStringForJson(id)}&clinical-status=active&_total=accurate"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "MedicationRequest?subject=Patient/${escapeStringForJson(id)}&_total=accurate"
+      }
+    }
+  ]
+}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Patient Bundle Requests',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? observationEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[0].resource.entry''',
+        true,
+      ) as List?;
+  static List? conditionEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[1].resource.entry''',
+        true,
+      ) as List?;
+  static List? medicationEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[2].resource.entry''',
+        true,
+      ) as List?;
+  static int? observationTotal(dynamic response) =>
+      castToType<int>(getJsonField(
+        response,
+        r'''$.entry[0].resource.total''',
+      ));
+  static int? conditionTotal(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.entry[1].resource.total''',
+      ));
+  static int? medicationTotal(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.entry[2].resource.total''',
+      ));
 }
 
 class ApiPagingParams {

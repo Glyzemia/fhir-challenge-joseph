@@ -17,6 +17,7 @@ class CustomTableHeaderComponentWidget extends StatefulWidget {
     double? bottomLeftBorderRadius,
     double? bottomRightBorderRadius,
     double? rowHeight,
+    this.bgColor,
   })  : this.isSelected = isSelected ?? false,
         this.isAscending = isAscending ?? true,
         this.topLeftBorderRadius = topLeftBorderRadius ?? 0.0,
@@ -34,6 +35,7 @@ class CustomTableHeaderComponentWidget extends StatefulWidget {
   final double bottomLeftBorderRadius;
   final double bottomRightBorderRadius;
   final double rowHeight;
+  final Color? bgColor;
 
   @override
   State<CustomTableHeaderComponentWidget> createState() =>
@@ -80,7 +82,7 @@ class _CustomTableHeaderComponentWidgetState
       child: Container(
         height: widget.rowHeight,
         decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).cardAlternate,
+          color: widget.bgColor,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(valueOrDefault<double>(
               widget.topLeftBorderRadius,

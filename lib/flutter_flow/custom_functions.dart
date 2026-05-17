@@ -139,8 +139,11 @@ DateTime? convertSingleDateStringtoDateTime(String? dateString) {
   }
 }
 
-List<int> createPageIndices(int items) {
-  final int numPages = ((items - 1) ~/ 10) + 1;
+List<int> createPageIndices(
+  int items,
+  int itemsPerPage,
+) {
+  final int numPages = ((items - 1) ~/ itemsPerPage) + 1;
   List<int> pages = List.generate(numPages, (index) => index);
   return pages;
 }
@@ -156,4 +159,512 @@ List<PatientStruct>? slicePatientsListForTablePages(
   }
   endIndex = endIndex > patients.length ? patients.length : endIndex;
   return patients.sublist(startIndex, endIndex);
+}
+
+List<ConditionStruct>? sliceConditionsListForTablePages(
+  List<ConditionStruct>? conditions,
+  int startIndex,
+  int endIndex,
+) {
+  // I want the function to take in patients list, and return the sublist from startIndex to endIndex. If endIndex is greater that patients length, return only up to the patients length.
+  if (conditions == null || startIndex >= conditions.length) {
+    return [];
+  }
+  endIndex = endIndex > conditions.length ? conditions.length : endIndex;
+  return conditions.sublist(startIndex, endIndex);
+}
+
+List<MedicationStruct>? sliceMedicationsListForTablePages(
+  List<MedicationStruct>? medications,
+  int startIndex,
+  int endIndex,
+) {
+  // I want the function to take in patients list, and return the sublist from startIndex to endIndex. If endIndex is greater that patients length, return only up to the patients length.
+  if (medications == null || startIndex >= medications.length) {
+    return [];
+  }
+  endIndex = endIndex > medications.length ? medications.length : endIndex;
+  return medications.sublist(startIndex, endIndex);
+}
+
+List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
+  if (entries == null || entries is! List) {
+    return <ObservationStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  String getPatientId(dynamic resource) {
+    final subjectRef = resource?['subject']?['reference'];
+
+    if (subjectRef == null) return '';
+
+    final ref = subjectRef.toString(); // Example: Patient/12345
+
+    if (ref.contains('/')) {
+      return ref.split('/').last;
+    }
+
+    return ref;
+  }
+
+  String getCategory(dynamic resource) {
+    final categories = resource?['category'];
+
+    if (categories is List && categories.isNotEmpty) {
+      final coding = categories[0]?['coding'];
+
+      if (coding is List && coding.isNotEmpty) {
+        return safeString(
+          coding[0]?['display'] ?? coding[0]?['code'],
+        );
+      }
+
+      return safeString(categories[0]?['text']);
+    }
+
+    return '';
+  }
+
+  String getCodeName(dynamic codeObj) {
+    if (codeObj == null) return '';
+
+    final text = codeObj['text'];
+    if (text != null && text.toString().isNotEmpty) {
+      return text.toString();
+    }
+
+    final coding = codeObj['coding'];
+    if (coding is List && coding.isNotEmpty) {
+      return safeString(
+        coding[0]?['display'] ?? coding[0]?['code'],
+      );
+    }
+
+    return '';
+  }
+
+  String getObservationValue(dynamic obj) {
+    if (obj?['valueQuantity'] != null) {
+      return safeString(obj?['valueQuantity']?['value']);
+    }
+
+    if (obj?['valueString'] != null) {
+      return safeString(obj?['valueString']);
+    }
+
+    if (obj?['valueInteger'] != null) {
+      return safeString(obj?['valueInteger']);
+    }
+
+    if (obj?['valueBoolean'] != null) {
+      return safeString(obj?['valueBoolean']);
+    }
+
+    if (obj?['valueCodeableConcept'] != null) {
+      final concept = obj?['valueCodeableConcept'];
+
+      if (concept?['text'] != null) {
+        return safeString(concept?['text']);
+      }
+
+      final coding = concept?['coding'];
+      if (coding is List && coding.isNotEmpty) {
+        return safeString(
+          coding[0]?['display'] ?? coding[0]?['code'],
+        );
+      }
+    }
+
+    return '';
+  }
+
+  String getObservationUnit(dynamic obj) {
+    if (obj?['valueQuantity'] != null) {
+      return safeString(
+        obj?['valueQuantity']?['unit'] ?? obj?['valueQuantity']?['code'],
+      );
+    }
+
+    return '';
+  }
+
+  DateTime? getRecordedAt(dynamic resource) {
+    final rawDate = resource?['effectiveDateTime'] ??
+        resource?['effectivePeriod']?['start'] ??
+        resource?['issued'];
+
+    if (rawDate == null) return null;
+
+    return DateTime.tryParse(rawDate.toString());
+  }
+
+  final List<ObservationStruct> observations = [];
+
+  for (final entry in entries) {
+    final resource = entry?['resource'];
+
+    if (resource == null) {
+      continue;
+    }
+
+    final patientId = getPatientId(resource);
+    final observationId = safeString(resource?['id']);
+    final category = getCategory(resource);
+    final recordedAt = getRecordedAt(resource);
+
+    final components = resource?['component'];
+
+    // Case 1: Panel observation, e.g. Blood Pressure
+    // The actual values are inside component[]
+    if (components is List && components.isNotEmpty) {
+      for (int i = 0; i < components.length; i++) {
+        final component = components[i];
+
+        observations.add(
+          ObservationStruct(
+            patientID: patientId,
+            observationID: '$observationId-component-$i',
+            category: category,
+            name: getCodeName(component?['code']),
+            value: getObservationValue(component),
+            units: getObservationUnit(component),
+            recordedAt: recordedAt,
+          ),
+        );
+      }
+
+      continue;
+    }
+
+    // Case 2: Normal observation, e.g. Heart rate, Temperature, SpO2
+    observations.add(
+      ObservationStruct(
+        patientID: patientId,
+        observationID: observationId,
+        category: category,
+        name: getCodeName(resource?['code']),
+        value: getObservationValue(resource),
+        units: getObservationUnit(resource),
+        recordedAt: recordedAt,
+      ),
+    );
+  }
+
+  return observations;
+}
+
+List<ConditionStruct> parseFhirConditions(List<dynamic> entries) {
+  if (entries.isEmpty) {
+    return <ConditionStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  String getPatientId(dynamic resource) {
+    final subjectRef = resource?['subject']?['reference'];
+
+    if (subjectRef == null) return '';
+
+    final ref = subjectRef.toString(); // Example: Patient/12345
+
+    if (ref.contains('/')) {
+      return ref.split('/').last;
+    }
+
+    return ref;
+  }
+
+  String getConditionName(dynamic resource) {
+    final code = resource?['code'];
+
+    if (code == null) return '';
+
+    final text = code['text'];
+    if (text != null && text.toString().isNotEmpty) {
+      return text.toString();
+    }
+
+    final coding = code['coding'];
+    if (coding is List && coding.isNotEmpty) {
+      return safeString(
+        coding[0]?['display'] ?? coding[0]?['code'],
+      );
+    }
+
+    return '';
+  }
+
+  String getConditionCode(dynamic resource) {
+    final coding = resource?['code']?['coding'];
+
+    if (coding is List && coding.isNotEmpty) {
+      return safeString(coding[0]?['code']);
+    }
+
+    return '';
+  }
+
+  DateTime? getOnsetDate(dynamic resource) {
+    final rawDate = resource?['onsetDateTime'] ??
+        resource?['onsetPeriod']?['start'] ??
+        resource?['recordedDate'];
+
+    if (rawDate == null) return null;
+
+    return DateTime.tryParse(rawDate.toString());
+  }
+
+  String getStatus(dynamic resource) {
+    final clinicalStatus = resource?['clinicalStatus'];
+
+    if (clinicalStatus == null) return '';
+
+    final text = clinicalStatus['text'];
+    if (text != null && text.toString().isNotEmpty) {
+      return text.toString();
+    }
+
+    final coding = clinicalStatus['coding'];
+    if (coding is List && coding.isNotEmpty) {
+      return safeString(
+        coding[0]?['display'] ?? coding[0]?['code'],
+      );
+    }
+
+    return '';
+  }
+
+  final List<ConditionStruct> conditions = [];
+
+  for (final entry in entries) {
+    final resource = entry?['resource'];
+
+    if (resource == null) {
+      continue;
+    }
+
+    conditions.add(
+      ConditionStruct(
+        patientID: getPatientId(resource),
+        conditionName: getConditionName(resource),
+        conditionCode: getConditionCode(resource),
+        onsetDate: getOnsetDate(resource),
+        status: getStatus(resource),
+      ),
+    );
+  }
+
+  return conditions;
+}
+
+List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
+  if (entries.isEmpty) {
+    return <MedicationStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  String getPatientId(dynamic resource) {
+    final subjectRef = resource?['subject']?['reference'];
+
+    if (subjectRef == null) return '';
+
+    final ref = subjectRef.toString(); // Example: Patient/12345
+
+    if (ref.contains('/')) {
+      return ref.split('/').last;
+    }
+
+    return ref;
+  }
+
+  String getMedicationName(dynamic resource) {
+    // Most common in MedicationRequest
+    final medConcept = resource?['medicationCodeableConcept'];
+
+    if (medConcept != null) {
+      final text = medConcept['text'];
+      if (text != null && text.toString().isNotEmpty) {
+        return text.toString();
+      }
+
+      final coding = medConcept['coding'];
+      if (coding is List && coding.isNotEmpty) {
+        return safeString(
+          coding[0]?['display'] ?? coding[0]?['code'],
+        );
+      }
+    }
+
+    // If medication is referenced as Medication/abc
+    final medRef = resource?['medicationReference'];
+    if (medRef != null) {
+      final display = medRef['display'];
+      if (display != null && display.toString().isNotEmpty) {
+        return display.toString();
+      }
+
+      return safeString(medRef['reference']);
+    }
+
+    return '';
+  }
+
+  String getDose(dynamic resource) {
+    final dosageInstructions = resource?['dosageInstruction'];
+
+    if (dosageInstructions is List && dosageInstructions.isNotEmpty) {
+      final dosage = dosageInstructions[0];
+
+      // If free-text dose exists, prefer it
+      final text = dosage?['text'];
+      if (text != null && text.toString().isNotEmpty) {
+        return text.toString();
+      }
+
+      final doseAndRate = dosage?['doseAndRate'];
+
+      if (doseAndRate is List && doseAndRate.isNotEmpty) {
+        final firstDoseRate = doseAndRate[0];
+
+        final doseQuantity = firstDoseRate?['doseQuantity'];
+        if (doseQuantity != null) {
+          final value = safeString(doseQuantity['value']);
+          final unit = safeString(
+            doseQuantity['unit'] ?? doseQuantity['code'],
+          );
+
+          if (value.isNotEmpty && unit.isNotEmpty) {
+            return '$value $unit';
+          }
+
+          if (value.isNotEmpty) {
+            return value;
+          }
+        }
+
+        final doseRange = firstDoseRate?['doseRange'];
+        if (doseRange != null) {
+          final low = doseRange['low'];
+          final high = doseRange['high'];
+
+          final lowValue = safeString(low?['value']);
+          final lowUnit = safeString(low?['unit'] ?? low?['code']);
+          final highValue = safeString(high?['value']);
+          final highUnit = safeString(high?['unit'] ?? high?['code']);
+
+          if (lowValue.isNotEmpty && highValue.isNotEmpty) {
+            final unit = highUnit.isNotEmpty ? highUnit : lowUnit;
+            return '$lowValue - $highValue ${unit}'.trim();
+          }
+        }
+      }
+    }
+
+    return '';
+  }
+
+  String getFrequency(dynamic resource) {
+    final dosageInstructions = resource?['dosageInstruction'];
+
+    if (dosageInstructions is List && dosageInstructions.isNotEmpty) {
+      final dosage = dosageInstructions[0];
+
+      final timing = dosage?['timing'];
+
+      // Prefer timing.code.text or coding.display if available
+      final timingCode = timing?['code'];
+      if (timingCode != null) {
+        final text = timingCode['text'];
+        if (text != null && text.toString().isNotEmpty) {
+          return text.toString();
+        }
+
+        final coding = timingCode['coding'];
+        if (coding is List && coding.isNotEmpty) {
+          return safeString(
+            coding[0]?['display'] ?? coding[0]?['code'],
+          );
+        }
+      }
+
+      final repeat = timing?['repeat'];
+      if (repeat != null) {
+        final frequency = repeat['frequency'];
+        final period = repeat['period'];
+        final periodUnit = repeat['periodUnit'];
+
+        if (frequency != null && period != null && periodUnit != null) {
+          return '${safeString(frequency)} time(s) every ${safeString(period)} ${safeString(periodUnit)}';
+        }
+
+        if (frequency != null && periodUnit != null) {
+          return '${safeString(frequency)} time(s) per ${safeString(periodUnit)}';
+        }
+
+        if (frequency != null) {
+          return '${safeString(frequency)} time(s)';
+        }
+      }
+    }
+
+    return '';
+  }
+
+  String getRoute(dynamic resource) {
+    final dosageInstructions = resource?['dosageInstruction'];
+
+    if (dosageInstructions is List && dosageInstructions.isNotEmpty) {
+      final route = dosageInstructions[0]?['route'];
+
+      if (route != null) {
+        final text = route['text'];
+        if (text != null && text.toString().isNotEmpty) {
+          return text.toString();
+        }
+
+        final coding = route['coding'];
+        if (coding is List && coding.isNotEmpty) {
+          return safeString(
+            coding[0]?['display'] ?? coding[0]?['code'],
+          );
+        }
+      }
+    }
+
+    return '';
+  }
+
+  final List<MedicationStruct> medications = [];
+
+  for (final entry in entries) {
+    final resource = entry?['resource'];
+
+    if (resource == null) {
+      continue;
+    }
+
+    medications.add(
+      MedicationStruct(
+        patientID: getPatientId(resource),
+        medicationName: getMedicationName(resource),
+        medicationDose: getDose(resource),
+        frequency: getFrequency(resource),
+        route: getRoute(resource),
+        status: safeString(resource?['status']),
+      ),
+    );
+  }
+
+  return medications;
 }
