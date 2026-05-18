@@ -2,6 +2,7 @@ import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
+import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -84,10 +85,53 @@ class _ConditioonTableRowComponentWidgetState
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            FaIcon(
-                              FontAwesomeIcons.stethoscope,
-                              color: FlutterFlowTheme.of(context).primary,
-                              size: 30.0,
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  valueOrDefault<String>(
+                                    widget.conditionsRow?.conditionName,
+                                    'Condition Name',
+                                  ),
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.up,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: FaIcon(
+                                FontAwesomeIcons.stethoscope,
+                                color: FlutterFlowTheme.of(context).primary,
+                                size: 30.0,
+                              ),
                             ),
                             Expanded(
                               child: Container(
@@ -276,10 +320,11 @@ class _ConditioonTableRowComponentWidgetState
                               ),
                               SelectionArea(
                                   child: Text(
-                                valueOrDefault<String>(
+                                functions
+                                    .capitalizeFirst(valueOrDefault<String>(
                                   widget.conditionsRow?.status,
                                   'Status',
-                                ),
+                                )),
                                 textAlign: TextAlign.center,
                                 style: FlutterFlowTheme.of(context)
                                     .bodyMedium

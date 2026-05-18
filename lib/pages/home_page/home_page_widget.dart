@@ -2471,7 +2471,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             ''),
                                                                       )!
                                                                           .toList())
-                                                                      .sortedList(keyOf: (e) => e.status, desc: false)
+                                                                      .sortedList(keyOf: (e) => e.onsetDate!, desc: false)
                                                                       .toList()
                                                                       .cast<ConditionStruct>();
                                                                 } else {
@@ -2492,6 +2492,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             ''),
                                                                       )!
                                                                           .toList())
+                                                                      .sortedList(keyOf: (e) => e.medicationName, desc: false)
                                                                       .toList()
                                                                       .cast<MedicationStruct>();
                                                                 } else {

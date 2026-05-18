@@ -128,7 +128,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
           int index, Function(MedicationStruct) updateFn) =>
       patientMedications[index] = updateFn(patientMedications[index]);
 
-  String selectedConditionsTableColumn = 'Status';
+  String selectedConditionsTableColumn = 'Onset Date';
 
   bool isAscendingConditionsTableColumn = true;
 

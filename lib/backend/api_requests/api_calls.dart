@@ -371,7 +371,7 @@ class PatientBundleRequestsCall {
     {
       "request": {
         "method": "GET",
-        "url": "MedicationRequest?subject=Patient/${escapeStringForJson(id)}&_total=accurate"
+        "url": "MedicationRequest?subject=Patient/${escapeStringForJson(id)}&_total=accurate&status=active"
       }
     }
   ]

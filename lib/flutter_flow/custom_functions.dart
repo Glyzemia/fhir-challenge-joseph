@@ -476,41 +476,36 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
 
   String getPatientId(dynamic resource) {
     final subjectRef = resource?['subject']?['reference'];
-
     if (subjectRef == null) return '';
 
-    final ref = subjectRef.toString(); // Example: Patient/12345
-
-    if (ref.contains('/')) {
-      return ref.split('/').last;
-    }
-
-    return ref;
+    final ref = subjectRef.toString();
+    return ref.contains('/') ? ref.split('/').last : ref;
   }
 
   String getMedicationName(dynamic resource) {
-    // Most common in MedicationRequest
     final medConcept = resource?['medicationCodeableConcept'];
 
     if (medConcept != null) {
       final text = medConcept['text'];
-      if (text != null && text.toString().isNotEmpty) {
+      if (text != null && text.toString().trim().isNotEmpty) {
         return text.toString();
       }
 
       final coding = medConcept['coding'];
       if (coding is List && coding.isNotEmpty) {
-        return safeString(
-          coding[0]?['display'] ?? coding[0]?['code'],
-        );
+        final display = coding[0]?['display'];
+        if (display != null && display.toString().trim().isNotEmpty) {
+          return display.toString();
+        }
+
+        return safeString(coding[0]?['code']);
       }
     }
 
-    // If medication is referenced as Medication/abc
     final medRef = resource?['medicationReference'];
     if (medRef != null) {
       final display = medRef['display'];
-      if (display != null && display.toString().isNotEmpty) {
+      if (display != null && display.toString().trim().isNotEmpty) {
         return display.toString();
       }
 
@@ -520,24 +515,116 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
     return '';
   }
 
-  String getDose(dynamic resource) {
+  String cleanMedicationDisplayName(String medicationName) {
+    if (medicationName.trim().isEmpty) {
+      return '';
+    }
+
+    var name = medicationName.trim();
+
+    // Remove strength, e.g. 81 MG, 10 MG, 0.01 MG, 500 MCG
+    name = name.replaceAll(
+      RegExp(
+        r'\b\d+(?:\.\d+)?\s*(MG|MCG|G|ML|UNIT|UNITS|IU|MEQ|%)\b',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    // Remove common route / form words.
+    // Add more words here if your FHIR server uses other formulation names.
+    name = name.replaceAll(
+      RegExp(
+        r'\b(Oral|Tablet|Tablets|Capsule|Capsules|Caplet|Caplets|Injection|Injectable|Solution|Suspension|Syrup|Cream|Ointment|Gel|Patch|Spray|Drops|Extended Release|Delayed Release|Chewable|Sublingual)\b',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    // Remove extra separators and spaces
+    name = name.replaceAll(RegExp(r'[-_/]+'), ' ');
+    name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    if (name.isEmpty) {
+      return medicationName.trim();
+    }
+
+    // Title case
+    return name.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
+  String inferDoseFromMedicationName(String medicationName) {
+    final regex = RegExp(
+      r'(\d+(?:\.\d+)?)\s*(MG|MCG|G|ML|UNIT|UNITS|IU|MEQ|%)',
+      caseSensitive: false,
+    );
+
+    final match = regex.firstMatch(medicationName);
+    if (match == null) return '';
+
+    final value = match.group(1) ?? '';
+    final unit = match.group(2) ?? '';
+
+    return '$value ${unit.toUpperCase()}'.trim();
+  }
+
+  String inferRouteFromMedicationName(String medicationName) {
+    final lower = medicationName.toLowerCase();
+
+    if (lower.contains('oral') ||
+        lower.contains('tablet') ||
+        lower.contains('capsule') ||
+        lower.contains('caplet')) {
+      return 'Oral';
+    }
+
+    if (lower.contains('injection') || lower.contains('injectable')) {
+      return 'Injection';
+    }
+
+    if (lower.contains('subcutaneous')) {
+      return 'Subcutaneous';
+    }
+
+    if (lower.contains('intravenous') || lower.contains(' iv ')) {
+      return 'Intravenous';
+    }
+
+    if (lower.contains('inhalation') || lower.contains('inhaler')) {
+      return 'Inhalation';
+    }
+
+    if (lower.contains('topical') ||
+        lower.contains('cream') ||
+        lower.contains('ointment') ||
+        lower.contains('gel')) {
+      return 'Topical';
+    }
+
+    if (lower.contains('drops')) {
+      return 'Drops';
+    }
+
+    if (lower.contains('patch')) {
+      return 'Transdermal';
+    }
+
+    return '';
+  }
+
+  String getDose(dynamic resource, String medicationNameRaw) {
     final dosageInstructions = resource?['dosageInstruction'];
 
     if (dosageInstructions is List && dosageInstructions.isNotEmpty) {
       final dosage = dosageInstructions[0];
-
-      // If free-text dose exists, prefer it
-      final text = dosage?['text'];
-      if (text != null && text.toString().isNotEmpty) {
-        return text.toString();
-      }
-
       final doseAndRate = dosage?['doseAndRate'];
 
       if (doseAndRate is List && doseAndRate.isNotEmpty) {
-        final firstDoseRate = doseAndRate[0];
+        final doseQuantity = doseAndRate[0]?['doseQuantity'];
 
-        final doseQuantity = firstDoseRate?['doseQuantity'];
         if (doseQuantity != null) {
           final value = safeString(doseQuantity['value']);
           final unit = safeString(
@@ -553,25 +640,26 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
           }
         }
 
-        final doseRange = firstDoseRate?['doseRange'];
+        final doseRange = doseAndRate[0]?['doseRange'];
         if (doseRange != null) {
           final low = doseRange['low'];
           final high = doseRange['high'];
 
           final lowValue = safeString(low?['value']);
           final lowUnit = safeString(low?['unit'] ?? low?['code']);
+
           final highValue = safeString(high?['value']);
           final highUnit = safeString(high?['unit'] ?? high?['code']);
 
           if (lowValue.isNotEmpty && highValue.isNotEmpty) {
             final unit = highUnit.isNotEmpty ? highUnit : lowUnit;
-            return '$lowValue - $highValue ${unit}'.trim();
+            return '$lowValue - $highValue $unit'.trim();
           }
         }
       }
     }
 
-    return '';
+    return inferDoseFromMedicationName(medicationNameRaw);
   }
 
   String getFrequency(dynamic resource) {
@@ -582,19 +670,24 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
 
       final timing = dosage?['timing'];
 
-      // Prefer timing.code.text or coding.display if available
       final timingCode = timing?['code'];
       if (timingCode != null) {
         final text = timingCode['text'];
-        if (text != null && text.toString().isNotEmpty) {
+        if (text != null && text.toString().trim().isNotEmpty) {
           return text.toString();
         }
 
         final coding = timingCode['coding'];
         if (coding is List && coding.isNotEmpty) {
-          return safeString(
-            coding[0]?['display'] ?? coding[0]?['code'],
-          );
+          final display = coding[0]?['display'];
+          if (display != null && display.toString().trim().isNotEmpty) {
+            return display.toString();
+          }
+
+          final code = coding[0]?['code'];
+          if (code != null && code.toString().trim().isNotEmpty) {
+            return code.toString();
+          }
         }
       }
 
@@ -605,6 +698,30 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
         final periodUnit = repeat['periodUnit'];
 
         if (frequency != null && period != null && periodUnit != null) {
+          if (safeString(frequency) == '1' &&
+              safeString(period) == '1' &&
+              safeString(periodUnit) == 'd') {
+            return 'Once daily';
+          }
+
+          if (safeString(frequency) == '2' &&
+              safeString(period) == '1' &&
+              safeString(periodUnit) == 'd') {
+            return 'Twice daily';
+          }
+
+          if (safeString(frequency) == '3' &&
+              safeString(period) == '1' &&
+              safeString(periodUnit) == 'd') {
+            return 'Three times daily';
+          }
+
+          if (safeString(frequency) == '4' &&
+              safeString(period) == '1' &&
+              safeString(periodUnit) == 'd') {
+            return 'Four times daily';
+          }
+
           return '${safeString(frequency)} time(s) every ${safeString(period)} ${safeString(periodUnit)}';
         }
 
@@ -616,12 +733,22 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
           return '${safeString(frequency)} time(s)';
         }
       }
+
+      final asNeeded = dosage?['asNeededBoolean'];
+      if (asNeeded == true) {
+        return 'As needed';
+      }
+
+      final text = dosage?['text'];
+      if (text != null && text.toString().trim().isNotEmpty) {
+        return text.toString();
+      }
     }
 
     return '';
   }
 
-  String getRoute(dynamic resource) {
+  String getRoute(dynamic resource, String medicationNameRaw) {
     final dosageInstructions = resource?['dosageInstruction'];
 
     if (dosageInstructions is List && dosageInstructions.isNotEmpty) {
@@ -629,20 +756,23 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
 
       if (route != null) {
         final text = route['text'];
-        if (text != null && text.toString().isNotEmpty) {
+        if (text != null && text.toString().trim().isNotEmpty) {
           return text.toString();
         }
 
         final coding = route['coding'];
         if (coding is List && coding.isNotEmpty) {
-          return safeString(
-            coding[0]?['display'] ?? coding[0]?['code'],
-          );
+          final display = coding[0]?['display'];
+          if (display != null && display.toString().trim().isNotEmpty) {
+            return display.toString();
+          }
+
+          return safeString(coding[0]?['code']);
         }
       }
     }
 
-    return '';
+    return inferRouteFromMedicationName(medicationNameRaw);
   }
 
   final List<MedicationStruct> medications = [];
@@ -654,13 +784,16 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
       continue;
     }
 
+    final medicationNameRaw = getMedicationName(resource);
+    final medicationNameDisplay = cleanMedicationDisplayName(medicationNameRaw);
+
     medications.add(
       MedicationStruct(
         patientID: getPatientId(resource),
-        medicationName: getMedicationName(resource),
-        medicationDose: getDose(resource),
+        medicationName: medicationNameDisplay,
+        medicationDose: getDose(resource, medicationNameRaw),
         frequency: getFrequency(resource),
-        route: getRoute(resource),
+        route: getRoute(resource, medicationNameRaw),
         status: safeString(resource?['status']),
       ),
     );
