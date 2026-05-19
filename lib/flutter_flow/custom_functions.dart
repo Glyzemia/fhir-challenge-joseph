@@ -48,17 +48,16 @@ List<PatientStruct>? parseFhirPatients(
     final DateTime? entryLastUpdated = lastUpdatedList[index];
 
     return createPatientStruct(
-      identifier: resource['id']?.toString() ?? '',
-      givenNames: parsedGivenNames,
-      familyName: familyName,
-      telecomSystem: firstTelecom['system']?.toString() ?? '',
-      telecomValue: firstTelecom['value']?.toString() ?? '',
-      gender: resource['gender']?.toString() ?? '',
-      birthDate: resource['birthDate']?.toString() ?? '',
-      firstName: firstNameOnly,
-      combinedNames: combinedNames,
-      lastUpdated: entryLastUpdated,
-    );
+        identifier: resource['id']?.toString() ?? '',
+        givenNames: parsedGivenNames,
+        familyName: familyName,
+        telecomSystem: firstTelecom['system']?.toString() ?? '',
+        telecomValue: firstTelecom['value']?.toString() ?? '',
+        gender: resource['gender']?.toString() ?? '',
+        birthDate: resource['birthDate']?.toString() ?? '',
+        firstName: firstNameOnly,
+        combinedNames: combinedNames,
+        lastUpdated: entryLastUpdated);
   }).toList();
 }
 
@@ -229,18 +228,51 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
     return '';
   }
 
+  String normalizeObservationName(String name) {
+    final value = name.trim().toLowerCase();
+
+    // Keep chart filtering consistent.
+    if (value == 'pulse') return 'Heart rate';
+    if (value == 'heart rate') return 'Heart rate';
+
+    if (value == 'temperature') return 'Body temperature';
+    if (value == 'body temperature') return 'Body temperature';
+    if (value == 'systolic blood pressure') return 'Systolic blood pressure';
+    if (value == 'diastolic blood pressure') return 'Diastolic blood pressure';
+    if (value == 'consciousness' || value == 'NEWS2 consciousness')
+      return 'Consciousness';
+
+    if (value == 'spo2' || value == 'oxygen saturation in arterial blood') {
+      return 'SpO2';
+    }
+    if (value == 'air or oxygen') return 'Air or oxygen';
+    if (value == 'any individual news2 parameter scored 3')
+      return 'is_individual_3';
+
+    if (value == 'respiratory rate') return 'Respiratory rate';
+    if (value == 'hypercapnic respiratory failure')
+      return 'Hypercapnic respiratory failure';
+
+    if (value == 'news2 total score' ||
+        value == 'royal college of physicians national early warning score 2') {
+      return 'NEWS2 total score';
+    }
+
+    return name;
+  }
+
   String getCodeName(dynamic codeObj) {
     if (codeObj == null) return '';
 
     final text = codeObj['text'];
-    if (text != null && text.toString().isNotEmpty) {
-      return text.toString();
+    if (text != null && text.toString().trim().isNotEmpty) {
+      return normalizeObservationName(text.toString());
     }
 
     final coding = codeObj['coding'];
     if (coding is List && coding.isNotEmpty) {
-      return safeString(
-        coding[0]?['display'] ?? coding[0]?['code'],
+      return normalizeObservationName(
+        safeString(coding[0]?['display'] ?? coding[0]?['code']),
       );
     }
 
@@ -248,30 +280,33 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
   }
 
   String getObservationValue(dynamic obj) {
-    if (obj?['valueQuantity'] != null) {
-      return safeString(obj?['valueQuantity']?['value']);
+    if (obj == null) return '';
+
+    if (obj['valueQuantity'] != null) {
+      return safeString(obj['valueQuantity']['value']);
     }
 
-    if (obj?['valueString'] != null) {
-      return safeString(obj?['valueString']);
+    if (obj['valueString'] != null) {
+      return safeString(obj['valueString']);
     }
 
-    if (obj?['valueInteger'] != null) {
-      return safeString(obj?['valueInteger']);
+    if (obj['valueInteger'] != null) {
+      return safeString(obj['valueInteger']);
     }
 
-    if (obj?['valueBoolean'] != null) {
-      return safeString(obj?['valueBoolean']);
+    if (obj['valueBoolean'] != null) {
+      return safeString(obj['valueBoolean']);
     }
 
-    if (obj?['valueCodeableConcept'] != null) {
-      final concept = obj?['valueCodeableConcept'];
+    if (obj['valueCodeableConcept'] != null) {
+      final concept = obj['valueCodeableConcept'];
 
-      if (concept?['text'] != null) {
-        return safeString(concept?['text']);
+      final conceptText = concept['text'];
+      if (conceptText != null && conceptText.toString().trim().isNotEmpty) {
+        return safeString(conceptText);
       }
 
-      final coding = concept?['coding'];
+      final coding = concept['coding'];
       if (coding is List && coding.isNotEmpty) {
         return safeString(
           coding[0]?['display'] ?? coding[0]?['code'],
@@ -283,9 +318,11 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
   }
 
   String getObservationUnit(dynamic obj) {
-    if (obj?['valueQuantity'] != null) {
+    if (obj == null) return '';
+
+    if (obj['valueQuantity'] != null) {
       return safeString(
-        obj?['valueQuantity']?['unit'] ?? obj?['valueQuantity']?['code'],
+        obj['valueQuantity']['unit'] ?? obj['valueQuantity']['code'],
       );
     }
 
@@ -295,7 +332,8 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
   DateTime? getRecordedAt(dynamic resource) {
     final rawDate = resource?['effectiveDateTime'] ??
         resource?['effectivePeriod']?['start'] ??
-        resource?['issued'];
+        resource?['issued'] ??
+        resource?['meta']?['lastUpdated'];
 
     if (rawDate == null) return null;
 
@@ -315,14 +353,46 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
     final observationId = safeString(resource?['id']);
     final category = getCategory(resource);
     final recordedAt = getRecordedAt(resource);
-
     final components = resource?['component'];
 
-    // Case 1: Panel observation, e.g. Blood Pressure
-    // The actual values are inside component[]
+    // 1. First parse the main Observation value, if it exists.
+    //
+    // This is important because some Observations, like your NEWS2 total score,
+    // have BOTH:
+    // - valueQuantity: total NEWS2 score
+    // - component[]: single-red-score-present
+    //
+    // The previous function skipped the parent value whenever component[] existed.
+    final mainValue = getObservationValue(resource);
+
+    if (mainValue.trim().isNotEmpty) {
+      observations.add(
+        ObservationStruct(
+          patientID: patientId,
+          observationID: observationId,
+          category: category,
+          name: getCodeName(resource?['code']),
+          value: mainValue,
+          units: getObservationUnit(resource),
+          recordedAt: recordedAt,
+        ),
+      );
+    }
+
+    // 2. Then parse components if they exist.
+    //
+    // This handles:
+    // - Blood pressure: systolic + diastolic components
+    // - NEWS2 total score component: single-red-score-present
     if (components is List && components.isNotEmpty) {
       for (int i = 0; i < components.length; i++) {
         final component = components[i];
+
+        final componentValue = getObservationValue(component);
+
+        if (componentValue.trim().isEmpty) {
+          continue;
+        }
 
         observations.add(
           ObservationStruct(
@@ -330,28 +400,13 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
             observationID: '$observationId-component-$i',
             category: category,
             name: getCodeName(component?['code']),
-            value: getObservationValue(component),
+            value: componentValue,
             units: getObservationUnit(component),
             recordedAt: recordedAt,
           ),
         );
       }
-
-      continue;
     }
-
-    // Case 2: Normal observation, e.g. Heart rate, Temperature, SpO2
-    observations.add(
-      ObservationStruct(
-        patientID: patientId,
-        observationID: observationId,
-        category: category,
-        name: getCodeName(resource?['code']),
-        value: getObservationValue(resource),
-        units: getObservationUnit(resource),
-        recordedAt: recordedAt,
-      ),
-    );
   }
 
   return observations;
@@ -800,4 +855,770 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
   }
 
   return medications;
+}
+
+String getRandomStringFromList(List<String> stringList) {
+  // I input a list of strings. The function outputs one string randomly from the given list
+  return stringList[math.Random().nextInt(stringList.length)];
+}
+
+double celsiusToFahrenheit(double celsius) {
+  // Function that takes in the temperature in celsius and computes the temperature in Fahrenheit.
+  return (celsius * 9 / 5) + 32;
+}
+
+dynamic generateNEWS2ObservationPostJSON(
+  String patientID,
+  String encounterID,
+  String baseIDValue,
+  String practitionerID,
+  String recordedAt,
+  int pulseRate,
+  int systolicBp,
+  int diastolicBp,
+  int spo2value,
+  double temperatureValue,
+  int respiratoryRate,
+  String airOrOxygen,
+  int totalScore,
+  String avpuValue,
+  String temperatureUnits,
+  bool isAnyIndividualScoreHigh,
+  bool hypercapnicRespiratoryFailure,
+) {
+  final String observationIdentifierSystem =
+      "https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/observation-identifier";
+
+  final String news2CodeSystem =
+      "https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/CodeSystem/news2";
+
+  final String news2ConsciousnessCodeSystem =
+      "https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/CodeSystem/news2-consciousness";
+
+  final String news2RiskCodeSystem =
+      "https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/CodeSystem/news2-risk";
+
+  final String spo2ScaleDisplay =
+      hypercapnicRespiratoryFailure ? "SpO2 Scale 2" : "SpO2 Scale 1";
+  final String spo2ScaleCode =
+      hypercapnicRespiratoryFailure ? "scale-2" : "scale-1";
+
+  final String hypercapnicDisplay = hypercapnicRespiratoryFailure
+      ? "Hypercapnic respiratory failure: Yes"
+      : "Hypercapnic respiratory failure: No";
+
+// If encounterID is already "Encounter/abc123", keep it.
+// If it is only "abc123", convert it to "Encounter/abc123".
+  final String encounterReference = encounterID.startsWith("Encounter/")
+      ? encounterID
+      : "Encounter/$encounterID";
+  final String obsEncounterFullUrl =
+      "urn:uuid:enc-news2-observation-session-001";
+  final String obsEncounterReference = obsEncounterFullUrl;
+
+// Temperature unit handling
+  final String tempUnit = temperatureUnits.trim().isEmpty
+      ? "C"
+      : temperatureUnits.trim().toUpperCase();
+  final String tempDisplay = tempUnit == "F" ? "F" : "C";
+  final String tempUcumCode = tempUnit == "F" ? "[degF]" : "Cel";
+
+  Map<String, String> getConsciousnessCoding(String input) {
+    final value = input.trim().toLowerCase();
+
+    if (value == "alert" || value == "a") {
+      return {
+        "code": "alert",
+        "display": "Alert",
+        "text": "Alert",
+      };
+    }
+
+    if (value == "voice" || value == "v") {
+      return {
+        "code": "voice",
+        "display": "Responds to voice",
+        "text": "Responds to voice",
+      };
+    }
+
+    if (value == "pain" || value == "p") {
+      return {
+        "code": "pain",
+        "display": "Responds to pain",
+        "text": "Responds to pain",
+      };
+    }
+
+    if (value == "unresponsive" || value == "u") {
+      return {
+        "code": "unresponsive",
+        "display": "Unresponsive",
+        "text": "Unresponsive",
+      };
+    }
+
+    if (value == "new confusion" ||
+        value == "confusion" ||
+        value == "c" ||
+        value == "cvpu") {
+      return {
+        "code": "new-confusion",
+        "display": "New confusion",
+        "text": "New confusion",
+      };
+    }
+
+    return {
+      "code": "unknown",
+      "display": input,
+      "text": input,
+    };
+  }
+
+  final consciousness = getConsciousnessCoding(avpuValue);
+// Air Oxygen Coding
+  Map<String, String> getAirOxygenCoding(String input) {
+    final value = input.trim().toLowerCase();
+
+    if (value == "oxygen" ||
+        value == "supplemental oxygen" ||
+        value == "o2" ||
+        value == "yes") {
+      return {
+        "code": "supplemental-oxygen",
+        "display": "Supplemental oxygen",
+        "text": "Supplemental oxygen",
+      };
+    }
+
+    return {
+      "code": "air",
+      "display": "Air",
+      "text": "Air",
+    };
+  }
+
+  final oxygenStatus = getAirOxygenCoding(airOrOxygen);
+
+  // NEW2 Score Clinical Score
+  Map<String, String> getNews2ClinicalRiskCoding(
+    int totalScore,
+    bool isAnyIndividualScoreHigh,
+  ) {
+    if (totalScore >= 7) {
+      return {
+        "code": "high",
+        "display": "High clinical risk",
+        "text": "High clinical risk",
+      };
+    }
+
+    if (totalScore >= 5) {
+      return {
+        "code": "medium",
+        "display": "Medium clinical risk",
+        "text": "Medium clinical risk",
+      };
+    }
+
+    if (isAnyIndividualScoreHigh) {
+      return {
+        "code": "low-medium",
+        "display": "Low-medium clinical risk",
+        "text": "Low-medium clinical risk due to single parameter score of 3",
+      };
+    }
+
+    if (totalScore >= 1) {
+      return {
+        "code": "low",
+        "display": "Low clinical risk",
+        "text": "Low clinical risk",
+      };
+    }
+
+    return {
+      "code": "normal",
+      "display": "Normal clinical risk",
+      "text": "Normal clinical risk",
+    };
+  }
+
+  final news2ClinicalRisk = getNews2ClinicalRiskCoding(
+    totalScore,
+    isAnyIndividualScoreHigh,
+  );
+
+  return {
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "timestamp": "${recordedAt}",
+    "entry": [
+      {
+        "fullUrl": obsEncounterFullUrl,
+        "resource": {
+          "resourceType": "Encounter",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-OBSENC"
+            }
+          ],
+          "status": "finished",
+          "class": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "OBSENC",
+            "display": "observation encounter"
+          },
+          "type": [
+            {
+              "coding": [
+                {
+                  "system": news2CodeSystem,
+                  "code": "news2-observation-session",
+                  "display": "NEWS2 observation session"
+                }
+              ],
+              "text": "NEWS2 observation session"
+            }
+          ],
+          "subject": {"reference": "Patient/${patientID}"},
+          "participant": [
+            {
+              "individual": {"reference": "Practitioner/${practitionerID}"}
+            }
+          ],
+          "period": {"start": recordedAt, "end": recordedAt},
+          "partOf": {"reference": encounterReference}
+        },
+        "request": {"method": "POST", "url": "Encounter"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-rr-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-RR"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs",
+                  "display": "Vital Signs"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "9279-1",
+                "display": "Respiratory rate"
+              }
+            ],
+            "text": "Respiratory rate"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "performer": [
+            {"reference": "Practitioner/${practitionerID}"}
+          ],
+          "valueQuantity": {
+            "value": respiratoryRate,
+            "unit": "breaths/minute",
+            "system": "http://unitsofmeasure.org",
+            "code": "/min"
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-spo2-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-SPO2"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs",
+                  "display": "Vital Signs"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "2708-6",
+                "display": "Oxygen saturation in Arterial blood"
+              }
+            ],
+            "text": "SpO2"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "performer": [
+            {"reference": "Practitioner/${practitionerID}"}
+          ],
+          "valueQuantity": {
+            "value": spo2value,
+            "unit": "%",
+            "system": "http://unitsofmeasure.org",
+            "code": "%"
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-hypercapnic-rf-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-HYPERCAPNIC-RF"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey",
+                  "display": "Survey"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": news2CodeSystem,
+                "code": "hypercapnic-respiratory-failure",
+                "display": "Hypercapnic respiratory failure"
+              }
+            ],
+            "text": "Hypercapnic respiratory failure"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": recordedAt,
+          "valueBoolean": hypercapnicRespiratoryFailure,
+          "interpretation": [
+            {
+              "coding": [
+                {
+                  "system": news2CodeSystem,
+                  "code": spo2ScaleCode,
+                  "display": spo2ScaleDisplay
+                }
+              ],
+              "text": spo2ScaleDisplay
+            }
+          ],
+          "note": [
+            {
+              "text":
+                  "$hypercapnicDisplay. NEWS2 oxygen saturation scoring uses $spo2ScaleDisplay."
+            }
+          ]
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-air-oxygen-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-AIR-OXYGEN"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey",
+                  "display": "Survey"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": news2CodeSystem,
+                "code": "air-or-oxygen",
+                "display": "Air or supplemental oxygen"
+              }
+            ],
+            "text": "Air or oxygen"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": news2CodeSystem,
+                "code": oxygenStatus["code"],
+                "display": oxygenStatus["display"]
+              }
+            ],
+            "text": oxygenStatus["text"]
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-bp-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-BP"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs",
+                  "display": "Vital Signs"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "85354-9",
+                "display": "Blood pressure panel with all children optional"
+              }
+            ],
+            "text": "Blood pressure"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "performer": [
+            {"reference": "Practitioner/${practitionerID}"}
+          ],
+          "component": [
+            {
+              "code": {
+                "coding": [
+                  {
+                    "system": "http://loinc.org",
+                    "code": "8480-6",
+                    "display": "Systolic blood pressure"
+                  }
+                ],
+                "text": "Systolic blood pressure"
+              },
+              "valueQuantity": {
+                "value": systolicBp,
+                "unit": "mmHg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
+            },
+            {
+              "code": {
+                "coding": [
+                  {
+                    "system": "http://loinc.org",
+                    "code": "8462-4",
+                    "display": "Diastolic blood pressure"
+                  }
+                ],
+                "text": "Diastolic blood pressure"
+              },
+              "valueQuantity": {
+                "value": diastolicBp,
+                "unit": "mmHg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm[Hg]"
+              }
+            }
+          ]
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-pulse-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-PULSE"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs",
+                  "display": "Vital Signs"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "8867-4",
+                "display": "Heart rate"
+              }
+            ],
+            "text": "Pulse"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "performer": [
+            {"reference": "Practitioner/${practitionerID}"}
+          ],
+          "valueQuantity": {
+            "value": pulseRate,
+            "unit": "beats/minute",
+            "system": "http://unitsofmeasure.org",
+            "code": "/min"
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-consciousness-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-CONSCIOUSNESS"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "exam",
+                  "display": "Exam"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": news2CodeSystem,
+                "code": "consciousness",
+                "display": "NEWS2 consciousness"
+              }
+            ],
+            "text": "Consciousness"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": news2ConsciousnessCodeSystem,
+                "code": consciousness["code"],
+                "display": consciousness["display"]
+              }
+            ],
+            "text": consciousness["text"]
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-temperature-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-TEMP"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "vital-signs",
+                  "display": "Vital Signs"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "8310-5",
+                "display": "Body temperature"
+              }
+            ],
+            "text": "Temperature"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "performer": [
+            {"reference": "Practitioner/${practitionerID}"}
+          ],
+          "valueQuantity": {
+            "value": temperatureValue,
+            "unit": tempDisplay,
+            "system": "http://unitsofmeasure.org",
+            "code": tempUcumCode
+          }
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      },
+      {
+        "fullUrl": "urn:uuid:obs-news2-total-score-001",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": observationIdentifierSystem,
+              "value": "${baseIDValue}-TOTAL-SCORE"
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey",
+                  "display": "Survey"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "1104051000000101",
+                "display":
+                    "Royal College of Physicians National Early Warning Score 2"
+              }
+            ],
+            "text": "NEWS2 total score"
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "encounter": {"reference": obsEncounterReference},
+          "effectiveDateTime": "${recordedAt}",
+          "derivedFrom": [
+            {"reference": "urn:uuid:obs-news2-rr-001"},
+            {"reference": "urn:uuid:obs-news2-spo2-001"},
+            {"reference": "urn:uuid:obs-news2-hypercapnic-rf-001"},
+            {"reference": "urn:uuid:obs-news2-air-oxygen-001"},
+            {"reference": "urn:uuid:obs-news2-bp-001"},
+            {"reference": "urn:uuid:obs-news2-pulse-001"},
+            {"reference": "urn:uuid:obs-news2-consciousness-001"},
+            {"reference": "urn:uuid:obs-news2-temperature-001"}
+          ],
+          "valueQuantity": {
+            "value": totalScore,
+            "unit": "score",
+            "system": "http://unitsofmeasure.org",
+            "code": "{score}"
+          },
+          "component": [
+            {
+              "code": {
+                "coding": [
+                  {
+                    "system": news2CodeSystem,
+                    "code": "single-red-score-present",
+                    "display": "Single red score present"
+                  }
+                ],
+                "text": "Any individual NEWS2 parameter scored 3"
+              },
+              "valueBoolean": isAnyIndividualScoreHigh
+            }
+          ],
+          "interpretation": [
+            {
+              "coding": [
+                {
+                  "system": news2RiskCodeSystem,
+                  "code": news2ClinicalRisk["code"],
+                  "display": news2ClinicalRisk["display"]
+                }
+              ],
+              "text": news2ClinicalRisk["text"]
+            }
+          ],
+          "note": [
+            {
+              "text": "NEWS2 calculated from observations entered at $recordedAt. "
+                  "Total score: $totalScore. "
+                  "Single parameter score of 3 present: ${isAnyIndividualScoreHigh ? "Yes" : "No"}. "
+                  "Clinical risk: ${news2ClinicalRisk["display"]}."
+            }
+          ]
+        },
+        "request": {"method": "POST", "url": "Observation"}
+      }
+    ]
+  };
+}
+
+String? datetimeToISO8601String(DateTime? date) {
+  // convert datetime object to iso8601 string format
+  if (date == null) return null;
+  return date.toUtc().toIso8601String();
 }

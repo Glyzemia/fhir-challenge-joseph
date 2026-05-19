@@ -8,7 +8,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'patient_table_row_component_model.dart';
 export 'patient_table_row_component_model.dart';
@@ -503,6 +502,45 @@ class _PatientTableRowComponentWidgetState
                     flex: 1,
                     child: Container(
                       height: 50.0,
+                      decoration: BoxDecoration(),
+                      alignment: AlignmentDirectional(0.0, 0.0),
+                      child: SelectionArea(
+                          child: Text(
+                        widget.patientRow!.hasLatestNEWS2Score
+                            ? valueOrDefault<String>(
+                                widget.patientRow?.latestNEWS2Score
+                                    .toString(),
+                                'NEWS',
+                              )
+                            : '-NA-',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              font: GoogleFonts.inter(
+                                fontWeight: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .fontWeight,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .fontStyle,
+                              ),
+                              color: _model.isRowHovered
+                                  ? FlutterFlowTheme.of(context).primary
+                                  : FlutterFlowTheme.of(context).primaryText,
+                              fontSize: _model.isRowHovered ? 15.0 : 14.0,
+                              letterSpacing: 0.0,
+                              fontWeight: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .fontWeight,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .fontStyle,
+                            ),
+                      )),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      height: 50.0,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.only(
                           bottomRight: Radius.circular(valueOrDefault<double>(
@@ -514,128 +552,216 @@ class _PatientTableRowComponentWidgetState
                       alignment: AlignmentDirectional(0.0, 0.0),
                       child: Row(
                         mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          AlignedTooltip(
-                            content: Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Text(
-                                'Edit Patient',
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyLarge
-                                    .override(
-                                      font: GoogleFonts.inter(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyLarge
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyLarge
-                                            .fontStyle,
-                                      ),
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
+                          Expanded(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AlignedTooltip(
+                                  content: Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Text(
+                                      'Show Patient Details',
+                                      style: FlutterFlowTheme.of(context)
                                           .bodyLarge
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyLarge
-                                          .fontStyle,
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontStyle,
+                                            ),
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                          ),
                                     ),
-                              ),
-                            ),
-                            offset: 4.0,
-                            preferredDirection: AxisDirection.up,
-                            borderRadius: BorderRadius.circular(8.0),
-                            backgroundColor: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            elevation: 4.0,
-                            tailBaseWidth: 24.0,
-                            tailLength: 12.0,
-                            waitDuration: Duration(milliseconds: 100),
-                            showDuration: Duration(milliseconds: 1000),
-                            triggerMode: TooltipTriggerMode.tap,
-                            child: FlutterFlowIconButton(
-                              borderColor:
-                                  FlutterFlowTheme.of(context).tertiary,
-                              borderRadius: 20.0,
-                              buttonSize: 40.0,
-                              fillColor: FlutterFlowTheme.of(context)
-                                  .secondaryBackground,
-                              hoverColor: FlutterFlowTheme.of(context).tertiary,
-                              hoverIconColor: FlutterFlowTheme.of(context).info,
-                              hoverBorderColor:
-                                  FlutterFlowTheme.of(context).tertiary,
-                              icon: Icon(
-                                Icons.edit_note_rounded,
-                                color: FlutterFlowTheme.of(context).tertiary,
-                                size: 24.0,
-                              ),
-                              onPressed: () async {
-                                await widget.onEditAction?.call(
-                                  widget.patientRow!,
-                                );
-                              },
+                                  ),
+                                  offset: 4.0,
+                                  preferredDirection: AxisDirection.up,
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  backgroundColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 4.0,
+                                  tailBaseWidth: 24.0,
+                                  tailLength: 12.0,
+                                  waitDuration: Duration(milliseconds: 100),
+                                  showDuration: Duration(milliseconds: 1000),
+                                  triggerMode: TooltipTriggerMode.tap,
+                                  child: FlutterFlowIconButton(
+                                    borderColor:
+                                        FlutterFlowTheme.of(context).primary,
+                                    borderRadius: 20.0,
+                                    buttonSize: 40.0,
+                                    fillColor: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    hoverColor:
+                                        FlutterFlowTheme.of(context).primary,
+                                    hoverIconColor:
+                                        FlutterFlowTheme.of(context).info,
+                                    hoverBorderColor:
+                                        FlutterFlowTheme.of(context).primary,
+                                    icon: Icon(
+                                      Icons.remove_red_eye,
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
+                                      size: 24.0,
+                                    ),
+                                    onPressed: () async {
+                                      await widget.showDetailsCallBack?.call(
+                                        widget.patientRow!,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                AlignedTooltip(
+                                  content: Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Text(
+                                      'Edit Patient',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyLarge
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontStyle,
+                                            ),
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                          ),
+                                    ),
+                                  ),
+                                  offset: 4.0,
+                                  preferredDirection: AxisDirection.up,
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  backgroundColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 4.0,
+                                  tailBaseWidth: 24.0,
+                                  tailLength: 12.0,
+                                  waitDuration: Duration(milliseconds: 100),
+                                  showDuration: Duration(milliseconds: 1000),
+                                  triggerMode: TooltipTriggerMode.tap,
+                                  child: FlutterFlowIconButton(
+                                    borderColor:
+                                        FlutterFlowTheme.of(context).tertiary,
+                                    borderRadius: 20.0,
+                                    buttonSize: 40.0,
+                                    fillColor: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    hoverColor:
+                                        FlutterFlowTheme.of(context).tertiary,
+                                    hoverIconColor:
+                                        FlutterFlowTheme.of(context).info,
+                                    hoverBorderColor:
+                                        FlutterFlowTheme.of(context).tertiary,
+                                    icon: Icon(
+                                      Icons.edit_note_rounded,
+                                      color:
+                                          FlutterFlowTheme.of(context).tertiary,
+                                      size: 24.0,
+                                    ),
+                                    onPressed: () async {
+                                      await widget.onEditAction?.call(
+                                        widget.patientRow!,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                AlignedTooltip(
+                                  content: Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Text(
+                                      'Delete Patient',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyLarge
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyLarge
+                                                      .fontStyle,
+                                            ),
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLarge
+                                                    .fontStyle,
+                                          ),
+                                    ),
+                                  ),
+                                  offset: 4.0,
+                                  preferredDirection: AxisDirection.up,
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  backgroundColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 4.0,
+                                  tailBaseWidth: 24.0,
+                                  tailLength: 12.0,
+                                  waitDuration: Duration(milliseconds: 100),
+                                  showDuration: Duration(milliseconds: 1000),
+                                  triggerMode: TooltipTriggerMode.tap,
+                                  child: FlutterFlowIconButton(
+                                    borderColor:
+                                        FlutterFlowTheme.of(context).error,
+                                    borderRadius: 20.0,
+                                    buttonSize: 40.0,
+                                    fillColor: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    hoverColor:
+                                        FlutterFlowTheme.of(context).error,
+                                    hoverIconColor:
+                                        FlutterFlowTheme.of(context).info,
+                                    hoverBorderColor:
+                                        FlutterFlowTheme.of(context).error,
+                                    icon: Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: FlutterFlowTheme.of(context).error,
+                                      size: 24.0,
+                                    ),
+                                    onPressed: () async {
+                                      await widget.onDeleteAction?.call(
+                                        widget.patientRow!,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ].divide(SizedBox(width: 10.0)),
                             ),
                           ),
-                          AlignedTooltip(
-                            content: Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Text(
-                                'Delete Patient',
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyLarge
-                                    .override(
-                                      font: GoogleFonts.inter(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyLarge
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyLarge
-                                            .fontStyle,
-                                      ),
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyLarge
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyLarge
-                                          .fontStyle,
-                                    ),
-                              ),
-                            ),
-                            offset: 4.0,
-                            preferredDirection: AxisDirection.up,
-                            borderRadius: BorderRadius.circular(8.0),
-                            backgroundColor: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            elevation: 4.0,
-                            tailBaseWidth: 24.0,
-                            tailLength: 12.0,
-                            waitDuration: Duration(milliseconds: 100),
-                            showDuration: Duration(milliseconds: 1000),
-                            triggerMode: TooltipTriggerMode.tap,
-                            child: FlutterFlowIconButton(
-                              borderColor: FlutterFlowTheme.of(context).error,
-                              borderRadius: 20.0,
-                              buttonSize: 40.0,
-                              fillColor: FlutterFlowTheme.of(context)
-                                  .secondaryBackground,
-                              hoverColor: FlutterFlowTheme.of(context).error,
-                              hoverIconColor: FlutterFlowTheme.of(context).info,
-                              hoverBorderColor:
-                                  FlutterFlowTheme.of(context).error,
-                              icon: Icon(
-                                Icons.delete_outline_rounded,
-                                color: FlutterFlowTheme.of(context).error,
-                                size: 24.0,
-                              ),
-                              onPressed: () async {
-                                await widget.onDeleteAction?.call(
-                                  widget.patientRow!,
-                                );
-                              },
-                            ),
-                          ),
-                        ].divide(SizedBox(width: 10.0)),
+                        ],
                       ),
                     ),
                   ),
@@ -643,33 +769,6 @@ class _PatientTableRowComponentWidgetState
               ),
             ),
           ),
-          if (_model.isRowHovered)
-            AnimatedContainer(
-              duration: Duration(milliseconds: 2000),
-              curve: Curves.easeIn,
-              width: 50.0,
-              height: 50.0,
-              decoration: BoxDecoration(
-                color: _model.isRowHovered
-                    ? FlutterFlowTheme.of(context).primary
-                    : FlutterFlowTheme.of(context).cardBlue,
-              ),
-              child: FlutterFlowIconButton(
-                borderRadius: 0.0,
-                buttonSize: 40.0,
-                fillColor: FlutterFlowTheme.of(context).primary,
-                icon: FaIcon(
-                  FontAwesomeIcons.filePrescription,
-                  color: FlutterFlowTheme.of(context).info,
-                  size: 24.0,
-                ),
-                onPressed: () async {
-                  await widget.showDetailsCallBack?.call(
-                    widget.patientRow!,
-                  );
-                },
-              ),
-            ),
         ].addToStart(SizedBox(width: 20.0)).addToEnd(SizedBox(width: 20.0)),
       ),
       onEnter: ((event) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/backend/schema/structs/index.dart';
 
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
@@ -62,5 +63,34 @@ class FFAppState extends ChangeNotifier {
   String get selectedPhoneFlagEmoji => _selectedPhoneFlagEmoji;
   set selectedPhoneFlagEmoji(String value) {
     _selectedPhoneFlagEmoji = value;
+  }
+
+  List<PractitionerStruct> _practitioners = [];
+  List<PractitionerStruct> get practitioners => _practitioners;
+  set practitioners(List<PractitionerStruct> value) {
+    _practitioners = value;
+  }
+
+  void addToPractitioners(PractitionerStruct value) {
+    practitioners.add(value);
+  }
+
+  void removeFromPractitioners(PractitionerStruct value) {
+    practitioners.remove(value);
+  }
+
+  void removeAtIndexFromPractitioners(int index) {
+    practitioners.removeAt(index);
+  }
+
+  void updatePractitionersAtIndex(
+    int index,
+    PractitionerStruct Function(PractitionerStruct) updateFn,
+  ) {
+    practitioners[index] = updateFn(_practitioners[index]);
+  }
+
+  void insertAtIndexInPractitioners(int index, PractitionerStruct value) {
+    practitioners.insert(index, value);
   }
 }

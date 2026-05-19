@@ -17,6 +17,9 @@ class PatientStruct extends BaseStruct {
     String? firstName,
     String? combinedNames,
     DateTime? lastUpdated,
+    int? latestNEWS2Score,
+    bool? latestSingleRedScore,
+    bool? hasLatestNEWS2Score,
   })  : _identifier = identifier,
         _givenNames = givenNames,
         _familyName = familyName,
@@ -26,7 +29,10 @@ class PatientStruct extends BaseStruct {
         _birthDate = birthDate,
         _firstName = firstName,
         _combinedNames = combinedNames,
-        _lastUpdated = lastUpdated;
+        _lastUpdated = lastUpdated,
+        _latestNEWS2Score = latestNEWS2Score,
+        _latestSingleRedScore = latestSingleRedScore,
+        _hasLatestNEWS2Score = hasLatestNEWS2Score;
 
   // "identifier" field.
   String? _identifier;
@@ -98,6 +104,30 @@ class PatientStruct extends BaseStruct {
 
   bool hasLastUpdated() => _lastUpdated != null;
 
+  // "latestNEWS2Score" field.
+  int? _latestNEWS2Score;
+  int get latestNEWS2Score => _latestNEWS2Score ?? 0;
+  set latestNEWS2Score(int? val) => _latestNEWS2Score = val;
+
+  void incrementLatestNEWS2Score(int amount) =>
+      latestNEWS2Score = latestNEWS2Score + amount;
+
+  bool hasLatestNEWS2ScoreField() => _latestNEWS2Score != null;
+
+  // "latestSingleRedScore" field.
+  bool? _latestSingleRedScore;
+  bool get latestSingleRedScore => _latestSingleRedScore ?? false;
+  set latestSingleRedScore(bool? val) => _latestSingleRedScore = val;
+
+  bool hasLatestSingleRedScore() => _latestSingleRedScore != null;
+
+  // "hasLatestNEWS2Score" field.
+  bool? _hasLatestNEWS2Score;
+  bool get hasLatestNEWS2Score => _hasLatestNEWS2Score ?? false;
+  set hasLatestNEWS2Score(bool? val) => _hasLatestNEWS2Score = val;
+
+  bool hasHasLatestNEWS2Score() => _hasLatestNEWS2Score != null;
+
   static PatientStruct fromMap(Map<String, dynamic> data) => PatientStruct(
         identifier: data['identifier'] as String?,
         givenNames: data['givenNames'] as String?,
@@ -109,6 +139,9 @@ class PatientStruct extends BaseStruct {
         firstName: data['firstName'] as String?,
         combinedNames: data['combinedNames'] as String?,
         lastUpdated: data['lastUpdated'] as DateTime?,
+        latestNEWS2Score: castToType<int>(data['latestNEWS2Score']),
+        latestSingleRedScore: data['latestSingleRedScore'] as bool?,
+        hasLatestNEWS2Score: data['hasLatestNEWS2Score'] as bool?,
       );
 
   static PatientStruct? maybeFromMap(dynamic data) =>
@@ -125,6 +158,9 @@ class PatientStruct extends BaseStruct {
         'firstName': _firstName,
         'combinedNames': _combinedNames,
         'lastUpdated': _lastUpdated,
+        'latestNEWS2Score': _latestNEWS2Score,
+        'latestSingleRedScore': _latestSingleRedScore,
+        'hasLatestNEWS2Score': _hasLatestNEWS2Score,
       }.withoutNulls;
 
   @override
@@ -168,6 +204,18 @@ class PatientStruct extends BaseStruct {
         'lastUpdated': serializeParam(
           _lastUpdated,
           ParamType.DateTime,
+        ),
+        'latestNEWS2Score': serializeParam(
+          _latestNEWS2Score,
+          ParamType.int,
+        ),
+        'latestSingleRedScore': serializeParam(
+          _latestSingleRedScore,
+          ParamType.bool,
+        ),
+        'hasLatestNEWS2Score': serializeParam(
+          _hasLatestNEWS2Score,
+          ParamType.bool,
         ),
       }.withoutNulls;
 
@@ -223,6 +271,21 @@ class PatientStruct extends BaseStruct {
           ParamType.DateTime,
           false,
         ),
+        latestNEWS2Score: deserializeParam(
+          data['latestNEWS2Score'],
+          ParamType.int,
+          false,
+        ),
+        latestSingleRedScore: deserializeParam(
+          data['latestSingleRedScore'],
+          ParamType.bool,
+          false,
+        ),
+        hasLatestNEWS2Score: deserializeParam(
+          data['hasLatestNEWS2Score'],
+          ParamType.bool,
+          false,
+        ),
       );
 
   @override
@@ -240,7 +303,10 @@ class PatientStruct extends BaseStruct {
         birthDate == other.birthDate &&
         firstName == other.firstName &&
         combinedNames == other.combinedNames &&
-        lastUpdated == other.lastUpdated;
+        lastUpdated == other.lastUpdated &&
+        latestNEWS2Score == other.latestNEWS2Score &&
+        latestSingleRedScore == other.latestSingleRedScore &&
+        hasLatestNEWS2Score == other.hasLatestNEWS2Score;
   }
 
   @override
@@ -254,7 +320,10 @@ class PatientStruct extends BaseStruct {
         birthDate,
         firstName,
         combinedNames,
-        lastUpdated
+        lastUpdated,
+        latestNEWS2Score,
+        latestSingleRedScore,
+        hasLatestNEWS2Score
       ]);
 }
 
@@ -269,6 +338,9 @@ PatientStruct createPatientStruct({
   String? firstName,
   String? combinedNames,
   DateTime? lastUpdated,
+  int? latestNEWS2Score,
+  bool? latestSingleRedScore,
+  bool? hasLatestNEWS2Score,
 }) =>
     PatientStruct(
       identifier: identifier,
@@ -281,4 +353,7 @@ PatientStruct createPatientStruct({
       firstName: firstName,
       combinedNames: combinedNames,
       lastUpdated: lastUpdated,
+      latestNEWS2Score: latestNEWS2Score,
+      latestSingleRedScore: latestSingleRedScore,
+      hasLatestNEWS2Score: hasLatestNEWS2Score,
     );

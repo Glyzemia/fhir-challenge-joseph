@@ -18,6 +18,7 @@ class CustomTableHeaderComponentWidget extends StatefulWidget {
     double? bottomRightBorderRadius,
     double? rowHeight,
     this.bgColor,
+    this.subHeader,
   })  : this.isSelected = isSelected ?? false,
         this.isAscending = isAscending ?? true,
         this.topLeftBorderRadius = topLeftBorderRadius ?? 0.0,
@@ -36,6 +37,7 @@ class CustomTableHeaderComponentWidget extends StatefulWidget {
   final double bottomRightBorderRadius;
   final double rowHeight;
   final Color? bgColor;
+  final String? subHeader;
 
   @override
   State<CustomTableHeaderComponentWidget> createState() =>
@@ -106,46 +108,74 @@ class _CustomTableHeaderComponentWidgetState
           ),
         ),
         alignment: AlignmentDirectional(0.0, 0.0),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              valueOrDefault<String>(
-                widget.columnName,
-                'Column Name',
-              ),
-              style: FlutterFlowTheme.of(context).labelLarge.override(
-                    font: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      fontStyle:
-                          FlutterFlowTheme.of(context).labelLarge.fontStyle,
-                    ),
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
-                    fontStyle:
-                        FlutterFlowTheme.of(context).labelLarge.fontStyle,
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  valueOrDefault<String>(
+                    widget.columnName,
+                    'Column Name',
                   ),
+                  style: FlutterFlowTheme.of(context).labelLarge.override(
+                        font: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontStyle:
+                              FlutterFlowTheme.of(context).labelLarge.fontStyle,
+                        ),
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                        fontStyle:
+                            FlutterFlowTheme.of(context).labelLarge.fontStyle,
+                      ),
+                ),
+                if (widget.isSelected)
+                  Builder(
+                    builder: (context) {
+                      if (widget.isAscending) {
+                        return Icon(
+                          Icons.arrow_upward_rounded,
+                          color: FlutterFlowTheme.of(context).primary,
+                          size: 20.0,
+                        );
+                      } else {
+                        return Icon(
+                          Icons.arrow_downward_rounded,
+                          color: FlutterFlowTheme.of(context).primary,
+                          size: 20.0,
+                        );
+                      }
+                    },
+                  ),
+              ].divide(SizedBox(width: 4.0)),
             ),
-            if (widget.isSelected)
-              Builder(
-                builder: (context) {
-                  if (widget.isAscending) {
-                    return Icon(
-                      Icons.arrow_upward_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                      size: 20.0,
-                    );
-                  } else {
-                    return Icon(
-                      Icons.arrow_downward_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                      size: 20.0,
-                    );
-                  }
-                },
+            if (widget.subHeader != null && widget.subHeader != '')
+              Text(
+                valueOrDefault<String>(
+                  widget.subHeader,
+                  'Subheader',
+                ),
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.inter(
+                        fontWeight:
+                            FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                        fontStyle:
+                            FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                      ),
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      fontSize: 10.0,
+                      letterSpacing: 0.0,
+                      fontWeight:
+                          FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                      fontStyle:
+                          FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                    ),
               ),
-          ].divide(SizedBox(width: 4.0)),
+          ],
         ),
       ),
     );

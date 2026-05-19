@@ -7,9 +7,11 @@ import '/components/custom_table_header_component_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/medications_table_row_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
+import '/components/n_e_w_s_row_component_widget.dart';
 import '/components/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
+import 'dart:async';
 import 'home_page_widget.dart' show HomePageWidget;
 import 'package:flutter/material.dart';
 
@@ -76,9 +78,9 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
           int index, Function(PatientStruct) updateFn) =>
       allFHIRSearchPatients[index] = updateFn(allFHIRSearchPatients[index]);
 
-  String? selectedTableColumn = 'Name';
+  String? selectedTableColumn = 'Latest News Score';
 
-  bool isAscendingSelectedTableColumn = true;
+  bool isAscendingSelectedTableColumn = false;
 
   int currentPatientPage = 0;
 
@@ -136,11 +138,23 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   bool isAscendingMedicationTable = true;
 
+  int currPractIdx = 0;
+
+  int practItems = 0;
+
+  String temp = '- Assessment by Nurse \\n - Monitor vitals every 4 hours.';
+
+  int currPtIdx = 0;
+
+  int ptItems = 0;
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();
-  // Stores action output result for [Backend Call - API (Get All Patients)] action in HomePage widget.
-  ApiCallResponse? allPatientsQuery1;
+  // Stores action output result for [Custom Action - fetchFhirPatientsWithLatestNews2] action in HomePage widget.
+  List<PatientStruct>? fetchPatientsWithNews1;
+  // Stores action output result for [Backend Call - API (Get All Practitioners)] action in HomePage widget.
+  ApiCallResponse? practitionersQuery;
   // Model for fireComponent component.
   late FireComponentModel fireComponentModel;
   // Model for Patients.
@@ -153,8 +167,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late MenuItemsComponentModel activityModel;
   // Model for Settings.
   late MenuItemsComponentModel settingsModel;
-  // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
-  ApiCallResponse? allPatientsQuery2;
+  // Stores action output result for [Custom Action - fetchFhirPatientsWithLatestNews2] action in Button widget.
+  List<PatientStruct>? fetchPatientsWithNews2;
   // State field(s) for SearchType widget.
   FormFieldController<String>? searchTypeValueController;
   // State field(s) for SearchName widget.
@@ -172,6 +186,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel tableHeaderComponentDOBModel1;
   // Model for TableHeaderComponentPhoneNumber.
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel1;
+  // Model for TableHeaderComponentPhoneNumber.
+  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel2;
   // Model for TableHeaderComponentActions.
   late CustomTableHeaderComponentModel tableHeaderComponentActionsModel;
   // State field(s) for PageView widget.
@@ -191,6 +207,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   ApiCallResponse? allPatientsQuery4;
   // Stores action output result for [Backend Call - API (Patient Bundle Requests)] action in PatientTableRowComponent widget.
   ApiCallResponse? bundleResponse;
+  Completer<ApiCallResponse>? apiRequestCompleter;
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels1;
@@ -252,8 +269,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   ApiCallResponse? createNewPatient;
   // Stores action output result for [Backend Call - API (Edit Patient)] action in Button widget.
   ApiCallResponse? editPatient;
-  // Stores action output result for [Backend Call - API (Get All Patients)] action in Button widget.
-  ApiCallResponse? allPatientsQuery3;
+  // Stores action output result for [Custom Action - fetchFhirPatientsWithLatestNews2] action in Button widget.
+  List<PatientStruct>? fetchPatientsWithNews3;
   // State field(s) for TabBar widget.
   TabController? tabBarController;
   int get tabBarCurrentIndex =>
@@ -268,7 +285,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Model for TableHeaderComponentDOB.
   late CustomTableHeaderComponentModel tableHeaderComponentDOBModel2;
   // Model for TableHeaderComponentPhoneNumber.
-  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel2;
+  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel3;
   // State field(s) for PageView widget.
   PageController? pageViewController2;
 
@@ -290,9 +307,9 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Model for TableHeaderComponentDOB.
   late CustomTableHeaderComponentModel tableHeaderComponentDOBModel3;
   // Model for TableHeaderComponentPhoneNumber.
-  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel3;
-  // Model for TableHeaderComponentPhoneNumber.
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel4;
+  // Model for TableHeaderComponentPhoneNumber.
+  late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel5;
   // State field(s) for PageView widget.
   PageController? pageViewController3;
 
@@ -307,6 +324,24 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels3;
+  // Model for RecordedAt.
+  late CustomTableHeaderComponentModel recordedAtModel;
+  // Model for PulseRate.
+  late CustomTableHeaderComponentModel pulseRateModel;
+  // Model for BloodPressure.
+  late CustomTableHeaderComponentModel bloodPressureModel;
+  // Model for RespiratoryRate.
+  late CustomTableHeaderComponentModel respiratoryRateModel;
+  // Model for Temperature.
+  late CustomTableHeaderComponentModel temperatureModel;
+  // Model for SpO2.
+  late CustomTableHeaderComponentModel spO2Model;
+  // Model for AVPU.
+  late CustomTableHeaderComponentModel avpuModel;
+  // Model for NEWS2Score.
+  late CustomTableHeaderComponentModel nEWS2ScoreModel;
+  // Models for NEWSRowComponent dynamic component.
+  late FlutterFlowDynamicModels<NEWSRowComponentModel> nEWSRowComponentModels;
 
   @override
   void initState(BuildContext context) {
@@ -324,6 +359,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     tableHeaderComponentPhoneNumberModel1 =
         createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentPhoneNumberModel2 =
+        createModel(context, () => CustomTableHeaderComponentModel());
     tableHeaderComponentActionsModel =
         createModel(context, () => CustomTableHeaderComponentModel());
     patientTableRowComponentModels =
@@ -339,7 +376,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     tableHeaderComponentDOBModel2 =
         createModel(context, () => CustomTableHeaderComponentModel());
-    tableHeaderComponentPhoneNumberModel2 =
+    tableHeaderComponentPhoneNumberModel3 =
         createModel(context, () => CustomTableHeaderComponentModel());
     conditioonTableRowComponentModels =
         FlutterFlowDynamicModels(() => ConditioonTableRowComponentModel());
@@ -351,14 +388,30 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     tableHeaderComponentDOBModel3 =
         createModel(context, () => CustomTableHeaderComponentModel());
-    tableHeaderComponentPhoneNumberModel3 =
-        createModel(context, () => CustomTableHeaderComponentModel());
     tableHeaderComponentPhoneNumberModel4 =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    tableHeaderComponentPhoneNumberModel5 =
         createModel(context, () => CustomTableHeaderComponentModel());
     medicationsTableRowComponentModels =
         FlutterFlowDynamicModels(() => MedicationsTableRowComponentModel());
     customDotComponentPageViewModels3 =
         FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
+    recordedAtModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    pulseRateModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    bloodPressureModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    respiratoryRateModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    temperatureModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    spO2Model = createModel(context, () => CustomTableHeaderComponentModel());
+    avpuModel = createModel(context, () => CustomTableHeaderComponentModel());
+    nEWS2ScoreModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
+    nEWSRowComponentModels =
+        FlutterFlowDynamicModels(() => NEWSRowComponentModel());
   }
 
   @override
@@ -376,6 +429,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     tableHeaderComponentGenderModel1.dispose();
     tableHeaderComponentDOBModel1.dispose();
     tableHeaderComponentPhoneNumberModel1.dispose();
+    tableHeaderComponentPhoneNumberModel2.dispose();
     tableHeaderComponentActionsModel.dispose();
     patientTableRowComponentModels.dispose();
     customDotComponentPageViewModels1.dispose();
@@ -392,18 +446,41 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     tableHeaderComponentNameModel2.dispose();
     tableHeaderComponentGenderModel2.dispose();
     tableHeaderComponentDOBModel2.dispose();
-    tableHeaderComponentPhoneNumberModel2.dispose();
+    tableHeaderComponentPhoneNumberModel3.dispose();
     conditioonTableRowComponentModels.dispose();
     customDotComponentPageViewModels2.dispose();
     tableHeaderComponentNameModel3.dispose();
     tableHeaderComponentGenderModel3.dispose();
     tableHeaderComponentDOBModel3.dispose();
-    tableHeaderComponentPhoneNumberModel3.dispose();
     tableHeaderComponentPhoneNumberModel4.dispose();
+    tableHeaderComponentPhoneNumberModel5.dispose();
     medicationsTableRowComponentModels.dispose();
     customDotComponentPageViewModels3.dispose();
+    recordedAtModel.dispose();
+    pulseRateModel.dispose();
+    bloodPressureModel.dispose();
+    respiratoryRateModel.dispose();
+    temperatureModel.dispose();
+    spO2Model.dispose();
+    avpuModel.dispose();
+    nEWS2ScoreModel.dispose();
+    nEWSRowComponentModels.dispose();
   }
 
   /// Additional helper methods.
   String? get searchTypeValue => searchTypeValueController?.value;
+  Future waitForApiRequestCompleted({
+    double minWait = 0,
+    double maxWait = double.infinity,
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    while (true) {
+      await Future.delayed(Duration(milliseconds: 50));
+      final timeElapsed = stopwatch.elapsedMilliseconds;
+      final requestComplete = apiRequestCompleter?.isCompleted ?? false;
+      if (timeElapsed > maxWait || (requestComplete && timeElapsed > minWait)) {
+        break;
+      }
+    }
+  }
 }

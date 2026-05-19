@@ -18,7 +18,7 @@ class GetPatientObservationByIDCall {
     return ApiManager.instance.makeApiCall(
       callName: 'Get Patient Observation by ID',
       apiUrl:
-          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?subject=Patient/${id}&${optionalQueries}',
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}&date=ge2026-05-18&_sort=-value-date&_count=9',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -80,6 +80,62 @@ class GetPatientConditionByIDCopyCall {
   static int? total(dynamic response) => castToType<int>(getJsonField(
         response,
         r'''$.total''',
+      ));
+}
+
+class GetAdmissionEncounterByPatientIDCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get Admission Encounter by Patient ID',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Encounter?subject=Patient/${id}&status=in-progress&class=IMP',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {
+        '_total': "accurate",
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.total''',
+      ));
+  static String? encounterID(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[0].resource.id''',
+      ));
+  static String? encounterStatus(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[0].resource.status''',
+      ));
+  static String? encounterType(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.class.code''',
+      ));
+  static String? admissionDate(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.period.start''',
       ));
 }
 
@@ -160,6 +216,80 @@ class GetAllPatientsCall {
         response,
         r'''$.total''',
       ));
+}
+
+class GetAllPractitionersCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get All Practitioners',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Practitioner',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static List<String>? lastUpdated(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.meta.lastUpdated''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.total''',
+      ));
+  static List<String>? id(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.id''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
+  static List<String>? familyName(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.name[:].family''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
+  static List<String>? givenName(dynamic response) => (getJsonField(
+        response,
+        r'''$.entry[:].resource.name[:].given[0]''',
+        true,
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
+  static List? prefix(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[:].resource.name[:].prefix''',
+        true,
+      ) as List?;
 }
 
 class SearchPatientsCall {
@@ -359,7 +489,7 @@ class PatientBundleRequestsCall {
     {
       "request": {
         "method": "GET",
-        "url": "Observation?subject=Patient/${escapeStringForJson(id)}&category=vital-signs&_total=accurate"
+        "url": "Observation?subject=Patient/${escapeStringForJson(id)}&_total=accurate&date=ge2026-05-18"
       }
     },
     {
@@ -423,6 +553,158 @@ class PatientBundleRequestsCall {
   static int? medicationTotal(dynamic response) => castToType<int>(getJsonField(
         response,
         r'''$.entry[2].resource.total''',
+      ));
+}
+
+class BundlePOSTNEWSObservationsCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    dynamic bundleJsonJson,
+  }) async {
+    final bundleJson = _serializeJson(bundleJsonJson);
+    final ffApiRequestBody = '''
+${bundleJson}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Bundle POST NEWS Observations',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? observationEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[0].resource.entry''',
+        true,
+      ) as List?;
+  static List? conditionEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[1].resource.entry''',
+        true,
+      ) as List?;
+  static List? medicationEntries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry[2].resource.entry''',
+        true,
+      ) as List?;
+  static int? observationTotal(dynamic response) =>
+      castToType<int>(getJsonField(
+        response,
+        r'''$.entry[0].resource.total''',
+      ));
+  static int? conditionTotal(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.entry[1].resource.total''',
+      ));
+  static int? medicationTotal(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.entry[2].resource.total''',
+      ));
+}
+
+class AdmitPatientCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+    String? startPeriod = '',
+    String? encounterID = '',
+  }) async {
+    final ffApiRequestBody = '''
+{
+  "resourceType": "Encounter",
+  "identifier": [
+    {
+      "system": "https://your-news2-app.example/fhir/admission-id",
+      "value": "${escapeStringForJson(encounterID)}"
+    }
+  ],
+  "status": "in-progress",
+  "class": {
+    "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+    "code": "IMP",
+    "display": "inpatient encounter"
+  },
+  "subject": {
+    "reference": "Patient/${escapeStringForJson(id)}"
+  },
+  "period": {
+    "start": "${escapeStringForJson(startPeriod)}"
+  },
+  "reasonCode": [
+    {
+      "text": "Inpatient admission for NEWS2 monitoring"
+    }
+  ]
+}''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Admit Patient',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Encounter',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class GetLatestNEWSScoreCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? id = '',
+  }) async {
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get Latest NEWS Score',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}&code=1104051000000101&_sort=-date&_count=1&_total=accurate',
+      callType: ApiCallType.GET,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+      },
+      params: {},
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static String? recordedAtString(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[0].resource.effectiveDateTime''',
+      ));
+  static int? news2Score(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.entry[0].resource.valueQuantity.value''',
+      ));
+  static bool? isSingleRedScorePresent(dynamic response) =>
+      castToType<bool>(getJsonField(
+        response,
+        r'''$.entry[0].resource.component[0].valueBoolean''',
       ));
 }
 

@@ -34,13 +34,12 @@ class _FireComponentWidgetState extends State<FireComponentWidget>
     animationsMap.addAll({
       'containerOnPageLoadAnimation': AnimationInfo(
         loop: true,
-        reverse: true,
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
           ShimmerEffect(
             curve: Curves.easeInOut,
             delay: 0.0.ms,
-            duration: 4000.0.ms,
+            duration: 2000.0.ms,
             color: Color(0x80FFFFFF),
             angle: 4.712,
           ),

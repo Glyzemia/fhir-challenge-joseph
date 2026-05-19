@@ -1,6 +1,7 @@
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
+import '/components/add_new_observation_set_component_widget.dart';
 import '/components/common_wait_component_widget.dart';
 import '/components/conditioon_table_row_component_widget.dart';
 import '/components/custom_dot_component_page_view_widget.dart';
@@ -9,6 +10,7 @@ import '/components/empty_widget_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/medications_table_row_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
+import '/components/n_e_w_s_row_component_widget.dart';
 import '/components/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_button_tabbar.dart';
@@ -19,8 +21,11 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
+import 'dart:async';
+import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -74,49 +79,81 @@ class _HomePageWidgetState extends State<HomePageWidget>
           backgroundColor: FlutterFlowTheme.of(context).tertiary,
         ),
       );
-      _model.allPatientsQuery1 = await GetAllPatientsCall.call(
-        token: FFAppState().fhirBearerToken,
-      );
+      await Future.wait([
+        Future(() async {
+          _model.fetchPatientsWithNews1 =
+              await actions.fetchFhirPatientsWithLatestNews2(
+            FFAppState().fhirBaseUrl,
+            FFAppState().fhirBearerToken,
+            '2026-05-18',
+          );
+          _model.allPatients =
+              _model.fetchPatientsWithNews1!.toList().cast<PatientStruct>();
+          _model.sortedAllPatients = _model.fetchPatientsWithNews1!
+              .sortedList(keyOf: (e) => e.latestNEWS2Score, desc: true)
+              .toList()
+              .cast<PatientStruct>();
+          safeSetState(() {});
+        }),
+        Future(() async {
+          _model.practitionersQuery = await GetAllPractitionersCall.call(
+            token: FFAppState().fhirBearerToken,
+          );
 
-      if ((_model.allPatientsQuery1?.succeeded ?? true)) {
-        _model.allPatients = functions
-            .parseFhirPatients(
-                GetAllPatientsCall.entries(
-                  (_model.allPatientsQuery1?.jsonBody ?? ''),
-                )?.toList(),
-                functions
-                    .convertDateStringListtoDateTimeList(
-                        GetAllPatientsCall.lastUpdated(
-                      (_model.allPatientsQuery1?.jsonBody ?? ''),
-                    )?.toList())
-                    .toList())!
-            .toList()
-            .cast<PatientStruct>();
-        _model.sortedAllPatients = functions
-            .parseFhirPatients(
-                GetAllPatientsCall.entries(
-                  (_model.allPatientsQuery1?.jsonBody ?? ''),
-                )?.toList(),
-                functions
-                    .convertDateStringListtoDateTimeList(
-                        GetAllPatientsCall.lastUpdated(
-                      (_model.allPatientsQuery1?.jsonBody ?? ''),
-                    )?.toList())
-                    .toList())!
-            .sortedList(keyOf: (e) => e.combinedNames, desc: false)
-            .toList()
-            .cast<PatientStruct>();
-        _model.selectedDob = null;
-        _model.patientSelectedForEdit = null;
-        _model.patientMode = PatientMode.create;
-        _model.showPatients = true;
-        _model.showSearch = false;
-        _model.showCreateEditPatient = false;
-        _model.showActivity = false;
-        _model.showSettings = false;
-        _model.displaySimpleSearchPatients = false;
-        safeSetState(() {});
-      }
+          if ((_model.practitionersQuery?.succeeded ?? true)) {
+            _model.currPractIdx = 0;
+            _model.practItems = GetAllPractitionersCall.total(
+              (_model.practitionersQuery?.jsonBody ?? ''),
+            )!;
+            safeSetState(() {});
+            while (_model.currPractIdx < _model.practItems) {
+              FFAppState().addToPractitioners(PractitionerStruct(
+                id: GetAllPractitionersCall.id(
+                  (_model.practitionersQuery?.jsonBody ?? ''),
+                )?.elementAtOrNull(_model.currPractIdx),
+                combinedNames: '${GetAllPractitionersCall.givenName(
+                  (_model.practitionersQuery?.jsonBody ?? ''),
+                )?.elementAtOrNull(_model.currPractIdx)} ${GetAllPractitionersCall.familyName(
+                  (_model.practitionersQuery?.jsonBody ?? ''),
+                )?.elementAtOrNull(_model.currPractIdx)}',
+                prefix: (GetAllPractitionersCall.prefix(
+                  (_model.practitionersQuery?.jsonBody ?? ''),
+                )?.elementAtOrNull(_model.currPractIdx))
+                    ?.toString(),
+              ));
+              safeSetState(() {});
+              _model.currPractIdx = _model.currPractIdx + 1;
+              safeSetState(() {});
+            }
+          } else {
+            await showDialog(
+              context: context,
+              builder: (alertDialogContext) {
+                return AlertDialog(
+                  title: Text('Error'),
+                  content: Text((_model.practitionersQuery?.bodyText ?? '')),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(alertDialogContext),
+                      child: Text('Ok'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        }),
+      ]);
+      _model.selectedDob = null;
+      _model.patientSelectedForEdit = null;
+      _model.patientMode = PatientMode.create;
+      _model.showPatients = true;
+      _model.showSearch = false;
+      _model.showCreateEditPatient = false;
+      _model.showActivity = false;
+      _model.showSettings = false;
+      _model.displaySimpleSearchPatients = false;
+      safeSetState(() {});
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
     });
 
@@ -256,13 +293,71 @@ class _HomePageWidgetState extends State<HomePageWidget>
                               ].divide(SizedBox(width: 20.0)),
                             ),
                           ),
-                          Text(
-                            'GLYZEMIA - FHIR CHALLENGE',
-                            textAlign: TextAlign.center,
-                            style: FlutterFlowTheme.of(context)
-                                .headlineMedium
-                                .override(
-                                  font: GoogleFonts.readexPro(
+                          RichText(
+                            textScaler: MediaQuery.of(context).textScaler,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'GLY',
+                                  style: FlutterFlowTheme.of(context)
+                                      .headlineMedium
+                                      .override(
+                                        font: GoogleFonts.readexPro(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .headlineMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .headlineMedium
+                                                  .fontStyle,
+                                        ),
+                                        color:
+                                            FlutterFlowTheme.of(context).info,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .headlineMedium
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .headlineMedium
+                                            .fontStyle,
+                                      ),
+                                ),
+                                TextSpan(
+                                  text: 'Z',
+                                  style: TextStyle(
+                                    color: FlutterFlowTheme.of(context).error,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'EMIA - ',
+                                  style: TextStyle(),
+                                ),
+                                TextSpan(
+                                  text: 'FHIR',
+                                  style: TextStyle(
+                                    color:
+                                        FlutterFlowTheme.of(context).fireOrange,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' CHALLENGE',
+                                  style: TextStyle(),
+                                )
+                              ],
+                              style: FlutterFlowTheme.of(context)
+                                  .headlineMedium
+                                  .override(
+                                    font: GoogleFonts.readexPro(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .headlineMedium
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .headlineMedium
+                                          .fontStyle,
+                                    ),
+                                    color: FlutterFlowTheme.of(context).info,
+                                    letterSpacing: 0.0,
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .headlineMedium
                                         .fontWeight,
@@ -270,15 +365,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                         .headlineMedium
                                         .fontStyle,
                                   ),
-                                  color: FlutterFlowTheme.of(context).info,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .headlineMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .headlineMedium
-                                      .fontStyle,
-                                ),
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -455,7 +543,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
               child: Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(30.0, 0.0, 100.0, 0.0),
                 child: Container(
-                  height: 945.0,
+                  height: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(10.0),
@@ -651,64 +739,30 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                     ),
                                     FFButtonWidget(
                                       onPressed: () async {
-                                        _model.allPatientsQuery2 =
-                                            await GetAllPatientsCall.call(
-                                          token: FFAppState().fhirBearerToken,
+                                        _model.fetchPatientsWithNews2 =
+                                            await actions
+                                                .fetchFhirPatientsWithLatestNews2(
+                                          FFAppState().fhirBaseUrl,
+                                          FFAppState().fhirBearerToken,
+                                          '2026-05-18',
                                         );
-
-                                        if ((_model
-                                                .allPatientsQuery2?.succeeded ??
-                                            true)) {
-                                          _model.allPatients = functions
-                                              .parseFhirPatients(
-                                                  GetAllPatientsCall.entries(
-                                                    (_model.allPatientsQuery2
-                                                            ?.jsonBody ??
-                                                        ''),
-                                                  )?.toList(),
-                                                  functions
-                                                      .convertDateStringListtoDateTimeList(
-                                                          GetAllPatientsCall
-                                                              .lastUpdated(
-                                                        (_model.allPatientsQuery2
-                                                                ?.jsonBody ??
-                                                            ''),
-                                                      )?.toList())
-                                                      .toList())!
-                                              .toList()
-                                              .cast<PatientStruct>();
-                                          _model.sortedAllPatients = functions
-                                              .parseFhirPatients(
-                                                  GetAllPatientsCall.entries(
-                                                    (_model.allPatientsQuery2
-                                                            ?.jsonBody ??
-                                                        ''),
-                                                  )?.toList(),
-                                                  functions
-                                                      .convertDateStringListtoDateTimeList(
-                                                          GetAllPatientsCall
-                                                              .lastUpdated(
-                                                        (_model.allPatientsQuery2
-                                                                ?.jsonBody ??
-                                                            ''),
-                                                      )?.toList())
-                                                      .toList())!
-                                              .sortedList(
-                                                  keyOf: (e) => e.combinedNames,
-                                                  desc: false)
-                                              .toList()
-                                              .cast<PatientStruct>();
-                                          safeSetState(() {});
-                                        }
+                                        _model.allPatients = _model
+                                            .fetchPatientsWithNews2!
+                                            .toList()
+                                            .cast<PatientStruct>();
+                                        _model.sortedAllPatients = _model
+                                            .fetchPatientsWithNews2!
+                                            .sortedList(
+                                                keyOf: (e) =>
+                                                    e.latestNEWS2Score,
+                                                desc: true)
+                                            .toList()
+                                            .cast<PatientStruct>();
+                                        safeSetState(() {});
                                         safeSetState(() {
                                           _model.searchNameTextController
                                               ?.clear();
                                         });
-                                        _model.displaySimpleSearchPatients =
-                                            false;
-                                        _model.displayFHIRSearchPatients =
-                                            false;
-                                        safeSetState(() {});
 
                                         safeSetState(() {});
                                       },
@@ -1444,7 +1498,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                   safeSetState(() {});
                                                 } else {
                                                   _model.isAscendingSelectedTableColumn =
-                                                      true;
+                                                      false;
                                                   _model.selectedTableColumn =
                                                       columnName;
                                                   safeSetState(() {});
@@ -1558,6 +1612,31 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             .toList()
                                                             .cast<
                                                                 PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Latest News Score') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: false)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: true)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
                                                     safeSetState(() {});
                                                   }
                                                 }
@@ -1593,7 +1672,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                   safeSetState(() {});
                                                 } else {
                                                   _model.isAscendingSelectedTableColumn =
-                                                      true;
+                                                      false;
                                                   _model.selectedTableColumn =
                                                       columnName;
                                                   safeSetState(() {});
@@ -1707,6 +1786,31 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             .toList()
                                                             .cast<
                                                                 PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Latest News Score') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: false)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: true)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
                                                     safeSetState(() {});
                                                   }
                                                 }
@@ -1742,7 +1846,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                   safeSetState(() {});
                                                 } else {
                                                   _model.isAscendingSelectedTableColumn =
-                                                      true;
+                                                      false;
                                                   _model.selectedTableColumn =
                                                       columnName;
                                                   safeSetState(() {});
@@ -1856,6 +1960,31 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             .toList()
                                                             .cast<
                                                                 PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Latest News Score') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: false)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: true)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
                                                     safeSetState(() {});
                                                   }
                                                 }
@@ -1892,7 +2021,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                     safeSetState(() {});
                                                   } else {
                                                     _model.isAscendingSelectedTableColumn =
-                                                        true;
+                                                        false;
                                                     _model.selectedTableColumn =
                                                         columnName;
                                                     safeSetState(() {});
@@ -2006,11 +2135,212 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               PatientStruct>();
                                                       safeSetState(() {});
                                                     }
+                                                  } else if (_model
+                                                          .selectedTableColumn ==
+                                                      'Latest News Score') {
+                                                    if (_model
+                                                        .isAscendingSelectedTableColumn) {
+                                                      _model.sortedAllPatients = _model
+                                                          .allPatients
+                                                          .sortedList(
+                                                              keyOf: (e) => e
+                                                                  .latestNEWS2Score,
+                                                              desc: false)
+                                                          .toList()
+                                                          .cast<
+                                                              PatientStruct>();
+                                                      safeSetState(() {});
+                                                    } else {
+                                                      _model.sortedAllPatients = _model
+                                                          .allPatients
+                                                          .sortedList(
+                                                              keyOf: (e) => e
+                                                                  .latestNEWS2Score,
+                                                              desc: true)
+                                                          .toList()
+                                                          .cast<
+                                                              PatientStruct>();
+                                                      safeSetState(() {});
+                                                    }
                                                   }
                                                 },
                                               ),
                                             ),
                                           ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: wrapWithModel(
+                                            model: _model
+                                                .tableHeaderComponentPhoneNumberModel2,
+                                            updateCallback: () =>
+                                                safeSetState(() {}),
+                                            child:
+                                                CustomTableHeaderComponentWidget(
+                                              columnName: 'Latest News Score',
+                                              isSelected:
+                                                  _model.selectedTableColumn ==
+                                                      'Latest News Score',
+                                              isAscending: _model
+                                                  .isAscendingSelectedTableColumn,
+                                              bgColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .cardAlternate,
+                                              onClick: (columnName) async {
+                                                if (_model
+                                                        .selectedTableColumn ==
+                                                    columnName) {
+                                                  _model.isAscendingSelectedTableColumn =
+                                                      !_model
+                                                          .isAscendingSelectedTableColumn;
+                                                  safeSetState(() {});
+                                                } else {
+                                                  _model.isAscendingSelectedTableColumn =
+                                                      false;
+                                                  _model.selectedTableColumn =
+                                                      columnName;
+                                                  safeSetState(() {});
+                                                }
+
+                                                if (_model
+                                                        .selectedTableColumn ==
+                                                    'Name') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) => e
+                                                                    .combinedNames,
+                                                                desc: false)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) => e
+                                                                    .combinedNames,
+                                                                desc: true)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Gender') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) =>
+                                                                    e.gender,
+                                                                desc: false)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) =>
+                                                                    e.gender,
+                                                                desc: true)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Date of Birth') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) =>
+                                                                    e.birthDate,
+                                                                desc: false)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients =
+                                                        _model.allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) =>
+                                                                    e.birthDate,
+                                                                desc: true)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Phone Number') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients =
+                                                        _model
+                                                            .allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) => e
+                                                                    .telecomValue,
+                                                                desc: false)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients =
+                                                        _model
+                                                            .allPatients
+                                                            .sortedList(
+                                                                keyOf: (e) => e
+                                                                    .telecomValue,
+                                                                desc: true)
+                                                            .toList()
+                                                            .cast<
+                                                                PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                } else if (_model
+                                                        .selectedTableColumn ==
+                                                    'Latest News Score') {
+                                                  if (_model
+                                                      .isAscendingSelectedTableColumn) {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: false)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
+                                                  } else {
+                                                    _model.sortedAllPatients = _model
+                                                        .allPatients
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: true)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ),
                                         Expanded(
                                           flex: 1,
                                           child: wrapWithModel(
@@ -2424,124 +2754,131 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                   [];
                                                               _model.patientMedications =
                                                                   [];
-                                                              _model.bundleResponse =
-                                                                  await PatientBundleRequestsCall
-                                                                      .call(
-                                                                token: FFAppState()
-                                                                    .fhirBearerToken,
-                                                                id: _model
-                                                                    .patientSelectedForDetails
-                                                                    ?.identifier,
-                                                              );
+                                                              await Future
+                                                                  .wait([
+                                                                Future(
+                                                                    () async {
+                                                                  _model.bundleResponse =
+                                                                      await PatientBundleRequestsCall
+                                                                          .call(
+                                                                    token: FFAppState()
+                                                                        .fhirBearerToken,
+                                                                    id: _model
+                                                                        .patientSelectedForDetails
+                                                                        ?.identifier,
+                                                                  );
 
-                                                              if ((_model
-                                                                      .bundleResponse
-                                                                      ?.succeeded ??
-                                                                  true)) {
-                                                                if (PatientBundleRequestsCall
-                                                                        .observationTotal(
-                                                                      (_model.bundleResponse
-                                                                              ?.jsonBody ??
-                                                                          ''),
-                                                                    )! >
-                                                                    0) {
-                                                                  _model.patientObservations = functions
-                                                                      .parseFhirObservations(PatientBundleRequestsCall.observationEntries(
-                                                                        (_model.bundleResponse?.jsonBody ??
-                                                                            ''),
-                                                                      )!
-                                                                          .toList())
-                                                                      .toList()
-                                                                      .cast<ObservationStruct>();
-                                                                } else {
-                                                                  _model.patientObservations =
-                                                                      [];
-                                                                }
+                                                                  if ((_model
+                                                                          .bundleResponse
+                                                                          ?.succeeded ??
+                                                                      true)) {
+                                                                    if (PatientBundleRequestsCall
+                                                                            .observationTotal(
+                                                                          (_model.bundleResponse?.jsonBody ??
+                                                                              ''),
+                                                                        )! >
+                                                                        0) {
+                                                                      _model.patientObservations = functions
+                                                                          .parseFhirObservations(PatientBundleRequestsCall.observationEntries(
+                                                                            (_model.bundleResponse?.jsonBody ??
+                                                                                ''),
+                                                                          )!
+                                                                              .toList())
+                                                                          .toList()
+                                                                          .cast<ObservationStruct>();
+                                                                    } else {
+                                                                      _model.patientObservations =
+                                                                          [];
+                                                                    }
 
-                                                                if (PatientBundleRequestsCall
-                                                                        .conditionTotal(
-                                                                      (_model.bundleResponse
-                                                                              ?.jsonBody ??
-                                                                          ''),
-                                                                    )! >
-                                                                    0) {
-                                                                  _model.patientConditions = functions
-                                                                      .parseFhirConditions(PatientBundleRequestsCall.conditionEntries(
-                                                                        (_model.bundleResponse?.jsonBody ??
-                                                                            ''),
-                                                                      )!
-                                                                          .toList())
-                                                                      .sortedList(keyOf: (e) => e.onsetDate!, desc: false)
-                                                                      .toList()
-                                                                      .cast<ConditionStruct>();
-                                                                } else {
-                                                                  _model.patientConditions =
-                                                                      [];
-                                                                }
+                                                                    if (PatientBundleRequestsCall
+                                                                            .conditionTotal(
+                                                                          (_model.bundleResponse?.jsonBody ??
+                                                                              ''),
+                                                                        )! >
+                                                                        0) {
+                                                                      _model.patientConditions = functions
+                                                                          .parseFhirConditions(PatientBundleRequestsCall.conditionEntries(
+                                                                            (_model.bundleResponse?.jsonBody ??
+                                                                                ''),
+                                                                          )!
+                                                                              .toList())
+                                                                          .sortedList(keyOf: (e) => e.onsetDate!, desc: false)
+                                                                          .toList()
+                                                                          .cast<ConditionStruct>();
+                                                                    } else {
+                                                                      _model.patientConditions =
+                                                                          [];
+                                                                    }
 
-                                                                if (PatientBundleRequestsCall
-                                                                        .medicationTotal(
-                                                                      (_model.bundleResponse
-                                                                              ?.jsonBody ??
-                                                                          ''),
-                                                                    )! >
-                                                                    0) {
-                                                                  _model.patientMedications = functions
-                                                                      .parseFhirMedications(PatientBundleRequestsCall.medicationEntries(
-                                                                        (_model.bundleResponse?.jsonBody ??
-                                                                            ''),
-                                                                      )!
-                                                                          .toList())
-                                                                      .sortedList(keyOf: (e) => e.medicationName, desc: false)
-                                                                      .toList()
-                                                                      .cast<MedicationStruct>();
-                                                                } else {
-                                                                  _model.patientMedications =
-                                                                      [];
-                                                                }
+                                                                    if (PatientBundleRequestsCall
+                                                                            .medicationTotal(
+                                                                          (_model.bundleResponse?.jsonBody ??
+                                                                              ''),
+                                                                        )! >
+                                                                        0) {
+                                                                      _model.patientMedications = functions
+                                                                          .parseFhirMedications(PatientBundleRequestsCall.medicationEntries(
+                                                                            (_model.bundleResponse?.jsonBody ??
+                                                                                ''),
+                                                                          )!
+                                                                              .toList())
+                                                                          .sortedList(keyOf: (e) => e.medicationName, desc: false)
+                                                                          .toList()
+                                                                          .cast<MedicationStruct>();
+                                                                    } else {
+                                                                      _model.patientMedications =
+                                                                          [];
+                                                                    }
 
-                                                                _model.showPatients =
-                                                                    false;
-                                                                _model.showSearch =
-                                                                    false;
-                                                                _model.showCreateEditPatient =
-                                                                    false;
-                                                                _model.showActivity =
-                                                                    false;
-                                                                _model.showSettings =
-                                                                    false;
-                                                                _model.showPatientDetails =
-                                                                    true;
-                                                                safeSetState(
-                                                                    () {});
-                                                              } else {
-                                                                await showDialog(
-                                                                  context:
-                                                                      context,
-                                                                  builder:
-                                                                      (alertDialogContext) {
-                                                                    return AlertDialog(
-                                                                      title: Text(
-                                                                          'Error'),
-                                                                      content: Text((_model
-                                                                              .bundleResponse
-                                                                              ?.bodyText ??
-                                                                          '')),
-                                                                      actions: [
-                                                                        TextButton(
-                                                                          onPressed: () =>
-                                                                              Navigator.pop(alertDialogContext),
-                                                                          child:
-                                                                              Text('Ok'),
-                                                                        ),
-                                                                      ],
+                                                                    _model.showPatients =
+                                                                        false;
+                                                                    _model.showSearch =
+                                                                        false;
+                                                                    _model.showCreateEditPatient =
+                                                                        false;
+                                                                    _model.showActivity =
+                                                                        false;
+                                                                    _model.showSettings =
+                                                                        false;
+                                                                    _model.showPatientDetails =
+                                                                        true;
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  } else {
+                                                                    await showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (alertDialogContext) {
+                                                                        return AlertDialog(
+                                                                          title:
+                                                                              Text('Error'),
+                                                                          content:
+                                                                              Text((_model.bundleResponse?.bodyText ?? '')),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              onPressed: () => Navigator.pop(alertDialogContext),
+                                                                              child: Text('Ok'),
+                                                                            ),
+                                                                          ],
+                                                                        );
+                                                                      },
                                                                     );
-                                                                  },
-                                                                );
-                                                              }
+                                                                  }
 
-                                                              Navigator.pop(
-                                                                  context);
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                }),
+                                                                Future(
+                                                                    () async {
+                                                                  safeSetState(() =>
+                                                                      _model.apiRequestCompleter =
+                                                                          null);
+                                                                  await _model
+                                                                      .waitForApiRequestCompleted();
+                                                                }),
+                                                              ]);
 
                                                               safeSetState(
                                                                   () {});
@@ -5352,63 +5689,28 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       return;
                                                     }
 
-                                                    _model.allPatientsQuery3 =
-                                                        await GetAllPatientsCall
-                                                            .call(
-                                                      token: FFAppState()
+                                                    _model.fetchPatientsWithNews3 =
+                                                        await actions
+                                                            .fetchFhirPatientsWithLatestNews2(
+                                                      FFAppState().fhirBaseUrl,
+                                                      FFAppState()
                                                           .fhirBearerToken,
+                                                      '2026-05-18',
                                                     );
-
                                                     _shouldSetState = true;
-                                                    if ((_model
-                                                            .allPatientsQuery3
-                                                            ?.succeeded ??
-                                                        true)) {
-                                                      _model.allPatients =
-                                                          functions
-                                                              .parseFhirPatients(
-                                                                  GetAllPatientsCall
-                                                                      .entries(
-                                                                    (_model.allPatientsQuery3
-                                                                            ?.jsonBody ??
-                                                                        ''),
-                                                                  )?.toList(),
-                                                                  functions
-                                                                      .convertDateStringListtoDateTimeList(
-                                                                          GetAllPatientsCall
-                                                                              .lastUpdated(
-                                                                        (_model.allPatientsQuery3?.jsonBody ??
-                                                                            ''),
-                                                                      )?.toList())
-                                                                      .toList())!
-                                                              .toList()
-                                                              .cast<PatientStruct>();
-                                                      _model.sortedAllPatients =
-                                                          functions
-                                                              .parseFhirPatients(
-                                                                  GetAllPatientsCall
-                                                                      .entries(
-                                                                    (_model.allPatientsQuery3
-                                                                            ?.jsonBody ??
-                                                                        ''),
-                                                                  )?.toList(),
-                                                                  functions
-                                                                      .convertDateStringListtoDateTimeList(GetAllPatientsCall
-                                                                              .lastUpdated(
-                                                                        (_model.allPatientsQuery3?.jsonBody ??
-                                                                            ''),
-                                                                      )
-                                                                          ?.toList())
-                                                                      .toList())!
-                                                              .sortedList(
-                                                                  keyOf: (e) => e
-                                                                      .combinedNames,
-                                                                  desc: false)
-                                                              .toList()
-                                                              .cast<
-                                                                  PatientStruct>();
-                                                      safeSetState(() {});
-                                                    }
+                                                    _model.allPatients = _model
+                                                        .fetchPatientsWithNews3!
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    _model.sortedAllPatients = _model
+                                                        .fetchPatientsWithNews3!
+                                                        .sortedList(
+                                                            keyOf: (e) => e
+                                                                .latestNEWS2Score,
+                                                            desc: true)
+                                                        .toList()
+                                                        .cast<PatientStruct>();
+                                                    safeSetState(() {});
                                                     safeSetState(() {
                                                       _model
                                                           .firstNameTextController
@@ -5569,197 +5871,42 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             ),
                           ),
                         if (_model.showPatientDetails)
-                          Container(
-                            height: 925.0,
-                            decoration: BoxDecoration(),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
+                          FutureBuilder<ApiCallResponse>(
+                            future: (_model.apiRequestCompleter ??= Completer<
+                                    ApiCallResponse>()
+                                  ..complete(
+                                      GetAdmissionEncounterByPatientIDCall.call(
+                                    token: FFAppState().fhirBearerToken,
+                                    id: _model
+                                        .patientSelectedForDetails?.identifier,
+                                  )))
+                                .future,
+                            builder: (context, snapshot) {
+                              // Customize what your widget looks like when it's loading.
+                              if (!snapshot.hasData) {
+                                return Center(
+                                  child: LinearProgressIndicator(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                  ),
+                                );
+                              }
+                              final patientDetailsContainerGetAdmissionEncounterByPatientIDResponse =
+                                  snapshot.data!;
+
+                              return Container(
+                                decoration: BoxDecoration(),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    InkWell(
-                                      splashColor: Colors.transparent,
-                                      focusColor: Colors.transparent,
-                                      hoverColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-                                      onTap: () async {
-                                        _model.showPatients = true;
-                                        _model.showSearch = false;
-                                        _model.showCreateEditPatient = false;
-                                        _model.showActivity = false;
-                                        _model.showSettings = false;
-                                        _model.selectedDob = null;
-                                        _model.patientMode = PatientMode.create;
-                                        _model.patientSelectedForDetails = null;
-                                        _model.showPatientDetails = false;
-                                        safeSetState(() {});
-                                        await _model.pageViewController1
-                                            ?.animateToPage(
-                                          _model.currentPatientPage,
-                                          duration: Duration(milliseconds: 500),
-                                          curve: Curves.ease,
-                                        );
-                                      },
-                                      child: Text(
-                                        'Patient',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight: FontWeight.w600,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .primary,
-                                              letterSpacing: 0.0,
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '/',
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            font: GoogleFonts.inter(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                            color: FlutterFlowTheme.of(context)
-                                                .primary,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.w600,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontStyle,
-                                          ),
-                                    ),
-                                    Text(
-                                      valueOrDefault<String>(
-                                        _model.patientSelectedForDetails
-                                            ?.combinedNames,
-                                        'NAME',
-                                      ),
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            font: GoogleFonts.inter(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                            color: FlutterFlowTheme.of(context)
-                                                .primary,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.w600,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontStyle,
-                                          ),
-                                    ),
-                                  ]
-                                      .divide(SizedBox(width: 20.0))
-                                      .around(SizedBox(width: 20.0)),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Patient Details',
-                                            style: FlutterFlowTheme.of(context)
-                                                .headlineLarge
-                                                .override(
-                                                  font: GoogleFonts.readexPro(
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .headlineLarge
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .headlineLarge
-                                                            .fontStyle,
-                                                  ),
-                                                  letterSpacing: 0.0,
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .headlineLarge
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .headlineLarge
-                                                          .fontStyle,
-                                                ),
-                                          ),
-                                          Text(
-                                            'View the patient\'s basic demographic information from the FHIR Server.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .override(
-                                                  font: GoogleFonts.inter(
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodyMedium
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodyMedium
-                                                            .fontStyle,
-                                                  ),
-                                                  letterSpacing: 0.0,
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontStyle,
-                                                ),
-                                          ),
-                                        ]
-                                            .divide(SizedBox(height: 10.0))
-                                            .addToStart(SizedBox(height: 5.0))
-                                            .addToEnd(SizedBox(height: 5.0)),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(),
-                                        alignment:
-                                            AlignmentDirectional(1.0, 0.0),
-                                        child: FFButtonWidget(
-                                          onPressed: () async {
+                                    Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        InkWell(
+                                          splashColor: Colors.transparent,
+                                          focusColor: Colors.transparent,
+                                          hoverColor: Colors.transparent,
+                                          highlightColor: Colors.transparent,
+                                          onTap: () async {
                                             _model.showPatients = true;
                                             _model.showSearch = false;
                                             _model.showCreateEditPatient =
@@ -5781,26 +5928,220 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                               curve: Curves.ease,
                                             );
                                           },
-                                          text: 'Back to Patients',
-                                          icon: Icon(
-                                            Icons.arrow_back_rounded,
-                                            size: 24.0,
+                                          child: Text(
+                                            'Patient',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  font: GoogleFonts.inter(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primary,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
                                           ),
-                                          options: FFButtonOptions(
-                                            width: 200.0,
-                                            height: 40.0,
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16.0, 0.0, 16.0, 0.0),
-                                            iconPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0.0, 0.0, 0.0, 0.0),
-                                            iconColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .primary,
-                                            color: Colors.transparent,
-                                            textStyle:
-                                                FlutterFlowTheme.of(context)
+                                        ),
+                                        Text(
+                                          '/',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                font: GoogleFonts.inter(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                                letterSpacing: 0.0,
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontStyle,
+                                              ),
+                                        ),
+                                        Text(
+                                          valueOrDefault<String>(
+                                            _model.patientSelectedForDetails
+                                                ?.combinedNames,
+                                            'NAME',
+                                          ),
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                font: GoogleFonts.inter(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                                letterSpacing: 0.0,
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontStyle,
+                                              ),
+                                        ),
+                                      ]
+                                          .divide(SizedBox(width: 20.0))
+                                          .around(SizedBox(width: 20.0)),
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.max,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Patient Details',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .headlineLarge
+                                                    .override(
+                                                      font:
+                                                          GoogleFonts.readexPro(
+                                                        fontWeight:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .headlineLarge
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .headlineLarge
+                                                                .fontStyle,
+                                                      ),
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .headlineLarge
+                                                              .fontWeight,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .headlineLarge
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                              Text(
+                                                'View the patient\'s basic demographic information from the FHIR Server.',
+                                                style:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .override(
+                                                          font:
+                                                              GoogleFonts.inter(
+                                                            fontWeight:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontWeight,
+                                                            fontStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .bodyMedium
+                                                                    .fontStyle,
+                                                          ),
+                                                          letterSpacing: 0.0,
+                                                          fontWeight:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontWeight,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontStyle,
+                                                        ),
+                                              ),
+                                            ]
+                                                .divide(SizedBox(height: 10.0))
+                                                .addToStart(
+                                                    SizedBox(height: 5.0))
+                                                .addToEnd(
+                                                    SizedBox(height: 5.0)),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            decoration: BoxDecoration(),
+                                            alignment:
+                                                AlignmentDirectional(1.0, 0.0),
+                                            child: FFButtonWidget(
+                                              onPressed: () async {
+                                                _model.showPatients = true;
+                                                _model.showSearch = false;
+                                                _model.showCreateEditPatient =
+                                                    false;
+                                                _model.showActivity = false;
+                                                _model.showSettings = false;
+                                                _model.selectedDob = null;
+                                                _model.patientMode =
+                                                    PatientMode.create;
+                                                _model.patientSelectedForDetails =
+                                                    null;
+                                                _model.showPatientDetails =
+                                                    false;
+                                                safeSetState(() {});
+                                                await _model.pageViewController1
+                                                    ?.animateToPage(
+                                                  _model.currentPatientPage,
+                                                  duration: Duration(
+                                                      milliseconds: 500),
+                                                  curve: Curves.ease,
+                                                );
+                                              },
+                                              text: 'Back to Patients',
+                                              icon: Icon(
+                                                Icons.arrow_back_rounded,
+                                                size: 24.0,
+                                              ),
+                                              options: FFButtonOptions(
+                                                width: 200.0,
+                                                height: 40.0,
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(
+                                                        16.0, 0.0, 16.0, 0.0),
+                                                iconPadding:
+                                                    EdgeInsetsDirectional
+                                                        .fromSTEB(
+                                                            0.0, 0.0, 0.0, 0.0),
+                                                iconColor:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                                color: Colors.transparent,
+                                                textStyle: FlutterFlowTheme.of(
+                                                        context)
                                                     .titleSmall
                                                     .override(
                                                       font: GoogleFonts.inter(
@@ -5832,126 +6173,85 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               .titleSmall
                                                               .fontStyle,
                                                     ),
-                                            elevation: 0.0,
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
-                                            hoverColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .cardBlue,
-                                            hoverBorderSide: BorderSide(
-                                              color:
-                                                  FlutterFlowTheme.of(context)
+                                                elevation: 0.0,
+                                                borderSide: BorderSide(
+                                                  color: Colors.transparent,
+                                                  width: 1.0,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                                hoverColor:
+                                                    FlutterFlowTheme.of(context)
+                                                        .cardBlue,
+                                                hoverBorderSide: BorderSide(
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
                                                       .primary,
-                                              width: 1.0,
+                                                  width: 1.0,
+                                                ),
+                                                hoverTextColor:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                              ),
                                             ),
-                                            hoverTextColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .primary,
                                           ),
                                         ),
-                                      ),
+                                        Container(
+                                          width: 150.0,
+                                          decoration: BoxDecoration(),
+                                        ),
+                                      ]
+                                          .divide(SizedBox(width: 20.0))
+                                          .around(SizedBox(width: 20.0)),
                                     ),
-                                    Container(
-                                      width: 150.0,
-                                      decoration: BoxDecoration(),
-                                    ),
-                                  ]
-                                      .divide(SizedBox(width: 20.0))
-                                      .around(SizedBox(width: 20.0)),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Container(
-                                      width: 1250.0,
-                                      decoration: BoxDecoration(
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryBackground,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            blurRadius: 4.0,
-                                            color: Color(0x33000000),
-                                            offset: Offset(
-                                              2.0,
-                                              2.0,
-                                            ),
-                                          )
-                                        ],
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0.0, 10.0, 0.0, 0.0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                Container(
-                                                  width: 60.0,
-                                                  height: 60.0,
-                                                  decoration: BoxDecoration(
-                                                    color: () {
-                                                      if (_model
-                                                              .patientSelectedForDetails
-                                                              ?.gender ==
-                                                          'male') {
-                                                        return FlutterFlowTheme
-                                                                .of(context)
-                                                            .cardBlue;
-                                                      } else if (_model
-                                                              .patientSelectedForDetails
-                                                              ?.gender ==
-                                                          'female') {
-                                                        return FlutterFlowTheme
-                                                                .of(context)
-                                                            .cardSuccess;
-                                                      } else {
-                                                        return FlutterFlowTheme
-                                                                .of(context)
-                                                            .cardTertiary;
-                                                      }
-                                                    }(),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: Align(
-                                                    alignment:
-                                                        AlignmentDirectional(
-                                                            0.0, 0.0),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        Container(
+                                          width: 1250.0,
+                                          decoration: BoxDecoration(
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryBackground,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                blurRadius: 4.0,
+                                                color: Color(0x33000000),
+                                                offset: Offset(
+                                                  2.0,
+                                                  2.0,
+                                                ),
+                                              )
+                                            ],
+                                            borderRadius:
+                                                BorderRadius.circular(10.0),
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                children: [
+                                                  Expanded(
                                                     child: Padding(
                                                       padding:
-                                                          EdgeInsets.all(10.0),
-                                                      child: Text(
-                                                        functions.getInitials(
-                                                            _model
-                                                                .patientSelectedForDetails!
-                                                                .givenNames,
-                                                            _model
-                                                                .patientSelectedForDetails!
-                                                                .familyName),
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .titleMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .readexPro(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleMedium
-                                                                    .fontStyle,
-                                                              ),
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0.0,
+                                                                  10.0,
+                                                                  0.0,
+                                                                  0.0),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Container(
+                                                            width: 60.0,
+                                                            height: 60.0,
+                                                            decoration:
+                                                                BoxDecoration(
                                                               color: () {
                                                                 if (_model
                                                                         .patientSelectedForDetails
@@ -5959,1106 +6259,2225 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                     'male') {
                                                                   return FlutterFlowTheme.of(
                                                                           context)
-                                                                      .primary;
+                                                                      .cardBlue;
                                                                 } else if (_model
                                                                         .patientSelectedForDetails
                                                                         ?.gender ==
                                                                     'female') {
                                                                   return FlutterFlowTheme.of(
                                                                           context)
-                                                                      .success;
+                                                                      .cardSuccess;
                                                                 } else {
                                                                   return FlutterFlowTheme.of(
                                                                           context)
-                                                                      .tertiary;
+                                                                      .cardTertiary;
                                                                 }
                                                               }(),
-                                                              fontSize: 20.0,
-                                                              letterSpacing:
-                                                                  0.0,
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
+                                                            child: Align(
+                                                              alignment:
+                                                                  AlignmentDirectional(
+                                                                      0.0, 0.0),
+                                                              child: Padding(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            10.0),
+                                                                child: Text(
+                                                                  functions.getInitials(
+                                                                      _model
+                                                                          .patientSelectedForDetails!
+                                                                          .givenNames,
+                                                                      _model
+                                                                          .patientSelectedForDetails!
+                                                                          .familyName),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .titleMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .readexPro(
+                                                                          fontWeight:
+                                                                              FontWeight.normal,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .titleMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        color:
+                                                                            () {
+                                                                          if (_model.patientSelectedForDetails?.gender ==
+                                                                              'male') {
+                                                                            return FlutterFlowTheme.of(context).primary;
+                                                                          } else if (_model.patientSelectedForDetails?.gender ==
+                                                                              'female') {
+                                                                            return FlutterFlowTheme.of(context).success;
+                                                                          } else {
+                                                                            return FlutterFlowTheme.of(context).tertiary;
+                                                                          }
+                                                                        }(),
+                                                                        fontSize:
+                                                                            20.0,
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight:
+                                                                            FontWeight.normal,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .titleMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Column(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .max,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                '${valueOrDefault<String>(
+                                                                  _model
+                                                                      .patientSelectedForDetails
+                                                                      ?.familyName,
+                                                                  'name',
+                                                                )}, ${valueOrDefault<String>(
+                                                                  _model
+                                                                      .patientSelectedForDetails
+                                                                      ?.givenNames,
+                                                                  'name',
+                                                                )}',
+                                                                style: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .headlineMedium
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .readexPro(
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .headlineMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .headlineMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .headlineMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .headlineMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                              ),
+                                                              Container(
+                                                                height: 30.0,
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .cardSuccess,
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              10.0),
+                                                                  border: Border
+                                                                      .all(
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .success,
+                                                                    width: 1.0,
+                                                                  ),
+                                                                ),
+                                                                child: Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .max,
+                                                                  children: [
+                                                                    Icon(
+                                                                      Icons
+                                                                          .check_circle_outline_rounded,
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .success,
+                                                                      size:
+                                                                          24.0,
+                                                                    ),
+                                                                    Text(
+                                                                      'FHIR Synced.',
+                                                                      style: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .override(
+                                                                            font:
+                                                                                GoogleFonts.inter(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                            ),
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).success,
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                    ),
+                                                                  ]
+                                                                      .divide(SizedBox(
+                                                                          width:
+                                                                              10.0))
+                                                                      .around(SizedBox(
+                                                                          width:
+                                                                              10.0)),
+                                                                ),
+                                                              ),
+                                                            ].divide(SizedBox(
+                                                                height: 10.0)),
+                                                          ),
+                                                          if (kDebugMode)
+                                                            InkWell(
+                                                              splashColor: Colors
+                                                                  .transparent,
+                                                              focusColor: Colors
+                                                                  .transparent,
+                                                              hoverColor: Colors
+                                                                  .transparent,
+                                                              highlightColor:
+                                                                  Colors
+                                                                      .transparent,
+                                                              onTap: () async {
+                                                                await Clipboard.setData(ClipboardData(
+                                                                    text: _model
+                                                                        .patientSelectedForDetails!
+                                                                        .identifier));
+                                                              },
+                                                              child: Icon(
+                                                                Icons
+                                                                    .content_copy_rounded,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .alternate,
+                                                                size: 24.0,
+                                                              ),
+                                                            ),
+                                                          if (kDebugMode)
+                                                            InkWell(
+                                                              splashColor: Colors
+                                                                  .transparent,
+                                                              focusColor: Colors
+                                                                  .transparent,
+                                                              hoverColor: Colors
+                                                                  .transparent,
+                                                              highlightColor:
+                                                                  Colors
+                                                                      .transparent,
+                                                              onTap: () async {
+                                                                await Clipboard.setData(
+                                                                    ClipboardData(
+                                                                        text: GetAdmissionEncounterByPatientIDCall
+                                                                            .encounterID(
+                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                      .jsonBody,
+                                                                )!));
+                                                              },
+                                                              child: Icon(
+                                                                Icons
+                                                                    .content_copy_rounded,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .alternate,
+                                                                size: 24.0,
+                                                              ),
+                                                            ),
+                                                        ]
+                                                            .divide(SizedBox(
+                                                                width: 150.0))
+                                                            .addToStart(
+                                                                SizedBox(
+                                                                    width:
+                                                                        30.0))
+                                                            .addToEnd(SizedBox(
+                                                                width: 50.0)),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  if ((GetAdmissionEncounterByPatientIDCall
+                                                              .total(
+                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                .jsonBody,
+                                                          )! >
+                                                          0) &&
+                                                      (GetAdmissionEncounterByPatientIDCall
+                                                              .encounterStatus(
+                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                .jsonBody,
+                                                          ) ==
+                                                          'in-progress') &&
+                                                      (GetAdmissionEncounterByPatientIDCall
+                                                              .encounterType(
+                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                .jsonBody,
+                                                          ) ==
+                                                          'IMP'))
+                                                    Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          children: [
+                                                            AlignedTooltip(
+                                                              content: Padding(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            4.0),
+                                                                child: Text(
+                                                                  'Encounter ID: ${GetAdmissionEncounterByPatientIDCall.encounterID(
+                                                                    patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                        .jsonBody,
+                                                                  )}',
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyLarge
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ),
+                                                              offset: 4.0,
+                                                              preferredDirection:
+                                                                  AxisDirection
+                                                                      .up,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                              backgroundColor:
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryBackground,
+                                                              elevation: 4.0,
+                                                              tailBaseWidth:
+                                                                  24.0,
+                                                              tailLength: 12.0,
+                                                              waitDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          100),
+                                                              showDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          1500),
+                                                              triggerMode:
+                                                                  TooltipTriggerMode
+                                                                      .tap,
+                                                              child: FaIcon(
+                                                                FontAwesomeIcons
+                                                                    .bed,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .success,
+                                                                size: 24.0,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              'In-Patient',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              width: 10.0)),
+                                                        ),
+                                                        Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          children: [
+                                                            AlignedTooltip(
+                                                              content: Padding(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            4.0),
+                                                                child: Text(
+                                                                  'Date of Admission',
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyLarge
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ),
+                                                              offset: 4.0,
+                                                              preferredDirection:
+                                                                  AxisDirection
+                                                                      .up,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                              backgroundColor:
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryBackground,
+                                                              elevation: 4.0,
+                                                              tailBaseWidth:
+                                                                  24.0,
+                                                              tailLength: 12.0,
+                                                              waitDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          100),
+                                                              showDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          1500),
+                                                              triggerMode:
+                                                                  TooltipTriggerMode
+                                                                      .tap,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .calendar_month_outlined,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                size: 24.0,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              dateTimeFormat(
+                                                                  "y-MM-dd",
+                                                                  functions.convertSingleDateStringtoDateTime(
+                                                                      GetAdmissionEncounterByPatientIDCall
+                                                                          .admissionDate(
+                                                                    patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                        .jsonBody,
+                                                                  ))),
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              width: 10.0)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                ].addToEnd(
+                                                    SizedBox(width: 10.0)),
+                                              ),
+                                              Divider(
+                                                thickness: 2.0,
+                                                indent: 30.0,
+                                                endIndent: 30.0,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .alternate,
+                                              ),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              'Full name',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .secondaryText,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Icon(
+                                                                  Icons
+                                                                      .person_rounded,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryText,
+                                                                  size: 24.0,
+                                                                ),
+                                                                Text(
+                                                                  valueOrDefault<
+                                                                      String>(
+                                                                    _model
+                                                                        .patientSelectedForDetails
+                                                                        ?.combinedNames,
+                                                                    'Name',
+                                                                  ),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              height: 10.0)),
+                                                        ),
+                                                      ]
+                                                          .addToStart(SizedBox(
+                                                              width: 20.0))
+                                                          .addToEnd(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: 100.0,
+                                                    child: VerticalDivider(
+                                                      thickness: 2.0,
+                                                      indent: 20.0,
+                                                      endIndent: 20.0,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              'Gender',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .secondaryText,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Builder(
+                                                                  builder:
+                                                                      (context) {
+                                                                    if (_model
+                                                                            .patientSelectedForDetails
+                                                                            ?.gender ==
+                                                                        'male') {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .male_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .primary,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    } else if (_model
+                                                                            .patientSelectedForDetails
+                                                                            ?.gender ==
+                                                                        'female') {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .female_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .success,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    } else {
+                                                                      return Icon(
+                                                                        Icons
+                                                                            .transgender_rounded,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .tertiary,
+                                                                        size:
+                                                                            24.0,
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                ),
+                                                                Text(
+                                                                  functions.capitalizeFirst(
+                                                                      valueOrDefault<
+                                                                          String>(
+                                                                    _model
+                                                                        .patientSelectedForDetails
+                                                                        ?.gender,
+                                                                    'Gender',
+                                                                  )),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              height: 10.0)),
+                                                        ),
+                                                      ]
+                                                          .addToStart(SizedBox(
+                                                              width: 20.0))
+                                                          .addToEnd(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: 100.0,
+                                                    child: VerticalDivider(
+                                                      thickness: 2.0,
+                                                      indent: 20.0,
+                                                      endIndent: 20.0,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              'Date of Birth',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .secondaryText,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Icon(
+                                                                  Icons
+                                                                      .calendar_month,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryText,
+                                                                  size: 24.0,
+                                                                ),
+                                                                Text(
+                                                                  valueOrDefault<
+                                                                      String>(
+                                                                    _model
+                                                                        .patientSelectedForDetails
+                                                                        ?.birthDate,
+                                                                    'Birth Date',
+                                                                  ),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              height: 10.0)),
+                                                        ),
+                                                      ]
+                                                          .addToStart(SizedBox(
+                                                              width: 20.0))
+                                                          .addToEnd(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: 100.0,
+                                                    child: VerticalDivider(
+                                                      thickness: 2.0,
+                                                      indent: 20.0,
+                                                      endIndent: 20.0,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              'Phone Number',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .secondaryText,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                FaIcon(
+                                                                  FontAwesomeIcons
+                                                                      .phone,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryText,
+                                                                  size: 20.0,
+                                                                ),
+                                                                Text(
+                                                                  valueOrDefault<
+                                                                      String>(
+                                                                    _model
+                                                                        .patientSelectedForDetails
+                                                                        ?.telecomValue,
+                                                                    'Phone Number',
+                                                                  ),
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                          ].divide(SizedBox(
+                                                              height: 10.0)),
+                                                        ),
+                                                      ]
+                                                          .addToStart(SizedBox(
+                                                              width: 20.0))
+                                                          .addToEnd(SizedBox(
+                                                              width: 20.0)),
+                                                    ),
+                                                  ),
+                                                ]
+                                                    .addToStart(
+                                                        SizedBox(width: 20.0))
+                                                    .addToEnd(
+                                                        SizedBox(width: 20.0)),
+                                              ),
+                                            ]
+                                                .divide(SizedBox(height: 6.0))
+                                                .around(SizedBox(height: 6.0)),
+                                          ),
+                                        ),
+                                      ]
+                                          .divide(SizedBox(width: 20.0))
+                                          .around(SizedBox(width: 20.0)),
+                                    ),
+                                    Align(
+                                      alignment:
+                                          AlignmentDirectional(-1.0, 0.0),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            20.0, 10.0, 0.0, 0.0),
+                                        child: Container(
+                                          width: 1250.0,
+                                          height: MediaQuery.sizeOf(context)
+                                                  .height *
+                                              1.0,
+                                          decoration: BoxDecoration(
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryBackground,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                blurRadius: 4.0,
+                                                color: Color(0x33000000),
+                                                offset: Offset(
+                                                  2.0,
+                                                  2.0,
+                                                ),
+                                              )
+                                            ],
+                                            borderRadius:
+                                                BorderRadius.circular(10.0),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Align(
+                                                alignment: Alignment(1.0, 0),
+                                                child: FlutterFlowButtonTabBar(
+                                                  useToggleButtonStyle: true,
+                                                  labelStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .titleMedium
+                                                          .override(
+                                                            font: GoogleFonts
+                                                                .readexPro(
                                                               fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .titleMedium
+                                                                      .fontWeight,
                                                               fontStyle:
                                                                   FlutterFlowTheme.of(
                                                                           context)
                                                                       .titleMedium
                                                                       .fontStyle,
                                                             ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      '${valueOrDefault<String>(
-                                                        _model
-                                                            .patientSelectedForDetails
-                                                            ?.familyName,
-                                                        'name',
-                                                      )}, ${valueOrDefault<String>(
-                                                        _model
-                                                            .patientSelectedForDetails
-                                                            ?.givenNames,
-                                                        'name',
-                                                      )}',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .headlineMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .readexPro(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .headlineMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .headlineMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
+                                                            letterSpacing: 0.0,
+                                                            fontWeight:
+                                                                FlutterFlowTheme.of(
                                                                         context)
-                                                                    .headlineMedium
+                                                                    .titleMedium
                                                                     .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
+                                                            fontStyle:
+                                                                FlutterFlowTheme.of(
                                                                         context)
-                                                                    .headlineMedium
+                                                                    .titleMedium
                                                                     .fontStyle,
-                                                              ),
-                                                    ),
-                                                    Container(
-                                                      height: 30.0,
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .cardSuccess,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                        border: Border.all(
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .success,
-                                                          width: 1.0,
-                                                        ),
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.max,
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .check_circle_outline_rounded,
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .success,
-                                                            size: 24.0,
                                                           ),
-                                                          Text(
-                                                            'FHIR Synced.',
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  font:
-                                                                      GoogleFonts
-                                                                          .inter(
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  color: FlutterFlowTheme.of(
+                                                  unselectedLabelStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .titleMedium
+                                                          .override(
+                                                            font: GoogleFonts
+                                                                .readexPro(
+                                                              fontWeight:
+                                                                  FlutterFlowTheme.of(
                                                                           context)
-                                                                      .success,
-                                                                  letterSpacing:
+                                                                      .titleMedium
+                                                                      .fontWeight,
+                                                              fontStyle:
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .titleMedium
+                                                                      .fontStyle,
+                                                            ),
+                                                            letterSpacing: 0.0,
+                                                            fontWeight:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleMedium
+                                                                    .fontWeight,
+                                                            fontStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleMedium
+                                                                    .fontStyle,
+                                                          ),
+                                                  labelColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .info,
+                                                  unselectedLabelColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .secondaryText,
+                                                  backgroundColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .primary,
+                                                  unselectedBackgroundColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .cardAlternate,
+                                                  unselectedBorderColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .alternate,
+                                                  borderWidth: 1.0,
+                                                  borderRadius: 10.0,
+                                                  elevation: 0.0,
+                                                  buttonMargin:
+                                                      EdgeInsetsDirectional
+                                                          .fromSTEB(5.0, 0.0,
+                                                              5.0, 0.0),
+                                                  padding: EdgeInsets.all(10.0),
+                                                  tabs: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10.0),
+                                                          child: FaIcon(
+                                                            FontAwesomeIcons
+                                                                .chartLine,
+                                                          ),
+                                                        ),
+                                                        Tab(
+                                                          text: 'Vital Signs',
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsetsDirectional
+                                                                  .fromSTEB(
                                                                       0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
+                                                                      0.0,
+                                                                      10.0,
+                                                                      0.0),
+                                                          child: Icon(
+                                                            Icons.notes_rounded,
                                                           ),
-                                                        ]
-                                                            .divide(SizedBox(
-                                                                width: 10.0))
-                                                            .around(SizedBox(
-                                                                width: 10.0)),
-                                                      ),
+                                                        ),
+                                                        Tab(
+                                                          text:
+                                                              'Active Conditions',
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ].divide(
-                                                      SizedBox(height: 10.0)),
-                                                ),
-                                                if (kDebugMode)
-                                                  InkWell(
-                                                    splashColor:
-                                                        Colors.transparent,
-                                                    focusColor:
-                                                        Colors.transparent,
-                                                    hoverColor:
-                                                        Colors.transparent,
-                                                    highlightColor:
-                                                        Colors.transparent,
-                                                    onTap: () async {
-                                                      await Clipboard.setData(
-                                                          ClipboardData(
-                                                              text: _model
-                                                                  .patientSelectedForDetails!
-                                                                  .identifier));
-                                                    },
-                                                    child: Icon(
-                                                      Icons
-                                                          .content_copy_rounded,
-                                                      color:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .alternate,
-                                                      size: 24.0,
-                                                    ),
-                                                  ),
-                                              ]
-                                                  .divide(
-                                                      SizedBox(width: 150.0))
-                                                  .addToStart(
-                                                      SizedBox(width: 30.0))
-                                                  .addToEnd(
-                                                      SizedBox(width: 50.0)),
-                                            ),
-                                          ),
-                                          Divider(
-                                            thickness: 2.0,
-                                            indent: 30.0,
-                                            endIndent: 30.0,
-                                            color: FlutterFlowTheme.of(context)
-                                                .alternate,
-                                          ),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              Expanded(
-                                                flex: 1,
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
                                                       children: [
-                                                        Text(
-                                                          'Full name',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .inter(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                              ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsetsDirectional
+                                                                  .fromSTEB(
+                                                                      0.0,
+                                                                      0.0,
+                                                                      10.0,
+                                                                      0.0),
+                                                          child: FaIcon(
+                                                            FontAwesomeIcons
+                                                                .pills,
+                                                          ),
                                                         ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .person_rounded,
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryText,
-                                                              size: 24.0,
-                                                            ),
-                                                            Text(
-                                                              valueOrDefault<
-                                                                  String>(
-                                                                _model
-                                                                    .patientSelectedForDetails
-                                                                    ?.combinedNames,
-                                                                'Name',
-                                                              ),
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
+                                                        Tab(
+                                                          text:
+                                                              'Current Medications',
                                                         ),
-                                                      ].divide(SizedBox(
-                                                          height: 10.0)),
+                                                      ],
                                                     ),
-                                                  ]
-                                                      .addToStart(
-                                                          SizedBox(width: 20.0))
-                                                      .addToEnd(SizedBox(
-                                                          width: 20.0)),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 100.0,
-                                                child: VerticalDivider(
-                                                  thickness: 2.0,
-                                                  indent: 20.0,
-                                                  endIndent: 20.0,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .alternate,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
                                                       children: [
-                                                        Text(
-                                                          'Gender',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .inter(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                              ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsetsDirectional
+                                                                  .fromSTEB(
+                                                                      0.0,
+                                                                      0.0,
+                                                                      10.0,
+                                                                      0.0),
+                                                          child: Icon(
+                                                            Icons.warning_amber,
+                                                          ),
                                                         ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Builder(
-                                                              builder:
-                                                                  (context) {
-                                                                if (_model
-                                                                        .patientSelectedForDetails
-                                                                        ?.gender ==
-                                                                    'male') {
-                                                                  return Icon(
-                                                                    Icons
-                                                                        .male_rounded,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                    size: 24.0,
-                                                                  );
-                                                                } else if (_model
-                                                                        .patientSelectedForDetails
-                                                                        ?.gender ==
-                                                                    'female') {
-                                                                  return Icon(
-                                                                    Icons
-                                                                        .female_rounded,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .success,
-                                                                    size: 24.0,
-                                                                  );
-                                                                } else {
-                                                                  return Icon(
-                                                                    Icons
-                                                                        .transgender_rounded,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .tertiary,
-                                                                    size: 24.0,
-                                                                  );
-                                                                }
-                                                              },
-                                                            ),
-                                                            Text(
-                                                              functions.capitalizeFirst(
-                                                                  valueOrDefault<
-                                                                      String>(
-                                                                _model
-                                                                    .patientSelectedForDetails
-                                                                    ?.gender,
-                                                                'Gender',
-                                                              )),
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
+                                                        Tab(
+                                                          text: 'NEWS2 Score',
                                                         ),
-                                                      ].divide(SizedBox(
-                                                          height: 10.0)),
-                                                    ),
-                                                  ]
-                                                      .addToStart(
-                                                          SizedBox(width: 20.0))
-                                                      .addToEnd(SizedBox(
-                                                          width: 20.0)),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 100.0,
-                                                child: VerticalDivider(
-                                                  thickness: 2.0,
-                                                  indent: 20.0,
-                                                  endIndent: 20.0,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .alternate,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          'Date of Birth',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .inter(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .calendar_month,
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryText,
-                                                              size: 24.0,
-                                                            ),
-                                                            Text(
-                                                              valueOrDefault<
-                                                                  String>(
-                                                                _model
-                                                                    .patientSelectedForDetails
-                                                                    ?.birthDate,
-                                                                'Birth Date',
-                                                              ),
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          height: 10.0)),
-                                                    ),
-                                                  ]
-                                                      .addToStart(
-                                                          SizedBox(width: 20.0))
-                                                      .addToEnd(SizedBox(
-                                                          width: 20.0)),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 100.0,
-                                                child: VerticalDivider(
-                                                  thickness: 2.0,
-                                                  indent: 20.0,
-                                                  endIndent: 20.0,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .alternate,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          'Phone Number',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .inter(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            FaIcon(
-                                                              FontAwesomeIcons
-                                                                  .phone,
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryText,
-                                                              size: 20.0,
-                                                            ),
-                                                            Text(
-                                                              valueOrDefault<
-                                                                  String>(
-                                                                _model
-                                                                    .patientSelectedForDetails
-                                                                    ?.telecomValue,
-                                                                'Phone Number',
-                                                              ),
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          height: 10.0)),
-                                                    ),
-                                                  ]
-                                                      .addToStart(
-                                                          SizedBox(width: 20.0))
-                                                      .addToEnd(SizedBox(
-                                                          width: 20.0)),
-                                                ),
-                                              ),
-                                            ]
-                                                .addToStart(
-                                                    SizedBox(width: 20.0))
-                                                .addToEnd(
-                                                    SizedBox(width: 20.0)),
-                                          ),
-                                        ]
-                                            .divide(SizedBox(height: 6.0))
-                                            .around(SizedBox(height: 6.0)),
-                                      ),
-                                    ),
-                                  ]
-                                      .divide(SizedBox(width: 20.0))
-                                      .around(SizedBox(width: 20.0)),
-                                ),
-                                Align(
-                                  alignment: AlignmentDirectional(-1.0, 0.0),
-                                  child: Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        20.0, 10.0, 0.0, 0.0),
-                                    child: Container(
-                                      width: 1250.0,
-                                      height: 565.0,
-                                      decoration: BoxDecoration(
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryBackground,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            blurRadius: 4.0,
-                                            color: Color(0x33000000),
-                                            offset: Offset(
-                                              2.0,
-                                              2.0,
-                                            ),
-                                          )
-                                        ],
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                            alignment: Alignment(1.0, 0),
-                                            child: FlutterFlowButtonTabBar(
-                                              useToggleButtonStyle: true,
-                                              labelStyle: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleMedium
-                                                  .override(
-                                                    font: GoogleFonts.readexPro(
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleMedium
-                                                              .fontStyle,
-                                                    ),
-                                                    letterSpacing: 0.0,
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleMedium
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleMedium
-                                                            .fontStyle,
-                                                  ),
-                                              unselectedLabelStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .titleMedium
-                                                      .override(
-                                                        font: GoogleFonts
-                                                            .readexPro(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleMedium
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleMedium
-                                                                  .fontStyle,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .titleMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .titleMedium
-                                                                .fontStyle,
-                                                      ),
-                                              labelColor:
-                                                  FlutterFlowTheme.of(context)
-                                                      .info,
-                                              unselectedLabelColor:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              backgroundColor:
-                                                  FlutterFlowTheme.of(context)
-                                                      .primary,
-                                              unselectedBackgroundColor:
-                                                  FlutterFlowTheme.of(context)
-                                                      .cardAlternate,
-                                              unselectedBorderColor:
-                                                  FlutterFlowTheme.of(context)
-                                                      .alternate,
-                                              borderWidth: 1.0,
-                                              borderRadius: 10.0,
-                                              elevation: 0.0,
-                                              buttonMargin:
-                                                  EdgeInsetsDirectional
-                                                      .fromSTEB(
-                                                          5.0, 0.0, 5.0, 0.0),
-                                              tabs: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0.0,
-                                                                  0.0,
-                                                                  10.0,
-                                                                  0.0),
-                                                      child: FaIcon(
-                                                        FontAwesomeIcons
-                                                            .chartLine,
-                                                      ),
-                                                    ),
-                                                    Tab(
-                                                      text: 'Vital Signs',
+                                                      ],
                                                     ),
                                                   ],
+                                                  controller:
+                                                      _model.tabBarController,
+                                                  onTap: (i) async {
+                                                    [
+                                                      () async {},
+                                                      () async {},
+                                                      () async {},
+                                                      () async {}
+                                                    ][i]();
+                                                  },
                                                 ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
+                                              ),
+                                              Expanded(
+                                                child: TabBarView(
+                                                  controller:
+                                                      _model.tabBarController,
                                                   children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0.0,
-                                                                  0.0,
-                                                                  10.0,
-                                                                  0.0),
-                                                      child: Icon(
-                                                        Icons.notes_rounded,
-                                                      ),
-                                                    ),
-                                                    Tab(
-                                                      text: 'Active Conditions',
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0.0,
-                                                                  0.0,
-                                                                  10.0,
-                                                                  0.0),
-                                                      child: FaIcon(
-                                                        FontAwesomeIcons.pills,
-                                                      ),
-                                                    ),
-                                                    Tab(
-                                                      text:
-                                                          'Current Medications',
-                                                    ),
-                                                  ],
-                                                ),
-                                                Tab(
-                                                  text: 'Temporary Data Spread',
-                                                ),
-                                              ],
-                                              controller:
-                                                  _model.tabBarController,
-                                              onTap: (i) async {
-                                                [
-                                                  () async {},
-                                                  () async {},
-                                                  () async {},
-                                                  () async {}
-                                                ][i]();
-                                              },
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: TabBarView(
-                                              controller:
-                                                  _model.tabBarController,
-                                              children: [
-                                                SingleChildScrollView(
-                                                  primary: false,
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Padding(
-                                                        padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                    10.0,
-                                                                    0.0,
-                                                                    0.0,
-                                                                    0.0),
-                                                        child: Wrap(
-                                                          spacing: 20.0,
-                                                          runSpacing: 0.0,
-                                                          alignment:
-                                                              WrapAlignment
-                                                                  .center,
-                                                          crossAxisAlignment:
-                                                              WrapCrossAlignment
-                                                                  .start,
-                                                          direction:
-                                                              Axis.horizontal,
-                                                          runAlignment:
-                                                              WrapAlignment
-                                                                  .start,
-                                                          verticalDirection:
-                                                              VerticalDirection
-                                                                  .down,
-                                                          clipBehavior:
-                                                              Clip.none,
-                                                          children: [
-                                                            Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Text(
-                                                                  'Blood Pressure',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
+                                                    Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsetsDirectional
+                                                                  .fromSTEB(
+                                                                      10.0,
+                                                                      0.0,
+                                                                      0.0,
+                                                                      0.0),
+                                                          child: Wrap(
+                                                            spacing: 20.0,
+                                                            runSpacing: 0.0,
+                                                            alignment:
+                                                                WrapAlignment
+                                                                    .center,
+                                                            crossAxisAlignment:
+                                                                WrapCrossAlignment
+                                                                    .start,
+                                                            direction:
+                                                                Axis.horizontal,
+                                                            runAlignment:
+                                                                WrapAlignment
+                                                                    .start,
+                                                            verticalDirection:
+                                                                VerticalDirection
+                                                                    .down,
+                                                            clipBehavior:
+                                                                Clip.none,
+                                                            children: [
+                                                              Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Blood Pressure',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
                                                                           fontWeight:
                                                                               FontWeight.w600,
                                                                           fontStyle: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    if (_model
-                                                                        .patientObservations
-                                                                        .where((e) =>
-                                                                            e.name ==
-                                                                            'Systolic Blood Pressure')
-                                                                        .toList()
-                                                                        .isNotEmpty) {
-                                                                      return Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Container(
-                                                                          width:
-                                                                              1100.0,
-                                                                          height:
-                                                                              250.0,
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      if (_model
+                                                                          .patientObservations
+                                                                          .where((e) =>
+                                                                              e.name ==
+                                                                              'Systolic blood pressure')
+                                                                          .toList()
+                                                                          .isNotEmpty) {
+                                                                        return Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
                                                                           child:
-                                                                              custom_widgets.LineChart(
+                                                                              Container(
                                                                             width:
                                                                                 1100.0,
                                                                             height:
                                                                                 250.0,
-                                                                            isLogarithmicYAxis:
-                                                                                false,
-                                                                            minCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Systolic Blood Pressure').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
-                                                                            maxCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Systolic Blood Pressure').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
-                                                                            name1:
-                                                                                'Systolic BP',
-                                                                            name2:
-                                                                                'Diastolic BP',
-                                                                            isExpanded:
-                                                                                true,
-                                                                            factor:
-                                                                                1.0,
-                                                                            yAxisTitle:
-                                                                                'Blood Pressure',
-                                                                            xData:
-                                                                                _model.patientObservations.where((e) => e.name == 'Systolic Blood Pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M", e.recordedAt)).toList(),
-                                                                            yData1:
-                                                                                (List<String> strList) {
-                                                                              return strList.map((e) => double.parse(e)).toList();
-                                                                            }(_model.patientObservations.where((e) => e.name == 'Systolic Blood Pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
-                                                                            yData2:
-                                                                                (List<String> strList) {
-                                                                              return strList.map((e) => double.parse(e)).toList();
-                                                                            }(_model.patientObservations.where((e) => e.name == 'Diastolic Blood Pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                            child:
+                                                                                custom_widgets.LineChart(
+                                                                              width: 1100.0,
+                                                                              height: 250.0,
+                                                                              isLogarithmicYAxis: false,
+                                                                              minCount: double.parse(_model.patientObservations.where((e) => e.name == 'Diastolic blood pressure').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
+                                                                              maxCount: double.parse(_model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
+                                                                              name1: 'Systolic BP',
+                                                                              name2: 'Diastolic BP',
+                                                                              isExpanded: true,
+                                                                              factor: 1.0,
+                                                                              yAxisTitle: 'Blood Pressure',
+                                                                              xData: _model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              yData1: (List<String> strList) {
+                                                                                return strList.map((e) => double.parse(e)).toList();
+                                                                              }(_model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                              yData2: (List<String> strList) {
+                                                                                return strList.map((e) => double.parse(e)).toList();
+                                                                              }(_model.patientObservations.where((e) => e.name == 'Diastolic blood pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                            ),
                                                                           ),
-                                                                        ),
-                                                                      );
-                                                                    } else {
-                                                                      return Container(
-                                                                        width:
-                                                                            1240.0,
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).error,
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
+                                                                        );
+                                                                      } else {
+                                                                        return Container(
+                                                                          width:
+                                                                              1240.0,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).error,
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
                                                                           child:
-                                                                              Text(
-                                                                            'No Data Found',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleLarge.override(
-                                                                                  font: GoogleFonts.readexPro(
+                                                                              Padding(
+                                                                            padding:
+                                                                                EdgeInsets.all(10.0),
+                                                                            child:
+                                                                                Text(
+                                                                              'No Data Found',
+                                                                              textAlign: TextAlign.center,
+                                                                              style: FlutterFlowTheme.of(context).titleLarge.override(
+                                                                                    font: GoogleFonts.readexPro(
+                                                                                      fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                    ),
+                                                                                    color: FlutterFlowTheme.of(context).info,
+                                                                                    letterSpacing: 0.0,
                                                                                     fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
                                                                                     fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
                                                                                   ),
-                                                                                  color: FlutterFlowTheme.of(context).info,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                ),
+                                                                            ),
                                                                           ),
-                                                                        ),
-                                                                      );
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ]
-                                                                  .divide(SizedBox(
-                                                                      height:
-                                                                          10.0))
-                                                                  .around(SizedBox(
-                                                                      height:
-                                                                          10.0)),
-                                                            ),
-                                                            Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Text(
-                                                                  'Heart Rate',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ]
+                                                                    .divide(SizedBox(
+                                                                        height:
+                                                                            10.0))
+                                                                    .around(SizedBox(
+                                                                        height:
+                                                                            10.0)),
+                                                              ),
+                                                              Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Heart Rate',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
                                                                           fontWeight:
                                                                               FontWeight.w600,
                                                                           fontStyle: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      if (_model
+                                                                          .patientObservations
+                                                                          .where((e) =>
+                                                                              e.name ==
+                                                                              'Heart rate')
+                                                                          .toList()
+                                                                          .isNotEmpty) {
+                                                                        return Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                          ),
+                                                                          child:
+                                                                              Container(
+                                                                            width:
+                                                                                390.0,
+                                                                            height:
+                                                                                250.0,
+                                                                            child:
+                                                                                custom_widgets.LineChart(
+                                                                              width: 390.0,
+                                                                              height: 250.0,
+                                                                              isLogarithmicYAxis: false,
+                                                                              minCount: double.parse(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
+                                                                              maxCount: double.parse(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
+                                                                              name1: 'Heart Rate',
+                                                                              isExpanded: true,
+                                                                              factor: 1.0,
+                                                                              yAxisTitle: 'Heart Rate',
+                                                                              xData: _model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              yData1: (List<String> strList) {
+                                                                                return strList.map((e) => double.parse(e)).toList();
+                                                                              }(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      } else {
+                                                                        return Container(
+                                                                          width:
+                                                                              390.0,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).error,
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
+                                                                          child:
+                                                                              Padding(
+                                                                            padding:
+                                                                                EdgeInsets.all(10.0),
+                                                                            child:
+                                                                                Text(
+                                                                              'No Data Found',
+                                                                              textAlign: TextAlign.center,
+                                                                              style: FlutterFlowTheme.of(context).titleLarge.override(
+                                                                                    font: GoogleFonts.readexPro(
+                                                                                      fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                    ),
+                                                                                    color: FlutterFlowTheme.of(context).info,
+                                                                                    letterSpacing: 0.0,
+                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                  ),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ]
+                                                                    .divide(SizedBox(
+                                                                        height:
+                                                                            10.0))
+                                                                    .around(SizedBox(
+                                                                        height:
+                                                                            10.0)),
+                                                              ),
+                                                              Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Body Temperature',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      if (_model
+                                                                          .patientObservations
+                                                                          .where((e) =>
+                                                                              e.name ==
+                                                                              'Body temperature')
+                                                                          .toList()
+                                                                          .isNotEmpty) {
+                                                                        return Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
+                                                                          child:
+                                                                              Container(
+                                                                            width:
+                                                                                390.0,
+                                                                            height:
+                                                                                250.0,
+                                                                            child:
+                                                                                custom_widgets.LineChart(
+                                                                              width: 390.0,
+                                                                              height: 250.0,
+                                                                              isLogarithmicYAxis: false,
+                                                                              minCount: double.parse(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
+                                                                              maxCount: double.parse(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
+                                                                              name1: 'Temperature',
+                                                                              isExpanded: true,
+                                                                              factor: 1.0,
+                                                                              yAxisTitle: 'Temperature',
+                                                                              xData: _model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              yData1: (List<String> strList) {
+                                                                                return strList.map((e) => double.parse(e)).toList();
+                                                                              }(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      } else {
+                                                                        return Container(
+                                                                          width:
+                                                                              390.0,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).error,
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
+                                                                          child:
+                                                                              Padding(
+                                                                            padding:
+                                                                                EdgeInsets.all(10.0),
+                                                                            child:
+                                                                                Text(
+                                                                              'No Data Found',
+                                                                              textAlign: TextAlign.center,
+                                                                              style: FlutterFlowTheme.of(context).titleLarge.override(
+                                                                                    font: GoogleFonts.readexPro(
+                                                                                      fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                    ),
+                                                                                    color: FlutterFlowTheme.of(context).info,
+                                                                                    letterSpacing: 0.0,
+                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                  ),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ]
+                                                                    .divide(SizedBox(
+                                                                        height:
+                                                                            10.0))
+                                                                    .around(SizedBox(
+                                                                        height:
+                                                                            10.0)),
+                                                              ),
+                                                              Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Text(
+                                                                    'Respiratory Rate',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      if (_model
+                                                                          .patientObservations
+                                                                          .where((e) =>
+                                                                              e.name ==
+                                                                              'Body temperature')
+                                                                          .toList()
+                                                                          .isNotEmpty) {
+                                                                        return Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
+                                                                          child:
+                                                                              Container(
+                                                                            width:
+                                                                                390.0,
+                                                                            height:
+                                                                                250.0,
+                                                                            child:
+                                                                                custom_widgets.LineChart(
+                                                                              width: 390.0,
+                                                                              height: 250.0,
+                                                                              isLogarithmicYAxis: false,
+                                                                              minCount: double.parse(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
+                                                                              maxCount: double.parse(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
+                                                                              name1: 'Respiratory Rate',
+                                                                              isExpanded: true,
+                                                                              factor: 1.0,
+                                                                              yAxisTitle: 'RespiratoryRate',
+                                                                              xData: _model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              yData1: (List<String> strList) {
+                                                                                return strList.map((e) => double.parse(e)).toList();
+                                                                              }(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      } else {
+                                                                        return Container(
+                                                                          width:
+                                                                              390.0,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).error,
+                                                                            boxShadow: [
+                                                                              BoxShadow(
+                                                                                blurRadius: 4.0,
+                                                                                color: Color(0x33000000),
+                                                                                offset: Offset(
+                                                                                  2.0,
+                                                                                  2.0,
+                                                                                ),
+                                                                              )
+                                                                            ],
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(10.0),
+                                                                          ),
+                                                                          child:
+                                                                              Padding(
+                                                                            padding:
+                                                                                EdgeInsets.all(10.0),
+                                                                            child:
+                                                                                Text(
+                                                                              'No Data Found',
+                                                                              textAlign: TextAlign.center,
+                                                                              style: FlutterFlowTheme.of(context).titleLarge.override(
+                                                                                    font: GoogleFonts.readexPro(
+                                                                                      fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                    ),
+                                                                                    color: FlutterFlowTheme.of(context).info,
+                                                                                    letterSpacing: 0.0,
+                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                                                                                  ),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ]
+                                                                    .divide(SizedBox(
+                                                                        height:
+                                                                            10.0))
+                                                                    .around(SizedBox(
+                                                                        height:
+                                                                            10.0)),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          children: [
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentNameModel2,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Condition',
+                                                                      isSelected:
+                                                                          _model.selectedConditionsTableColumn ==
+                                                                              'Condition',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingConditionsTableColumn,
+                                                                      topLeftBorderRadius:
+                                                                          10.0,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              !_model.isAscendingConditionsTableColumn;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              true;
+                                                                          _model.selectedConditionsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
+
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            'Onset Date') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Condition') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Code') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Status') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentGenderModel2,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Code',
+                                                                      isSelected:
+                                                                          _model.selectedConditionsTableColumn ==
+                                                                              'Code',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingConditionsTableColumn,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              !_model.isAscendingConditionsTableColumn;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              true;
+                                                                          _model.selectedConditionsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
+
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            'Onset Date') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Condition') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Code') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Status') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentDOBModel2,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Onset Date',
+                                                                      isSelected:
+                                                                          _model.selectedConditionsTableColumn ==
+                                                                              'Onset Date',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingConditionsTableColumn,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              !_model.isAscendingConditionsTableColumn;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingConditionsTableColumn =
+                                                                              true;
+                                                                          _model.selectedConditionsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
+
+                                                                        if (_model.selectedConditionsTableColumn ==
+                                                                            'Onset Date') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.onsetDate!, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Condition') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionName, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Code') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.conditionCode, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedConditionsTableColumn ==
+                                                                            'Status') {
+                                                                          if (_model
+                                                                              .isAscendingConditionsTableColumn) {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: false).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientConditions =
+                                                                                _model.patientConditions.sortedList(keyOf: (e) => e.status, desc: true).toList().cast<ConditionStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentPhoneNumberModel3,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Status',
+                                                                      isSelected:
+                                                                          false,
+                                                                      isAscending:
+                                                                          false,
+                                                                      topRIghtBorderRadius:
+                                                                          10.0,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {},
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ]
+                                                                  .addToStart(
+                                                                      SizedBox(
+                                                                          width:
+                                                                              20.0))
+                                                                  .addToEnd(
+                                                                      SizedBox(
+                                                                          width:
+                                                                              20.0)),
+                                                            ),
+                                                            Builder(
+                                                              builder:
+                                                                  (context) {
+                                                                final conditionPages = functions
+                                                                    .createPageIndices(
+                                                                        _model
+                                                                            .patientConditions
+                                                                            .length,
+                                                                        5)
+                                                                    .toList();
+                                                                if (conditionPages
+                                                                    .isEmpty) {
+                                                                  return Center(
+                                                                    child:
+                                                                        EmptyWidgetWidget(),
+                                                                  );
+                                                                }
+
+                                                                return Container(
+                                                                  width: MediaQuery.sizeOf(
+                                                                              context)
+                                                                          .width *
+                                                                      1.0,
+                                                                  height: 270.0,
+                                                                  child: PageView
+                                                                      .builder(
+                                                                    controller: _model
+                                                                            .pageViewController2 ??=
+                                                                        PageController(
+                                                                            initialPage:
+                                                                                max(0, min(0, conditionPages.length - 1))),
+                                                                    scrollDirection:
+                                                                        Axis.horizontal,
+                                                                    itemCount:
+                                                                        conditionPages
+                                                                            .length,
+                                                                    itemBuilder:
+                                                                        (context,
+                                                                            conditionPagesIndex) {
+                                                                      final conditionPagesItem =
+                                                                          conditionPages[
+                                                                              conditionPagesIndex];
+                                                                      return Builder(
+                                                                        builder:
+                                                                            (context) {
+                                                                          final conditionsList =
+                                                                              functions.sliceConditionsListForTablePages(_model.patientConditions.toList(), conditionPagesItem * 5, (conditionPagesItem + 1) * 5)?.toList() ?? [];
+
+                                                                          return SingleChildScrollView(
+                                                                            primary:
+                                                                                false,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisSize: MainAxisSize.min,
+                                                                              children: List.generate(conditionsList.length, (conditionsListIndex) {
+                                                                                final conditionsListItem = conditionsList[conditionsListIndex];
+                                                                                return wrapWithModel(
+                                                                                  model: _model.conditioonTableRowComponentModels.getModel(
+                                                                                    conditionsListIndex.toString(),
+                                                                                    conditionsListIndex,
+                                                                                  ),
+                                                                                  updateCallback: () => safeSetState(() {}),
+                                                                                  child: ConditioonTableRowComponentWidget(
+                                                                                    key: Key(
+                                                                                      'Keyjli_${conditionsListIndex.toString()}',
+                                                                                    ),
+                                                                                    conditionsRow: conditionsListItem,
+                                                                                  ),
+                                                                                );
+                                                                              }),
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                Text(
+                                                                  'Pages',
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
                                                                         letterSpacing:
                                                                             0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
                                                                         fontStyle: FlutterFlowTheme.of(context)
                                                                             .bodyMedium
                                                                             .fontStyle,
@@ -7067,1968 +8486,1127 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                 Builder(
                                                                   builder:
                                                                       (context) {
-                                                                    if (_model
-                                                                        .patientObservations
-                                                                        .where((e) =>
-                                                                            e.name ==
-                                                                            'Heart rate')
-                                                                        .toList()
-                                                                        .isNotEmpty) {
-                                                                      return Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
+                                                                    final pages2 = functions
+                                                                        .createPageIndices(
+                                                                            _model.patientConditions.length,
+                                                                            5)
+                                                                        .toList();
+
+                                                                    return Row(
+                                                                      mainAxisSize:
+                                                                          MainAxisSize
+                                                                              .max,
+                                                                      children: List.generate(
+                                                                          pages2
+                                                                              .length,
+                                                                          (pages2Index) {
+                                                                        final pages2Item =
+                                                                            pages2[pages2Index];
+                                                                        return InkWell(
+                                                                          splashColor:
+                                                                              Colors.transparent,
+                                                                          focusColor:
+                                                                              Colors.transparent,
+                                                                          hoverColor:
+                                                                              Colors.transparent,
+                                                                          highlightColor:
+                                                                              Colors.transparent,
+                                                                          onTap:
+                                                                              () async {
+                                                                            _model.currentPatientPage =
+                                                                                pages2Item;
+                                                                            safeSetState(() {});
+                                                                            await _model.pageViewController2?.animateToPage(
+                                                                              _model.currentPatientPage,
+                                                                              duration: Duration(milliseconds: 500),
+                                                                              curve: Curves.ease,
+                                                                            );
+                                                                          },
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.customDotComponentPageViewModels2.getModel(
+                                                                              pages2Item.toString(),
+                                                                              pages2Index,
+                                                                            ),
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomDotComponentPageViewWidget(
+                                                                              key: Key(
+                                                                                'Key9no_${pages2Item.toString()}',
                                                                               ),
-                                                                            )
-                                                                          ],
-                                                                        ),
-                                                                        child:
-                                                                            Container(
+                                                                              isSelected: _model.currentPatientPage == pages2Item,
+                                                                              assignedIdx: pages2Item,
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }).divide(SizedBox(
                                                                           width:
-                                                                              390.0,
-                                                                          height:
-                                                                              250.0,
-                                                                          child:
-                                                                              custom_widgets.LineChart(
-                                                                            width:
-                                                                                390.0,
-                                                                            height:
-                                                                                250.0,
-                                                                            isLogarithmicYAxis:
-                                                                                false,
-                                                                            minCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
-                                                                            maxCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
-                                                                            name1:
-                                                                                'Heart Rate',
-                                                                            isExpanded:
-                                                                                true,
-                                                                            factor:
-                                                                                1.0,
-                                                                            yAxisTitle:
-                                                                                'Heart Rate',
-                                                                            xData:
-                                                                                _model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M", e.recordedAt)).toList(),
-                                                                            yData1:
-                                                                                (List<String> strList) {
-                                                                              return strList.map((e) => double.parse(e)).toList();
-                                                                            }(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    } else {
-                                                                      return Container(
-                                                                        width:
-                                                                            390.0,
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).error,
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
-                                                                          child:
-                                                                              Text(
-                                                                            'No Data Found',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleLarge.override(
-                                                                                  font: GoogleFonts.readexPro(
-                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).info,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    }
+                                                                              10.0)),
+                                                                    );
                                                                   },
                                                                 ),
-                                                              ]
-                                                                  .divide(SizedBox(
-                                                                      height:
-                                                                          10.0))
-                                                                  .around(SizedBox(
-                                                                      height:
-                                                                          10.0)),
-                                                            ),
-                                                            Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Text(
-                                                                  'Body temperature',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    if (_model
-                                                                        .patientObservations
-                                                                        .where((e) =>
-                                                                            e.name ==
-                                                                            'Body temperature')
-                                                                        .toList()
-                                                                        .isNotEmpty) {
-                                                                      return Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Container(
-                                                                          width:
-                                                                              390.0,
-                                                                          height:
-                                                                              250.0,
-                                                                          child:
-                                                                              custom_widgets.LineChart(
-                                                                            width:
-                                                                                390.0,
-                                                                            height:
-                                                                                250.0,
-                                                                            isLogarithmicYAxis:
-                                                                                false,
-                                                                            minCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
-                                                                            maxCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
-                                                                            name1:
-                                                                                'Temperature',
-                                                                            isExpanded:
-                                                                                true,
-                                                                            factor:
-                                                                                1.0,
-                                                                            yAxisTitle:
-                                                                                'Temperature',
-                                                                            xData:
-                                                                                _model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M", e.recordedAt)).toList(),
-                                                                            yData1:
-                                                                                (List<String> strList) {
-                                                                              return strList.map((e) => double.parse(e)).toList();
-                                                                            }(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    } else {
-                                                                      return Container(
-                                                                        width:
-                                                                            390.0,
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).error,
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
-                                                                          child:
-                                                                              Text(
-                                                                            'No Data Found',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleLarge.override(
-                                                                                  font: GoogleFonts.readexPro(
-                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).info,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ]
-                                                                  .divide(SizedBox(
-                                                                      height:
-                                                                          10.0))
-                                                                  .around(SizedBox(
-                                                                      height:
-                                                                          10.0)),
-                                                            ),
-                                                            Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              children: [
-                                                                Text(
-                                                                  'Respiratory rate',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    if (_model
-                                                                        .patientObservations
-                                                                        .where((e) =>
-                                                                            e.name ==
-                                                                            'Body temperature')
-                                                                        .toList()
-                                                                        .isNotEmpty) {
-                                                                      return Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Container(
-                                                                          width:
-                                                                              390.0,
-                                                                          height:
-                                                                              250.0,
-                                                                          child:
-                                                                              custom_widgets.LineChart(
-                                                                            width:
-                                                                                390.0,
-                                                                            height:
-                                                                                250.0,
-                                                                            isLogarithmicYAxis:
-                                                                                false,
-                                                                            minCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.value, desc: false).firstOrNull!.value),
-                                                                            maxCount:
-                                                                                double.parse(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.value, desc: false).lastOrNull!.value),
-                                                                            name1:
-                                                                                'Respiratory Rate',
-                                                                            isExpanded:
-                                                                                true,
-                                                                            factor:
-                                                                                1.0,
-                                                                            yAxisTitle:
-                                                                                'RespiratoryRate',
-                                                                            xData:
-                                                                                _model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M", e.recordedAt)).toList(),
-                                                                            yData1:
-                                                                                (List<String> strList) {
-                                                                              return strList.map((e) => double.parse(e)).toList();
-                                                                            }(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    } else {
-                                                                      return Container(
-                                                                        width:
-                                                                            390.0,
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).error,
-                                                                          boxShadow: [
-                                                                            BoxShadow(
-                                                                              blurRadius: 4.0,
-                                                                              color: Color(0x33000000),
-                                                                              offset: Offset(
-                                                                                2.0,
-                                                                                2.0,
-                                                                              ),
-                                                                            )
-                                                                          ],
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(10.0),
-                                                                        ),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(10.0),
-                                                                          child:
-                                                                              Text(
-                                                                            'No Data Found',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleLarge.override(
-                                                                                  font: GoogleFonts.readexPro(
-                                                                                    fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).info,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FlutterFlowTheme.of(context).titleLarge.fontWeight,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).titleLarge.fontStyle,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ]
-                                                                  .divide(SizedBox(
-                                                                      height:
-                                                                          10.0))
-                                                                  .around(SizedBox(
-                                                                      height:
-                                                                          10.0)),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
                                                             ),
                                                           ],
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentNameModel2,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Condition',
-                                                                  isSelected: _model
-                                                                          .selectedConditionsTableColumn ==
-                                                                      'Condition',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingConditionsTableColumn,
-                                                                  topLeftBorderRadius:
-                                                                      10.0,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          !_model
-                                                                              .isAscendingConditionsTableColumn;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          true;
-                                                                      _model.selectedConditionsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
-
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Onset Date') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Condition') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Code') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Status') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentGenderModel2,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Code',
-                                                                  isSelected:
-                                                                      _model.selectedConditionsTableColumn ==
-                                                                          'Code',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingConditionsTableColumn,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          !_model
-                                                                              .isAscendingConditionsTableColumn;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          true;
-                                                                      _model.selectedConditionsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
-
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Onset Date') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Condition') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Code') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Status') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentDOBModel2,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Onset Date',
-                                                                  isSelected: _model
-                                                                          .selectedConditionsTableColumn ==
-                                                                      'Onset Date',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingConditionsTableColumn,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          !_model
-                                                                              .isAscendingConditionsTableColumn;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingConditionsTableColumn =
-                                                                          true;
-                                                                      _model.selectedConditionsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
-
-                                                                    if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Onset Date') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.onsetDate!,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Condition') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Code') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.conditionCode,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedConditionsTableColumn ==
-                                                                        'Status') {
-                                                                      if (_model
-                                                                          .isAscendingConditionsTableColumn) {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientConditions = _model
-                                                                            .patientConditions
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.status,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<ConditionStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentPhoneNumberModel2,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Status',
-                                                                  isSelected:
-                                                                      false,
-                                                                  isAscending:
-                                                                      false,
-                                                                  topRIghtBorderRadius:
-                                                                      10.0,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {},
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ]
-                                                              .addToStart(
-                                                                  SizedBox(
-                                                                      width:
-                                                                          20.0))
-                                                              .addToEnd(SizedBox(
-                                                                  width: 20.0)),
-                                                        ),
-                                                        Builder(
-                                                          builder: (context) {
-                                                            final conditionPages = functions
-                                                                .createPageIndices(
-                                                                    _model
-                                                                        .patientConditions
-                                                                        .length,
-                                                                    5)
-                                                                .toList();
-                                                            if (conditionPages
-                                                                .isEmpty) {
-                                                              return Center(
-                                                                child:
-                                                                    EmptyWidgetWidget(),
-                                                              );
-                                                            }
-
-                                                            return Container(
-                                                              width: MediaQuery
-                                                                          .sizeOf(
-                                                                              context)
-                                                                      .width *
-                                                                  1.0,
-                                                              height: 270.0,
-                                                              child: PageView
-                                                                  .builder(
-                                                                controller: _model
-                                                                        .pageViewController2 ??=
-                                                                    PageController(
-                                                                        initialPage: max(
-                                                                            0,
-                                                                            min(0,
-                                                                                conditionPages.length - 1))),
-                                                                scrollDirection:
-                                                                    Axis.horizontal,
-                                                                itemCount:
-                                                                    conditionPages
-                                                                        .length,
-                                                                itemBuilder:
-                                                                    (context,
-                                                                        conditionPagesIndex) {
-                                                                  final conditionPagesItem =
-                                                                      conditionPages[
-                                                                          conditionPagesIndex];
-                                                                  return Builder(
-                                                                    builder:
-                                                                        (context) {
-                                                                      final conditionsList =
-                                                                          functions.sliceConditionsListForTablePages(_model.patientConditions.toList(), conditionPagesItem * 5, (conditionPagesItem + 1) * 5)?.toList() ??
-                                                                              [];
-
-                                                                      return SingleChildScrollView(
-                                                                        primary:
-                                                                            false,
-                                                                        child:
-                                                                            Column(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.min,
-                                                                          children: List.generate(
-                                                                              conditionsList.length,
-                                                                              (conditionsListIndex) {
-                                                                            final conditionsListItem =
-                                                                                conditionsList[conditionsListIndex];
-                                                                            return wrapWithModel(
-                                                                              model: _model.conditioonTableRowComponentModels.getModel(
-                                                                                conditionsListIndex.toString(),
-                                                                                conditionsListIndex,
-                                                                              ),
-                                                                              updateCallback: () => safeSetState(() {}),
-                                                                              child: ConditioonTableRowComponentWidget(
-                                                                                key: Key(
-                                                                                  'Keyjli_${conditionsListIndex.toString()}',
-                                                                                ),
-                                                                                conditionsRow: conditionsListItem,
-                                                                              ),
-                                                                            );
-                                                                          }),
-                                                                        ),
-                                                                      );
-                                                                    },
-                                                                  );
-                                                                },
-                                                              ),
-                                                            );
-                                                          },
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Text(
-                                                              'Pages',
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                            Builder(
-                                                              builder:
-                                                                  (context) {
-                                                                final pages2 = functions
-                                                                    .createPageIndices(
-                                                                        _model
-                                                                            .patientConditions
-                                                                            .length,
-                                                                        5)
-                                                                    .toList();
-
-                                                                return Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
-                                                                  children: List
-                                                                      .generate(
-                                                                          pages2
-                                                                              .length,
-                                                                          (pages2Index) {
-                                                                    final pages2Item =
-                                                                        pages2[
-                                                                            pages2Index];
-                                                                    return InkWell(
-                                                                      splashColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      focusColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      hoverColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      highlightColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      onTap:
-                                                                          () async {
-                                                                        _model.currentPatientPage =
-                                                                            pages2Item;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        await _model
-                                                                            .pageViewController2
-                                                                            ?.animateToPage(
-                                                                          _model
-                                                                              .currentPatientPage,
-                                                                          duration:
-                                                                              Duration(milliseconds: 500),
-                                                                          curve:
-                                                                              Curves.ease,
-                                                                        );
-                                                                      },
-                                                                      child:
-                                                                          wrapWithModel(
-                                                                        model: _model
-                                                                            .customDotComponentPageViewModels2
-                                                                            .getModel(
-                                                                          pages2Item
-                                                                              .toString(),
-                                                                          pages2Index,
-                                                                        ),
-                                                                        updateCallback:
-                                                                            () =>
-                                                                                safeSetState(() {}),
-                                                                        child:
-                                                                            CustomDotComponentPageViewWidget(
-                                                                          key:
-                                                                              Key(
-                                                                            'Key9no_${pages2Item.toString()}',
-                                                                          ),
-                                                                          isSelected:
-                                                                              _model.currentPatientPage == pages2Item,
-                                                                          assignedIdx:
-                                                                              pages2Item,
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  }).divide(
-                                                                      SizedBox(
-                                                                          width:
-                                                                              10.0)),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
-                                                        ),
-                                                      ],
+                                                      ].addToStart(SizedBox(
+                                                          height: 20.0)),
                                                     ),
-                                                  ].addToStart(
-                                                      SizedBox(height: 20.0)),
-                                                ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
                                                     Column(
                                                       mainAxisSize:
                                                           MainAxisSize.max,
                                                       children: [
-                                                        Row(
+                                                        Column(
                                                           mainAxisSize:
                                                               MainAxisSize.max,
                                                           children: [
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentNameModel3,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Medication',
-                                                                  isSelected: _model
-                                                                          .selectedMedicationsTableColumn ==
-                                                                      'Medication',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingMedicationTable,
-                                                                  topLeftBorderRadius:
-                                                                      10.0,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          !_model
-                                                                              .isAscendingMedicationTable;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          true;
-                                                                      _model.selectedMedicationsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              children: [
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentNameModel3,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Medication',
+                                                                      isSelected:
+                                                                          _model.selectedMedicationsTableColumn ==
+                                                                              'Medication',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingMedicationTable,
+                                                                      topLeftBorderRadius:
+                                                                          10.0,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              !_model.isAscendingMedicationTable;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              true;
+                                                                          _model.selectedMedicationsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
 
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Medication') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Dose') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Frequency') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Route') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            'Medication') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Dose') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Frequency') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Route') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentGenderModel3,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Dose',
-                                                                  isSelected:
-                                                                      _model.selectedMedicationsTableColumn ==
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentGenderModel3,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
                                                                           'Dose',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingConditionsTableColumn,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          !_model
-                                                                              .isAscendingMedicationTable;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          true;
-                                                                      _model.selectedMedicationsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
+                                                                      isSelected:
+                                                                          _model.selectedMedicationsTableColumn ==
+                                                                              'Dose',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingConditionsTableColumn,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              !_model.isAscendingMedicationTable;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              true;
+                                                                          _model.selectedMedicationsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
 
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Medication') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Dose') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Frequency') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Route') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentDOBModel3,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Frequency',
-                                                                  isSelected: _model
-                                                                          .selectedMedicationsTableColumn ==
-                                                                      'Frequency',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingConditionsTableColumn,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          !_model
-                                                                              .isAscendingMedicationTable;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          true;
-                                                                      _model.selectedMedicationsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
-
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Medication') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Dose') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Frequency') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Route') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentPhoneNumberModel3,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Route',
-                                                                  isSelected:
-                                                                      _model.selectedMedicationsTableColumn ==
-                                                                          'Route',
-                                                                  isAscending:
-                                                                      _model
-                                                                          .isAscendingMedicationTable,
-                                                                  topRIghtBorderRadius:
-                                                                      10.0,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        columnName) {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          !_model
-                                                                              .isAscendingMedicationTable;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    } else {
-                                                                      _model.isAscendingMedicationTable =
-                                                                          true;
-                                                                      _model.selectedMedicationsTableColumn =
-                                                                          columnName!;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    }
-
-                                                                    if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Medication') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationName,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Dose') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.medicationDose,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Frequency') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.frequency,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    } else if (_model
-                                                                            .selectedMedicationsTableColumn ==
-                                                                        'Route') {
-                                                                      if (_model
-                                                                          .isAscendingMedicationTable) {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: false)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      } else {
-                                                                        _model.patientMedications = _model
-                                                                            .patientMedications
-                                                                            .sortedList(
-                                                                                keyOf: (e) => e.route,
-                                                                                desc: true)
-                                                                            .toList()
-                                                                            .cast<MedicationStruct>();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      }
-                                                                    }
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  wrapWithModel(
-                                                                model: _model
-                                                                    .tableHeaderComponentPhoneNumberModel4,
-                                                                updateCallback: () =>
-                                                                    safeSetState(
-                                                                        () {}),
-                                                                child:
-                                                                    CustomTableHeaderComponentWidget(
-                                                                  columnName:
-                                                                      'Status',
-                                                                  isSelected:
-                                                                      false,
-                                                                  isAscending:
-                                                                      false,
-                                                                  topRIghtBorderRadius:
-                                                                      10.0,
-                                                                  bgColor: Color(
-                                                                      0xFFFDFDFF),
-                                                                  onClick:
-                                                                      (columnName) async {},
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ]
-                                                              .addToStart(
-                                                                  SizedBox(
-                                                                      width:
-                                                                          20.0))
-                                                              .addToEnd(SizedBox(
-                                                                  width: 20.0)),
-                                                        ),
-                                                        Builder(
-                                                          builder: (context) {
-                                                            final medicationPages = functions
-                                                                .createPageIndices(
-                                                                    _model
-                                                                        .patientMedications
-                                                                        .length,
-                                                                    5)
-                                                                .toList();
-                                                            if (medicationPages
-                                                                .isEmpty) {
-                                                              return Center(
-                                                                child:
-                                                                    EmptyWidgetWidget(),
-                                                              );
-                                                            }
-
-                                                            return Container(
-                                                              width: MediaQuery
-                                                                          .sizeOf(
-                                                                              context)
-                                                                      .width *
-                                                                  1.0,
-                                                              height: 270.0,
-                                                              child: PageView
-                                                                  .builder(
-                                                                controller: _model
-                                                                        .pageViewController3 ??=
-                                                                    PageController(
-                                                                        initialPage: max(
-                                                                            0,
-                                                                            min(0,
-                                                                                medicationPages.length - 1))),
-                                                                scrollDirection:
-                                                                    Axis.horizontal,
-                                                                itemCount:
-                                                                    medicationPages
-                                                                        .length,
-                                                                itemBuilder:
-                                                                    (context,
-                                                                        medicationPagesIndex) {
-                                                                  final medicationPagesItem =
-                                                                      medicationPages[
-                                                                          medicationPagesIndex];
-                                                                  return Builder(
-                                                                    builder:
-                                                                        (context) {
-                                                                      final medicationsList =
-                                                                          functions.sliceMedicationsListForTablePages(_model.patientMedications.toList(), medicationPagesItem * 5, (medicationPagesItem + 1) * 5)?.toList() ??
-                                                                              [];
-
-                                                                      return SingleChildScrollView(
-                                                                        primary:
-                                                                            false,
-                                                                        child:
-                                                                            Column(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.min,
-                                                                          children: List.generate(
-                                                                              medicationsList.length,
-                                                                              (medicationsListIndex) {
-                                                                            final medicationsListItem =
-                                                                                medicationsList[medicationsListIndex];
-                                                                            return wrapWithModel(
-                                                                              model: _model.medicationsTableRowComponentModels.getModel(
-                                                                                medicationsListIndex.toString(),
-                                                                                medicationsListIndex,
-                                                                              ),
-                                                                              updateCallback: () => safeSetState(() {}),
-                                                                              child: MedicationsTableRowComponentWidget(
-                                                                                key: Key(
-                                                                                  'Keyffw_${medicationsListIndex.toString()}',
-                                                                                ),
-                                                                                medicationsRow: medicationsListItem,
-                                                                              ),
-                                                                            );
-                                                                          }),
-                                                                        ),
-                                                                      );
-                                                                    },
-                                                                  );
-                                                                },
-                                                              ),
-                                                            );
-                                                          },
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Text(
-                                                              'Pages',
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .bodyMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .inter(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            'Medication') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Dose') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Frequency') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Route') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
                                                                     ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
                                                                   ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentDOBModel3,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Frequency',
+                                                                      isSelected:
+                                                                          _model.selectedMedicationsTableColumn ==
+                                                                              'Frequency',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingConditionsTableColumn,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              !_model.isAscendingMedicationTable;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              true;
+                                                                          _model.selectedMedicationsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
+
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            'Medication') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Dose') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Frequency') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Route') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentPhoneNumberModel4,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Route',
+                                                                      isSelected:
+                                                                          _model.selectedMedicationsTableColumn ==
+                                                                              'Route',
+                                                                      isAscending:
+                                                                          _model
+                                                                              .isAscendingMedicationTable,
+                                                                      topRIghtBorderRadius:
+                                                                          10.0,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            columnName) {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              !_model.isAscendingMedicationTable;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          _model.isAscendingMedicationTable =
+                                                                              true;
+                                                                          _model.selectedMedicationsTableColumn =
+                                                                              columnName!;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        }
+
+                                                                        if (_model.selectedMedicationsTableColumn ==
+                                                                            'Medication') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationName, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Dose') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.medicationDose, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Frequency') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.frequency, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        } else if (_model.selectedMedicationsTableColumn ==
+                                                                            'Route') {
+                                                                          if (_model
+                                                                              .isAscendingMedicationTable) {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: false).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          } else {
+                                                                            _model.patientMedications =
+                                                                                _model.patientMedications.sortedList(keyOf: (e) => e.route, desc: true).toList().cast<MedicationStruct>();
+                                                                            safeSetState(() {});
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      wrapWithModel(
+                                                                    model: _model
+                                                                        .tableHeaderComponentPhoneNumberModel5,
+                                                                    updateCallback: () =>
+                                                                        safeSetState(
+                                                                            () {}),
+                                                                    child:
+                                                                        CustomTableHeaderComponentWidget(
+                                                                      columnName:
+                                                                          'Status',
+                                                                      isSelected:
+                                                                          false,
+                                                                      isAscending:
+                                                                          false,
+                                                                      topRIghtBorderRadius:
+                                                                          10.0,
+                                                                      bgColor:
+                                                                          Color(
+                                                                              0xFFFDFDFF),
+                                                                      onClick:
+                                                                          (columnName) async {},
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ]
+                                                                  .addToStart(
+                                                                      SizedBox(
+                                                                          width:
+                                                                              20.0))
+                                                                  .addToEnd(
+                                                                      SizedBox(
+                                                                          width:
+                                                                              20.0)),
                                                             ),
                                                             Builder(
                                                               builder:
                                                                   (context) {
-                                                                final pages2 = functions
+                                                                final medicationPages = functions
                                                                     .createPageIndices(
                                                                         _model
                                                                             .patientMedications
                                                                             .length,
                                                                         5)
                                                                     .toList();
+                                                                if (medicationPages
+                                                                    .isEmpty) {
+                                                                  return Center(
+                                                                    child:
+                                                                        EmptyWidgetWidget(),
+                                                                  );
+                                                                }
 
-                                                                return Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
-                                                                  children: List
-                                                                      .generate(
-                                                                          pages2
-                                                                              .length,
-                                                                          (pages2Index) {
-                                                                    final pages2Item =
-                                                                        pages2[
-                                                                            pages2Index];
-                                                                    return InkWell(
-                                                                      splashColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      focusColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      hoverColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      highlightColor:
-                                                                          Colors
-                                                                              .transparent,
-                                                                      onTap:
-                                                                          () async {
-                                                                        _model.currentPatientPage =
-                                                                            pages2Item;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        await _model
-                                                                            .pageViewController3
-                                                                            ?.animateToPage(
-                                                                          _model
-                                                                              .currentPatientPage,
-                                                                          duration:
-                                                                              Duration(milliseconds: 500),
-                                                                          curve:
-                                                                              Curves.ease,
-                                                                        );
-                                                                      },
-                                                                      child:
-                                                                          wrapWithModel(
-                                                                        model: _model
-                                                                            .customDotComponentPageViewModels3
-                                                                            .getModel(
-                                                                          pages2Item
-                                                                              .toString(),
-                                                                          pages2Index,
-                                                                        ),
-                                                                        updateCallback:
-                                                                            () =>
-                                                                                safeSetState(() {}),
-                                                                        child:
-                                                                            CustomDotComponentPageViewWidget(
-                                                                          key:
-                                                                              Key(
-                                                                            'Key0qq_${pages2Item.toString()}',
-                                                                          ),
-                                                                          isSelected:
-                                                                              _model.currentPatientPage == pages2Item,
-                                                                          assignedIdx:
-                                                                              pages2Item,
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  }).divide(
-                                                                      SizedBox(
-                                                                          width:
-                                                                              10.0)),
+                                                                return Container(
+                                                                  width: MediaQuery.sizeOf(
+                                                                              context)
+                                                                          .width *
+                                                                      1.0,
+                                                                  height: 270.0,
+                                                                  child: PageView
+                                                                      .builder(
+                                                                    controller: _model
+                                                                            .pageViewController3 ??=
+                                                                        PageController(
+                                                                            initialPage:
+                                                                                max(0, min(0, medicationPages.length - 1))),
+                                                                    scrollDirection:
+                                                                        Axis.horizontal,
+                                                                    itemCount:
+                                                                        medicationPages
+                                                                            .length,
+                                                                    itemBuilder:
+                                                                        (context,
+                                                                            medicationPagesIndex) {
+                                                                      final medicationPagesItem =
+                                                                          medicationPages[
+                                                                              medicationPagesIndex];
+                                                                      return Builder(
+                                                                        builder:
+                                                                            (context) {
+                                                                          final medicationsList =
+                                                                              functions.sliceMedicationsListForTablePages(_model.patientMedications.toList(), medicationPagesItem * 5, (medicationPagesItem + 1) * 5)?.toList() ?? [];
+
+                                                                          return SingleChildScrollView(
+                                                                            primary:
+                                                                                false,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisSize: MainAxisSize.min,
+                                                                              children: List.generate(medicationsList.length, (medicationsListIndex) {
+                                                                                final medicationsListItem = medicationsList[medicationsListIndex];
+                                                                                return wrapWithModel(
+                                                                                  model: _model.medicationsTableRowComponentModels.getModel(
+                                                                                    medicationsListIndex.toString(),
+                                                                                    medicationsListIndex,
+                                                                                  ),
+                                                                                  updateCallback: () => safeSetState(() {}),
+                                                                                  child: MedicationsTableRowComponentWidget(
+                                                                                    key: Key(
+                                                                                      'Keyffw_${medicationsListIndex.toString()}',
+                                                                                    ),
+                                                                                    medicationsRow: medicationsListItem,
+                                                                                  ),
+                                                                                );
+                                                                              }),
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
                                                                 );
                                                               },
                                                             ),
-                                                          ].divide(SizedBox(
-                                                              width: 10.0)),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .max,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                Text(
+                                                                  'Pages',
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyMedium
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyMedium
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                                Builder(
+                                                                  builder:
+                                                                      (context) {
+                                                                    final pages2 = functions
+                                                                        .createPageIndices(
+                                                                            _model.patientMedications.length,
+                                                                            5)
+                                                                        .toList();
+
+                                                                    return Row(
+                                                                      mainAxisSize:
+                                                                          MainAxisSize
+                                                                              .max,
+                                                                      children: List.generate(
+                                                                          pages2
+                                                                              .length,
+                                                                          (pages2Index) {
+                                                                        final pages2Item =
+                                                                            pages2[pages2Index];
+                                                                        return InkWell(
+                                                                          splashColor:
+                                                                              Colors.transparent,
+                                                                          focusColor:
+                                                                              Colors.transparent,
+                                                                          hoverColor:
+                                                                              Colors.transparent,
+                                                                          highlightColor:
+                                                                              Colors.transparent,
+                                                                          onTap:
+                                                                              () async {
+                                                                            _model.currentPatientPage =
+                                                                                pages2Item;
+                                                                            safeSetState(() {});
+                                                                            await _model.pageViewController3?.animateToPage(
+                                                                              _model.currentPatientPage,
+                                                                              duration: Duration(milliseconds: 500),
+                                                                              curve: Curves.ease,
+                                                                            );
+                                                                          },
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.customDotComponentPageViewModels3.getModel(
+                                                                              pages2Item.toString(),
+                                                                              pages2Index,
+                                                                            ),
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomDotComponentPageViewWidget(
+                                                                              key: Key(
+                                                                                'Key0qq_${pages2Item.toString()}',
+                                                                              ),
+                                                                              isSelected: _model.currentPatientPage == pages2Item,
+                                                                              assignedIdx: pages2Item,
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }).divide(SizedBox(
+                                                                          width:
+                                                                              10.0)),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ].divide(SizedBox(
+                                                                  width: 10.0)),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ].addToStart(SizedBox(
+                                                          height: 20.0)),
+                                                    ),
+                                                    Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .end,
+                                                          children: [
+                                                            AlignedTooltip(
+                                                              content: Padding(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            4.0),
+                                                                child: Text(
+                                                                  'Add New Observation',
+                                                                  style: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .bodyLarge
+                                                                      .override(
+                                                                        font: GoogleFonts
+                                                                            .inter(
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyLarge
+                                                                              .fontStyle,
+                                                                        ),
+                                                                        letterSpacing:
+                                                                            0.0,
+                                                                        fontWeight: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontWeight,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .fontStyle,
+                                                                      ),
+                                                                ),
+                                                              ),
+                                                              offset: 4.0,
+                                                              preferredDirection:
+                                                                  AxisDirection
+                                                                      .down,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                              backgroundColor:
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryBackground,
+                                                              elevation: 4.0,
+                                                              tailBaseWidth:
+                                                                  24.0,
+                                                              tailLength: 12.0,
+                                                              waitDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          100),
+                                                              showDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          1500),
+                                                              triggerMode:
+                                                                  TooltipTriggerMode
+                                                                      .tap,
+                                                              child: Builder(
+                                                                builder:
+                                                                    (context) =>
+                                                                        FlutterFlowIconButton(
+                                                                  borderColor:
+                                                                      FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .primary,
+                                                                  borderRadius:
+                                                                      20.0,
+                                                                  buttonSize:
+                                                                      40.0,
+                                                                  icon: Icon(
+                                                                    Icons
+                                                                        .add_rounded,
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .primary,
+                                                                    size: 24.0,
+                                                                  ),
+                                                                  onPressed:
+                                                                      () async {
+                                                                    await showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (dialogContext) {
+                                                                        return Dialog(
+                                                                          elevation:
+                                                                              0,
+                                                                          insetPadding:
+                                                                              EdgeInsets.zero,
+                                                                          backgroundColor:
+                                                                              Colors.transparent,
+                                                                          alignment:
+                                                                              AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
+                                                                          child:
+                                                                              Container(
+                                                                            width:
+                                                                                1000.0,
+                                                                            child:
+                                                                                AddNewObservationSetComponentWidget(
+                                                                              practitionerID: functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()),
+                                                                              encounterID: GetAdmissionEncounterByPatientIDCall.encounterID(
+                                                                                patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                              )!,
+                                                                              admissionDate: functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
+                                                                                patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                              ))!,
+                                                                              patientID: _model.patientSelectedForDetails?.identifier,
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ]
+                                                              .divide(SizedBox(
+                                                                  width: 10.0))
+                                                              .around(SizedBox(
+                                                                  width: 10.0)),
+                                                        ),
+                                                        Builder(
+                                                          builder: (context) {
+                                                            if (_model
+                                                                .patientObservations
+                                                                .isNotEmpty) {
+                                                              return Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  Row(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .max,
+                                                                    children: [
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.recordedAtModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'Date',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            topLeftBorderRadius:
+                                                                                10.0,
+                                                                            subHeader:
+                                                                                'Time',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.pulseRateModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'PR',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                '/min',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.bloodPressureModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'BP',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                'mm Hg',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.respiratoryRateModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'RR',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                '/min',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.temperatureModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'Temp',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                '°F',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.spO2Model,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'SpO2',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                '%',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.avpuModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'AVPU',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            subHeader:
+                                                                                'Score',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            wrapWithModel(
+                                                                          model:
+                                                                              _model.nEWS2ScoreModel,
+                                                                          updateCallback: () =>
+                                                                              safeSetState(() {}),
+                                                                          child:
+                                                                              CustomTableHeaderComponentWidget(
+                                                                            columnName:
+                                                                                'NEWS2',
+                                                                            isSelected:
+                                                                                false,
+                                                                            isAscending:
+                                                                                false,
+                                                                            topRIghtBorderRadius:
+                                                                                10.0,
+                                                                            subHeader:
+                                                                                'score',
+                                                                            onClick:
+                                                                                (columnName) async {},
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ]
+                                                                        .addToStart(SizedBox(
+                                                                            width:
+                                                                                20.0))
+                                                                        .addToEnd(SizedBox(
+                                                                            width:
+                                                                                20.0)),
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      final newsRows = _model
+                                                                          .patientObservations
+                                                                          .unique((e) => e
+                                                                              .recordedAt!)
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.recordedAt!,
+                                                                              desc: true)
+                                                                          .map((e) => e.recordedAt)
+                                                                          .withoutNulls
+                                                                          .toList();
+
+                                                                      return Column(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        children: List.generate(
+                                                                            newsRows.length,
+                                                                            (newsRowsIndex) {
+                                                                          final newsRowsItem =
+                                                                              newsRows[newsRowsIndex];
+                                                                          return wrapWithModel(
+                                                                            model:
+                                                                                _model.nEWSRowComponentModels.getModel(
+                                                                              newsRowsIndex.toString(),
+                                                                              newsRowsIndex,
+                                                                            ),
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                NEWSRowComponentWidget(
+                                                                              key: Key(
+                                                                                'Key8wu_${newsRowsIndex.toString()}',
+                                                                              ),
+                                                                              observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                            ),
+                                                                          );
+                                                                        }),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            } else {
+                                                              return Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Text(
+                                                                    'Enter New Vital signs to view the NEWS Score.',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontWeight,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            }
+                                                          },
                                                         ),
                                                       ],
                                                     ),
-                                                  ].addToStart(
-                                                      SizedBox(height: 20.0)),
+                                                  ],
                                                 ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [],
-                                                ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ]
+                                      .divide(SizedBox(height: 6.0))
+                                      .addToStart(SizedBox(height: 10.0)),
                                 ),
-                              ]
-                                  .divide(SizedBox(height: 6.0))
-                                  .addToStart(SizedBox(height: 10.0)),
-                            ),
+                              );
+                            },
                           ),
                       ].addToStart(SizedBox(height: 20.0)),
                     ),
