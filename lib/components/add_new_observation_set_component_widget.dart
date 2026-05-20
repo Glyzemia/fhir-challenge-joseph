@@ -172,7 +172,7 @@ class _AddNewObservationSetComponentWidgetState
                                 focusNode: _model.pulseFocusNode,
                                 onChanged: (_) => EasyDebounce.debounce(
                                   '_model.pulseTextController',
-                                  Duration(milliseconds: 2000),
+                                  Duration(milliseconds: 100),
                                   () async {
                                     if (_model.pulseTextController.text != '') {
                                       _model.pulseScore = () {
@@ -593,7 +593,7 @@ class _AddNewObservationSetComponentWidgetState
                                       focusNode: _model.systolicBPFocusNode,
                                       onChanged: (_) => EasyDebounce.debounce(
                                         '_model.systolicBPTextController',
-                                        Duration(milliseconds: 2000),
+                                        Duration(milliseconds: 100),
                                         () async {
                                           if (_model.systolicBPTextController
                                                       .text !=
@@ -1083,7 +1083,7 @@ class _AddNewObservationSetComponentWidgetState
                                       focusNode: _model.diastolicBPFocusNode,
                                       onChanged: (_) => EasyDebounce.debounce(
                                         '_model.diastolicBPTextController',
-                                        Duration(milliseconds: 2000),
+                                        Duration(milliseconds: 100),
                                         () async {
                                           if (_model.diastolicBPTextController
                                                       .text !=
@@ -2010,7 +2010,7 @@ class _AddNewObservationSetComponentWidgetState
                                         focusNode: _model.temperatureFocusNode,
                                         onChanged: (_) => EasyDebounce.debounce(
                                           '_model.temperatureTextController',
-                                          Duration(milliseconds: 2000),
+                                          Duration(milliseconds: 100),
                                           () async {
                                             if (_model.temperatureTextController
                                                         .text !=
@@ -3548,7 +3548,7 @@ class _AddNewObservationSetComponentWidgetState
                                 focusNode: _model.spO2FocusNode,
                                 onChanged: (_) => EasyDebounce.debounce(
                                   '_model.spO2TextController',
-                                  Duration(milliseconds: 2000),
+                                  Duration(milliseconds: 100),
                                   () async {
                                     if (_model.spO2TextController.text != '') {
                                       _model.spo2Score = _model
@@ -4543,13 +4543,13 @@ class _AddNewObservationSetComponentWidgetState
 
                           if ((_model.postNEWSObservations?.succeeded ??
                               true)) {
+                            Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
                                   'Successfully recorded Observations..!!',
                                   style: TextStyle(
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryText,
+                                    color: FlutterFlowTheme.of(context).info,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -4558,7 +4558,6 @@ class _AddNewObservationSetComponentWidgetState
                                     FlutterFlowTheme.of(context).success,
                               ),
                             );
-                            Navigator.pop(context);
                           } else {
                             await showDialog(
                               context: context,
@@ -5021,6 +5020,68 @@ class _AddNewObservationSetComponentWidgetState
                             valueOrDefault<String>(
                               _model.respiratoryScore != null
                                   ? _model.respiratoryScore?.toString()
+                                  : 'Empty',
+                              'Empty',
+                            ),
+                            style: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  font: GoogleFonts.readexPro(
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleMedium
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleMedium
+                                        .fontStyle,
+                                  ),
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontStyle,
+                                ),
+                          ),
+                        ),
+                      ].addToStart(SizedBox(width: 10.0)),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            'Temperature Score',
+                            style: FlutterFlowTheme.of(context)
+                                .titleLarge
+                                .override(
+                                  font: GoogleFonts.readexPro(
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .fontStyle,
+                                ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            valueOrDefault<String>(
+                              _model.temperatureScore != null
+                                  ? _model.temperatureScore?.toString()
                                   : 'Empty',
                               'Empty',
                             ),

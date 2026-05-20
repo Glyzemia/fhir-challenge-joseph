@@ -15,6 +15,7 @@ import '/components/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_button_tabbar.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
+import '/flutter_flow/flutter_flow_expanded_image_view.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_radio_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -176,7 +177,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
     )..addListener(() => safeSetState(() {}));
 
     animationsMap.addAll({
-      'containerOnActionTriggerAnimation': AnimationInfo(
+      'containerOnActionTriggerAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onActionTrigger,
         applyInitialState: true,
         effectsBuilder: () => [
@@ -184,6 +185,19 @@ class _HomePageWidgetState extends State<HomePageWidget>
             curve: Curves.easeInOut,
             delay: 0.0.ms,
             duration: 700.0.ms,
+            color: FlutterFlowTheme.of(context).success,
+            angle: 0.524,
+          ),
+        ],
+      ),
+      'containerOnActionTriggerAnimation2': AnimationInfo(
+        trigger: AnimationTrigger.onActionTrigger,
+        applyInitialState: true,
+        effectsBuilder: () => [
+          ShimmerEffect(
+            curve: Curves.easeInOut,
+            delay: 0.0.ms,
+            duration: 1000.0.ms,
             color: FlutterFlowTheme.of(context).success,
             angle: 0.524,
           ),
@@ -2176,15 +2190,16 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                 safeSetState(() {}),
                                             child:
                                                 CustomTableHeaderComponentWidget(
-                                              columnName: 'Latest News Score',
+                                              columnName: 'Latest NEWS2 Score',
                                               isSelected:
                                                   _model.selectedTableColumn ==
-                                                      'Latest News Score',
+                                                      'Latest NEWS2 Score',
                                               isAscending: _model
                                                   .isAscendingSelectedTableColumn,
                                               bgColor:
                                                   FlutterFlowTheme.of(context)
                                                       .cardAlternate,
+                                              subHeader: 'Score/Risk',
                                               onClick: (columnName) async {
                                                 if (_model
                                                         .selectedTableColumn ==
@@ -2546,20 +2561,20 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         .telecomValue;
                                                               });
                                                               if (animationsMap[
-                                                                      'containerOnActionTriggerAnimation'] !=
+                                                                      'containerOnActionTriggerAnimation1'] !=
                                                                   null) {
                                                                 await animationsMap[
-                                                                        'containerOnActionTriggerAnimation']!
+                                                                        'containerOnActionTriggerAnimation1']!
                                                                     .controller
                                                                     .forward(
                                                                         from:
                                                                             0.0);
                                                               }
                                                               if (animationsMap[
-                                                                      'containerOnActionTriggerAnimation'] !=
+                                                                      'containerOnActionTriggerAnimation1'] !=
                                                                   null) {
                                                                 await animationsMap[
-                                                                        'containerOnActionTriggerAnimation']!
+                                                                        'containerOnActionTriggerAnimation1']!
                                                                     .controller
                                                                     .reverse();
                                                               }
@@ -2869,6 +2884,34 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
                                                                   Navigator.pop(
                                                                       context);
+                                                                  await Future
+                                                                      .delayed(
+                                                                    Duration(
+                                                                      milliseconds:
+                                                                          200,
+                                                                    ),
+                                                                  );
+                                                                  if (animationsMap[
+                                                                          'containerOnActionTriggerAnimation2'] !=
+                                                                      null) {
+                                                                    await animationsMap[
+                                                                            'containerOnActionTriggerAnimation2']!
+                                                                        .controller
+                                                                        .forward(
+                                                                            from:
+                                                                                0.0)
+                                                                        .whenComplete(animationsMap['containerOnActionTriggerAnimation2']!
+                                                                            .controller
+                                                                            .reverse);
+                                                                  }
+                                                                  if (animationsMap[
+                                                                          'containerOnActionTriggerAnimation2'] !=
+                                                                      null) {
+                                                                    animationsMap[
+                                                                            'containerOnActionTriggerAnimation2']!
+                                                                        .controller
+                                                                        .stop();
+                                                                  }
                                                                 }),
                                                                 Future(
                                                                     () async {
@@ -3628,7 +3671,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                           ),
                                         ).animateOnActionTrigger(
                                           animationsMap[
-                                              'containerOnActionTriggerAnimation']!,
+                                              'containerOnActionTriggerAnimation1']!,
                                         ),
                                       ]
                                           .divide(SizedBox(width: 20.0))
@@ -6438,11 +6481,23 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                           width:
                                                                               10.0)),
                                                                 ),
+                                                              ).animateOnActionTrigger(
+                                                                animationsMap[
+                                                                    'containerOnActionTriggerAnimation2']!,
                                                               ),
                                                             ].divide(SizedBox(
                                                                 height: 10.0)),
                                                           ),
-                                                          if (kDebugMode)
+                                                          if (kDebugMode &&
+                                                              responsiveVisibility(
+                                                                context:
+                                                                    context,
+                                                                phone: false,
+                                                                tablet: false,
+                                                                tabletLandscape:
+                                                                    false,
+                                                                desktop: false,
+                                                              ))
                                                             InkWell(
                                                               splashColor: Colors
                                                                   .transparent,
@@ -6468,7 +6523,16 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                 size: 24.0,
                                                               ),
                                                             ),
-                                                          if (kDebugMode)
+                                                          if (kDebugMode &&
+                                                              responsiveVisibility(
+                                                                context:
+                                                                    context,
+                                                                phone: false,
+                                                                tablet: false,
+                                                                tabletLandscape:
+                                                                    false,
+                                                                desktop: false,
+                                                              ))
                                                             InkWell(
                                                               splashColor: Colors
                                                                   .transparent,
@@ -6750,6 +6814,276 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               width: 10.0)),
                                                         ),
                                                       ],
+                                                    ),
+                                                  if (_model
+                                                          .patientSelectedForDetails
+                                                          ?.hasLatestNEWS2Score ??
+                                                      true)
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  20.0,
+                                                                  0.0,
+                                                                  0.0,
+                                                                  0.0),
+                                                      child: Container(
+                                                        width: 400.0,
+                                                        decoration:
+                                                            BoxDecoration(),
+                                                        alignment:
+                                                            AlignmentDirectional(
+                                                                0.0, 0.0),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.max,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Expanded(
+                                                              child: Builder(
+                                                                builder:
+                                                                    (context) {
+                                                                  if (_model
+                                                                          .patientSelectedForDetails!
+                                                                          .hasLatestNEWS2Score &&
+                                                                      (_model.patientSelectedForDetails!
+                                                                              .latestNEWS2Score <=
+                                                                          4) &&
+                                                                      !_model
+                                                                          .patientSelectedForDetails!
+                                                                          .latestSingleRedScore) {
+                                                                    return Align(
+                                                                      alignment:
+                                                                          AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0),
+                                                                      child:
+                                                                          Padding(
+                                                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                                                            20.0,
+                                                                            0.0,
+                                                                            10.0,
+                                                                            0.0),
+                                                                        child:
+                                                                            FaIcon(
+                                                                          FontAwesomeIcons
+                                                                              .smile,
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).success,
+                                                                          size:
+                                                                              30.0,
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  } else {
+                                                                    return Padding(
+                                                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                                                          20.0,
+                                                                          0.0,
+                                                                          10.0,
+                                                                          0.0),
+                                                                      child:
+                                                                          Column(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        children: [
+                                                                          Row(
+                                                                            mainAxisSize:
+                                                                                MainAxisSize.max,
+                                                                            children:
+                                                                                [
+                                                                              Builder(
+                                                                                builder: (context) {
+                                                                                  if (_model.patientSelectedForDetails!.latestNEWS2Score >= 7) {
+                                                                                    return Icon(
+                                                                                      Icons.wb_incandescent_rounded,
+                                                                                      color: FlutterFlowTheme.of(context).error,
+                                                                                      size: 24.0,
+                                                                                    );
+                                                                                  } else {
+                                                                                    return Icon(
+                                                                                      Icons.wb_incandescent_outlined,
+                                                                                      color: FlutterFlowTheme.of(context).tertiary,
+                                                                                      size: 30.0,
+                                                                                    );
+                                                                                  }
+                                                                                },
+                                                                              ),
+                                                                              Expanded(
+                                                                                child: Container(
+                                                                                  decoration: BoxDecoration(),
+                                                                                  child: Text(
+                                                                                    functions.decodeNewsScore(_model.patientSelectedForDetails!.latestNEWS2Score, _model.patientSelectedForDetails!.latestSingleRedScore).interpretation,
+                                                                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                          font: GoogleFonts.inter(
+                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                          ),
+                                                                                          letterSpacing: 0.0,
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ].divide(SizedBox(width: 10.0)),
+                                                                          ),
+                                                                          Row(
+                                                                            mainAxisSize:
+                                                                                MainAxisSize.max,
+                                                                            children:
+                                                                                [
+                                                                              Icon(
+                                                                                Icons.person_search_sharp,
+                                                                                color: FlutterFlowTheme.of(context).primaryText,
+                                                                                size: 24.0,
+                                                                              ),
+                                                                              Expanded(
+                                                                                child: Container(
+                                                                                  decoration: BoxDecoration(),
+                                                                                  child: Text(
+                                                                                    functions.decodeNewsScore(_model.patientSelectedForDetails!.latestNEWS2Score, _model.patientSelectedForDetails!.latestSingleRedScore).assessmentBy,
+                                                                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                          font: GoogleFonts.inter(
+                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                          ),
+                                                                                          letterSpacing: 0.0,
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ].divide(SizedBox(width: 10.0)),
+                                                                          ),
+                                                                          Row(
+                                                                            mainAxisSize:
+                                                                                MainAxisSize.max,
+                                                                            children:
+                                                                                [
+                                                                              Icon(
+                                                                                Icons.looks_one_outlined,
+                                                                                color: FlutterFlowTheme.of(context).primaryText,
+                                                                                size: 24.0,
+                                                                              ),
+                                                                              Expanded(
+                                                                                child: Container(
+                                                                                  decoration: BoxDecoration(),
+                                                                                  child: Text(
+                                                                                    functions.decodeNewsScore(_model.patientSelectedForDetails!.latestNEWS2Score, _model.patientSelectedForDetails!.latestSingleRedScore).action1,
+                                                                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                          font: GoogleFonts.inter(
+                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                          ),
+                                                                                          letterSpacing: 0.0,
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ].divide(SizedBox(width: 10.0)),
+                                                                          ),
+                                                                          Row(
+                                                                            mainAxisSize:
+                                                                                MainAxisSize.max,
+                                                                            children:
+                                                                                [
+                                                                              Icon(
+                                                                                Icons.looks_two_outlined,
+                                                                                color: FlutterFlowTheme.of(context).primaryText,
+                                                                                size: 24.0,
+                                                                              ),
+                                                                              Expanded(
+                                                                                child: Container(
+                                                                                  decoration: BoxDecoration(),
+                                                                                  child: Text(
+                                                                                    functions.decodeNewsScore(_model.patientSelectedForDetails!.latestNEWS2Score, _model.patientSelectedForDetails!.latestSingleRedScore).action2,
+                                                                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                          font: GoogleFonts.inter(
+                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                          ),
+                                                                                          letterSpacing: 0.0,
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ].divide(SizedBox(width: 10.0)),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    );
+                                                                  }
+                                                                },
+                                                              ),
+                                                            ),
+                                                            InkWell(
+                                                              splashColor: Colors
+                                                                  .transparent,
+                                                              focusColor: Colors
+                                                                  .transparent,
+                                                              hoverColor: Colors
+                                                                  .transparent,
+                                                              highlightColor:
+                                                                  Colors
+                                                                      .transparent,
+                                                              onTap: () async {
+                                                                await Navigator
+                                                                    .push(
+                                                                  context,
+                                                                  PageTransition(
+                                                                    type: PageTransitionType
+                                                                        .fade,
+                                                                    child:
+                                                                        FlutterFlowExpandedImageView(
+                                                                      image: Image
+                                                                          .asset(
+                                                                        'assets/images/The-NEWS2-scoring-system-Reproduced-from-Royal-College-of-Physicians-National-Early.webp',
+                                                                        fit: BoxFit
+                                                                            .contain,
+                                                                      ),
+                                                                      allowRotation:
+                                                                          false,
+                                                                      tag:
+                                                                          'imageTag',
+                                                                      useHeroAnimation:
+                                                                          true,
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              },
+                                                              child: Hero(
+                                                                tag: 'imageTag',
+                                                                transitionOnUserGestures:
+                                                                    true,
+                                                                child:
+                                                                    ClipRRect(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8.0),
+                                                                  child: Image
+                                                                      .asset(
+                                                                    'assets/images/The-NEWS2-scoring-system-Reproduced-from-Royal-College-of-Physicians-National-Early.webp',
+                                                                    width: 75.0,
+                                                                    height:
+                                                                        75.0,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                     ),
                                                 ].addToEnd(
                                                     SizedBox(width: 10.0)),
@@ -7587,7 +7921,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               isExpanded: true,
                                                                               factor: 1.0,
                                                                               yAxisTitle: 'Blood Pressure',
-                                                                              xData: _model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              xData: functions.convertUTCtoISTDatetime(_model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().map((e) => e.recordedAt).withoutNulls.toList()).sortedList(keyOf: (e) => e, desc: false).map((e) => dateTimeFormat("d/M H:mm", e)).toList(),
                                                                               yData1: (List<String> strList) {
                                                                                 return strList.map((e) => double.parse(e)).toList();
                                                                               }(_model.patientObservations.where((e) => e.name == 'Systolic blood pressure').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
@@ -7718,7 +8052,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               isExpanded: true,
                                                                               factor: 1.0,
                                                                               yAxisTitle: 'Heart Rate',
-                                                                              xData: _model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              xData: functions.convertUTCtoISTDatetime(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().map((e) => e.recordedAt).withoutNulls.toList()).sortedList(keyOf: (e) => e, desc: false).map((e) => dateTimeFormat("d/M H:mm", e)).toList(),
                                                                               yData1: (List<String> strList) {
                                                                                 return strList.map((e) => double.parse(e)).toList();
                                                                               }(_model.patientObservations.where((e) => e.name == 'Heart rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
@@ -7848,7 +8182,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               isExpanded: true,
                                                                               factor: 1.0,
                                                                               yAxisTitle: 'Temperature',
-                                                                              xData: _model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              xData: functions.convertUTCtoISTDatetime(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().map((e) => e.recordedAt).withoutNulls.toList()).sortedList(keyOf: (e) => e, desc: false).map((e) => dateTimeFormat("d/M H:mm", e)).toList(),
                                                                               yData1: (List<String> strList) {
                                                                                 return strList.map((e) => double.parse(e)).toList();
                                                                               }(_model.patientObservations.where((e) => e.name == 'Body temperature').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
@@ -7978,7 +8312,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               isExpanded: true,
                                                                               factor: 1.0,
                                                                               yAxisTitle: 'RespiratoryRate',
-                                                                              xData: _model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => dateTimeFormat("d/M H:mm", e.recordedAt)).toList(),
+                                                                              xData: functions.convertUTCtoISTDatetime(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().map((e) => e.recordedAt).withoutNulls.toList()).sortedList(keyOf: (e) => e, desc: false).map((e) => dateTimeFormat("d/M H:mm", e)).toList(),
                                                                               yData1: (List<String> strList) {
                                                                                 return strList.map((e) => double.parse(e)).toList();
                                                                               }(_model.patientObservations.where((e) => e.name == 'Respiratory rate').toList().sortedList(keyOf: (e) => e.recordedAt!, desc: false).map((e) => e.value).toList()),
@@ -9161,34 +9495,46 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       ].addToStart(SizedBox(
                                                           height: 20.0)),
                                                     ),
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
-                                                          children: [
-                                                            AlignedTooltip(
-                                                              content: Padding(
-                                                                padding:
-                                                                    EdgeInsets
-                                                                        .all(
-                                                                            4.0),
-                                                                child: Text(
-                                                                  'Add New Observation',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyLarge
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
+                                                    Container(
+                                                      decoration:
+                                                          BoxDecoration(),
+                                                      child: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .max,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .end,
+                                                            children: [
+                                                              AlignedTooltip(
+                                                                content:
+                                                                    Padding(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              4.0),
+                                                                  child: Text(
+                                                                    'Add New Observation',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyLarge
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
                                                                           fontWeight: FlutterFlowTheme.of(context)
                                                                               .bodyLarge
                                                                               .fontWeight,
@@ -9196,402 +9542,512 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               .bodyLarge
                                                                               .fontStyle,
                                                                         ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyLarge
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyLarge
-                                                                            .fontStyle,
-                                                                      ),
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                              offset: 4.0,
-                                                              preferredDirection:
-                                                                  AxisDirection
-                                                                      .down,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              backgroundColor:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .secondaryBackground,
-                                                              elevation: 4.0,
-                                                              tailBaseWidth:
-                                                                  24.0,
-                                                              tailLength: 12.0,
-                                                              waitDuration:
-                                                                  Duration(
-                                                                      milliseconds:
-                                                                          100),
-                                                              showDuration:
-                                                                  Duration(
-                                                                      milliseconds:
-                                                                          1500),
-                                                              triggerMode:
-                                                                  TooltipTriggerMode
-                                                                      .tap,
-                                                              child: Builder(
-                                                                builder:
-                                                                    (context) =>
-                                                                        FlutterFlowIconButton(
-                                                                  borderColor:
-                                                                      FlutterFlowTheme.of(
+                                                                offset: 4.0,
+                                                                preferredDirection:
+                                                                    AxisDirection
+                                                                        .down,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            8.0),
+                                                                backgroundColor:
+                                                                    FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .secondaryBackground,
+                                                                elevation: 4.0,
+                                                                tailBaseWidth:
+                                                                    24.0,
+                                                                tailLength:
+                                                                    12.0,
+                                                                waitDuration:
+                                                                    Duration(
+                                                                        milliseconds:
+                                                                            100),
+                                                                showDuration:
+                                                                    Duration(
+                                                                        milliseconds:
+                                                                            1500),
+                                                                triggerMode:
+                                                                    TooltipTriggerMode
+                                                                        .tap,
+                                                                child: Builder(
+                                                                  builder:
+                                                                      (context) =>
+                                                                          FlutterFlowIconButton(
+                                                                    borderColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .primary,
+                                                                    borderRadius:
+                                                                        20.0,
+                                                                    buttonSize:
+                                                                        40.0,
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .add_rounded,
+                                                                      color: FlutterFlowTheme.of(
                                                                               context)
                                                                           .primary,
-                                                                  borderRadius:
-                                                                      20.0,
-                                                                  buttonSize:
-                                                                      40.0,
-                                                                  icon: Icon(
-                                                                    Icons
-                                                                        .add_rounded,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                    size: 24.0,
-                                                                  ),
-                                                                  onPressed:
-                                                                      () async {
-                                                                    await showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (dialogContext) {
-                                                                        return Dialog(
-                                                                          elevation:
-                                                                              0,
-                                                                          insetPadding:
-                                                                              EdgeInsets.zero,
-                                                                          backgroundColor:
-                                                                              Colors.transparent,
-                                                                          alignment:
-                                                                              AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                          child:
-                                                                              Container(
-                                                                            width:
-                                                                                1000.0,
+                                                                      size:
+                                                                          24.0,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () async {
+                                                                      await showDialog(
+                                                                        context:
+                                                                            context,
+                                                                        builder:
+                                                                            (dialogContext) {
+                                                                          return Dialog(
+                                                                            elevation:
+                                                                                0,
+                                                                            insetPadding:
+                                                                                EdgeInsets.zero,
+                                                                            backgroundColor:
+                                                                                Colors.transparent,
+                                                                            alignment:
+                                                                                AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
                                                                             child:
-                                                                                AddNewObservationSetComponentWidget(
-                                                                              practitionerID: functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()),
-                                                                              encounterID: GetAdmissionEncounterByPatientIDCall.encounterID(
-                                                                                patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
-                                                                              )!,
-                                                                              admissionDate: functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
-                                                                                patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
-                                                                              ))!,
-                                                                              patientID: _model.patientSelectedForDetails?.identifier,
+                                                                                Container(
+                                                                              width: 1000.0,
+                                                                              child: AddNewObservationSetComponentWidget(
+                                                                                practitionerID: functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()),
+                                                                                encounterID: GetAdmissionEncounterByPatientIDCall.encounterID(
+                                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                                )!,
+                                                                                admissionDate: functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
+                                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                                ))!,
+                                                                                patientID: _model.patientSelectedForDetails?.identifier,
+                                                                              ),
                                                                             ),
+                                                                          );
+                                                                        },
+                                                                      );
+
+                                                                      ScaffoldMessenger.of(
+                                                                              context)
+                                                                          .clearSnackBars();
+                                                                      ScaffoldMessenger.of(
+                                                                              context)
+                                                                          .showSnackBar(
+                                                                        SnackBar(
+                                                                          content:
+                                                                              Text(
+                                                                            'Fectching Updated Records. Please wait..!!',
+                                                                            style:
+                                                                                TextStyle(
+                                                                              color: FlutterFlowTheme.of(context).info,
+                                                                            ),
+                                                                            textAlign:
+                                                                                TextAlign.center,
                                                                           ),
+                                                                          duration:
+                                                                              Duration(milliseconds: 4000),
+                                                                          backgroundColor:
+                                                                              FlutterFlowTheme.of(context).tertiary,
+                                                                        ),
+                                                                      );
+                                                                      _model.fetchPatientsWithNews4 =
+                                                                          await actions
+                                                                              .fetchFhirPatientsWithLatestNews2(
+                                                                        FFAppState()
+                                                                            .fhirBaseUrl,
+                                                                        FFAppState()
+                                                                            .fhirBearerToken,
+                                                                        '2026-05-18',
+                                                                      );
+                                                                      _model.allPatients = _model
+                                                                          .fetchPatientsWithNews4!
+                                                                          .toList()
+                                                                          .cast<
+                                                                              PatientStruct>();
+                                                                      _model.sortedAllPatients = _model
+                                                                          .fetchPatientsWithNews4!
+                                                                          .sortedList(
+                                                                              keyOf: (e) => e.latestNEWS2Score,
+                                                                              desc: true)
+                                                                          .toList()
+                                                                          .cast<PatientStruct>();
+                                                                      _model.selectedTableColumn =
+                                                                          'Latest NEWS2 Score';
+                                                                      _model.isAscendingSelectedTableColumn =
+                                                                          false;
+                                                                      _model
+                                                                          .updatePatientSelectedForDetailsStruct(
+                                                                        (e) => e
+                                                                          ..hasLatestNEWS2Score = _model
+                                                                              .allPatients
+                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
+                                                                              .toList()
+                                                                              .firstOrNull
+                                                                              ?.hasLatestNEWS2Score
+                                                                          ..latestNEWS2Score = _model
+                                                                              .allPatients
+                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
+                                                                              .toList()
+                                                                              .firstOrNull
+                                                                              ?.latestNEWS2Score
+                                                                          ..latestSingleRedScore = _model
+                                                                              .allPatients
+                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
+                                                                              .toList()
+                                                                              .firstOrNull
+                                                                              ?.latestSingleRedScore,
+                                                                      );
+                                                                      safeSetState(
+                                                                          () {});
+                                                                      _model.bundleResponse2 =
+                                                                          await PatientBundleRequestsCall
+                                                                              .call(
+                                                                        token: FFAppState()
+                                                                            .fhirBearerToken,
+                                                                        id: _model
+                                                                            .patientSelectedForDetails
+                                                                            ?.identifier,
+                                                                      );
+
+                                                                      if ((_model
+                                                                              .bundleResponse2
+                                                                              ?.succeeded ??
+                                                                          true)) {
+                                                                        if (PatientBundleRequestsCall.observationTotal(
+                                                                              (_model.bundleResponse2?.jsonBody ?? ''),
+                                                                            )! >
+                                                                            0) {
+                                                                          _model.patientObservations = functions
+                                                                              .parseFhirObservations(PatientBundleRequestsCall.observationEntries(
+                                                                                (_model.bundleResponse2?.jsonBody ?? ''),
+                                                                              )!
+                                                                                  .toList())
+                                                                              .toList()
+                                                                              .cast<ObservationStruct>();
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        } else {
+                                                                          await showDialog(
+                                                                            context:
+                                                                                context,
+                                                                            builder:
+                                                                                (alertDialogContext) {
+                                                                              return AlertDialog(
+                                                                                title: Text('Error'),
+                                                                                content: Text('No observations noted'),
+                                                                                actions: [
+                                                                                  TextButton(
+                                                                                    onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                    child: Text('Ok'),
+                                                                                  ),
+                                                                                ],
+                                                                              );
+                                                                            },
+                                                                          );
+                                                                        }
+
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .hideCurrentSnackBar();
+                                                                      } else {
+                                                                        await showDialog(
+                                                                          context:
+                                                                              context,
+                                                                          builder:
+                                                                              (alertDialogContext) {
+                                                                            return AlertDialog(
+                                                                              title: Text('Error'),
+                                                                              content: Text((_model.bundleResponse2?.bodyText ?? '')),
+                                                                              actions: [
+                                                                                TextButton(
+                                                                                  onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                  child: Text('Ok'),
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
                                                                         );
-                                                                      },
-                                                                    );
-                                                                  },
+                                                                      }
+
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    },
+                                                                  ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                          ]
-                                                              .divide(SizedBox(
-                                                                  width: 10.0))
-                                                              .around(SizedBox(
-                                                                  width: 10.0)),
-                                                        ),
-                                                        Builder(
-                                                          builder: (context) {
-                                                            if (_model
-                                                                .patientObservations
-                                                                .isNotEmpty) {
-                                                              return Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  Row(
-                                                                    mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .max,
-                                                                    children: [
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.recordedAtModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
+                                                            ]
+                                                                .divide(SizedBox(
+                                                                    width:
+                                                                        10.0))
+                                                                .around(SizedBox(
+                                                                    width:
+                                                                        10.0)),
+                                                          ),
+                                                          Builder(
+                                                            builder: (context) {
+                                                              if (_model
+                                                                  .patientObservations
+                                                                  .isNotEmpty) {
+                                                                return Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .max,
+                                                                  children: [
+                                                                    Row(
+                                                                      mainAxisSize:
+                                                                          MainAxisSize
+                                                                              .max,
+                                                                      children:
+                                                                          [
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
                                                                           child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'Date',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            topLeftBorderRadius:
-                                                                                10.0,
-                                                                            subHeader:
-                                                                                'Time',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.pulseRateModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'PR',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                '/min',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.bloodPressureModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'BP',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                'mm Hg',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.respiratoryRateModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'RR',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                '/min',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.temperatureModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'Temp',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                '°F',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.spO2Model,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'SpO2',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                '%',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.avpuModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'AVPU',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            subHeader:
-                                                                                'Score',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 1,
-                                                                        child:
-                                                                            wrapWithModel(
-                                                                          model:
-                                                                              _model.nEWS2ScoreModel,
-                                                                          updateCallback: () =>
-                                                                              safeSetState(() {}),
-                                                                          child:
-                                                                              CustomTableHeaderComponentWidget(
-                                                                            columnName:
-                                                                                'NEWS2',
-                                                                            isSelected:
-                                                                                false,
-                                                                            isAscending:
-                                                                                false,
-                                                                            topRIghtBorderRadius:
-                                                                                10.0,
-                                                                            subHeader:
-                                                                                'score',
-                                                                            onClick:
-                                                                                (columnName) async {},
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ]
-                                                                        .addToStart(SizedBox(
-                                                                            width:
-                                                                                20.0))
-                                                                        .addToEnd(SizedBox(
-                                                                            width:
-                                                                                20.0)),
-                                                                  ),
-                                                                  Builder(
-                                                                    builder:
-                                                                        (context) {
-                                                                      final newsRows = _model
-                                                                          .patientObservations
-                                                                          .unique((e) => e
-                                                                              .recordedAt!)
-                                                                          .sortedList(
-                                                                              keyOf: (e) => e.recordedAt!,
-                                                                              desc: true)
-                                                                          .map((e) => e.recordedAt)
-                                                                          .withoutNulls
-                                                                          .toList();
-
-                                                                      return Column(
-                                                                        mainAxisSize:
-                                                                            MainAxisSize.max,
-                                                                        children: List.generate(
-                                                                            newsRows.length,
-                                                                            (newsRowsIndex) {
-                                                                          final newsRowsItem =
-                                                                              newsRows[newsRowsIndex];
-                                                                          return wrapWithModel(
+                                                                              wrapWithModel(
                                                                             model:
-                                                                                _model.nEWSRowComponentModels.getModel(
-                                                                              newsRowsIndex.toString(),
-                                                                              newsRowsIndex,
-                                                                            ),
+                                                                                _model.recordedAtModel,
                                                                             updateCallback: () =>
                                                                                 safeSetState(() {}),
                                                                             child:
-                                                                                NEWSRowComponentWidget(
-                                                                              key: Key(
-                                                                                'Key8wu_${newsRowsIndex.toString()}',
-                                                                              ),
-                                                                              observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'Date',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              topLeftBorderRadius: 10.0,
+                                                                              subHeader: 'Time',
+                                                                              onClick: (columnName) async {},
                                                                             ),
-                                                                          );
-                                                                        }),
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              );
-                                                            } else {
-                                                              return Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                children: [
-                                                                  Text(
-                                                                    'Enter New Vital signs to view the NEWS Score.',
-                                                                    style: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.inter(
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.pulseRateModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'PR',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: '/min (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.bloodPressureModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'BP',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: 'mm Hg (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.respiratoryRateModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'RR',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: '/min (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.temperatureModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'Temp',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: '°F (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.airOxygenModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'Air/Oxygen',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: 'value (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.spO2Model,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'SpO2',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: '% (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.avpuModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'AVPU',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              subHeader: 'Value (score)',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        Expanded(
+                                                                          flex:
+                                                                              2,
+                                                                          child:
+                                                                              wrapWithModel(
+                                                                            model:
+                                                                                _model.nEWS2ScoreModel,
+                                                                            updateCallback: () =>
+                                                                                safeSetState(() {}),
+                                                                            child:
+                                                                                CustomTableHeaderComponentWidget(
+                                                                              columnName: 'NEWS2',
+                                                                              isSelected: false,
+                                                                              isAscending: false,
+                                                                              topRIghtBorderRadius: 10.0,
+                                                                              subHeader: 'score',
+                                                                              onClick: (columnName) async {},
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ].addToStart(SizedBox(width: 20.0)).addToEnd(
+                                                                              SizedBox(width: 20.0)),
+                                                                    ),
+                                                                    Builder(
+                                                                      builder:
+                                                                          (context) {
+                                                                        final newsRows = _model
+                                                                            .patientObservations
+                                                                            .unique((e) =>
+                                                                                e.recordedAt!)
+                                                                            .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                                                                            .map((e) => e.recordedAt)
+                                                                            .withoutNulls
+                                                                            .toList();
+
+                                                                        return Column(
+                                                                          mainAxisSize:
+                                                                              MainAxisSize.max,
+                                                                          children: List.generate(
+                                                                              newsRows.length,
+                                                                              (newsRowsIndex) {
+                                                                            final newsRowsItem =
+                                                                                newsRows[newsRowsIndex];
+                                                                            return wrapWithModel(
+                                                                              model: _model.nEWSRowComponentModels.getModel(
+                                                                                newsRowsIndex.toString(),
+                                                                                newsRowsIndex,
+                                                                              ),
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: NEWSRowComponentWidget(
+                                                                                key: Key(
+                                                                                  'Key8wu_${newsRowsIndex.toString()}',
+                                                                                ),
+                                                                                observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                isLatest: newsRowsIndex == 0,
+                                                                              ),
+                                                                            );
+                                                                          }),
+                                                                        );
+                                                                      },
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              } else {
+                                                                return Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .max,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  children: [
+                                                                    Text(
+                                                                      'Enter New Vital signs to view the NEWS Score.',
+                                                                      style: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .override(
+                                                                            font:
+                                                                                GoogleFonts.inter(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                            ),
+                                                                            letterSpacing:
+                                                                                0.0,
                                                                             fontWeight:
                                                                                 FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                                                                             fontStyle:
                                                                                 FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                           ),
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                  ),
-                                                                ],
-                                                              );
-                                                            }
-                                                          },
-                                                        ),
-                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              }
+                                                            },
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
                                                   ],
                                                 ),

@@ -1,4 +1,5 @@
 import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -8,6 +9,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'patient_table_row_component_model.dart';
 export 'patient_table_row_component_model.dart';
@@ -37,8 +40,11 @@ class PatientTableRowComponentWidget extends StatefulWidget {
 }
 
 class _PatientTableRowComponentWidgetState
-    extends State<PatientTableRowComponentWidget> {
+    extends State<PatientTableRowComponentWidget>
+    with TickerProviderStateMixin {
   late PatientTableRowComponentModel _model;
+
+  final animationsMap = <String, AnimationInfo>{};
 
   @override
   void setState(VoidCallback callback) {
@@ -50,6 +56,23 @@ class _PatientTableRowComponentWidgetState
   void initState() {
     super.initState();
     _model = createModel(context, () => PatientTableRowComponentModel());
+
+    animationsMap.addAll({
+      'iconOnPageLoadAnimation': AnimationInfo(
+        loop: true,
+        reverse: true,
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 0.0.ms,
+            duration: 500.0.ms,
+            begin: 0.5,
+            end: 1.0,
+          ),
+        ],
+      ),
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -504,37 +527,203 @@ class _PatientTableRowComponentWidgetState
                       height: 50.0,
                       decoration: BoxDecoration(),
                       alignment: AlignmentDirectional(0.0, 0.0),
-                      child: SelectionArea(
-                          child: Text(
-                        widget.patientRow!.hasLatestNEWS2Score
-                            ? valueOrDefault<String>(
-                                widget.patientRow?.latestNEWS2Score
-                                    .toString(),
-                                'NEWS',
-                              )
-                            : '-NA-',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.inter(
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
-                              color: _model.isRowHovered
-                                  ? FlutterFlowTheme.of(context).primary
-                                  : FlutterFlowTheme.of(context).primaryText,
-                              fontSize: _model.isRowHovered ? 15.0 : 14.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FlutterFlowTheme.of(context)
+                      child: Builder(
+                        builder: (context) {
+                          if (widget.patientRow?.hasLatestNEWS2Score ??
+                              false) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SelectionArea(
+                                        child: Text(
+                                      widget.patientRow!.hasLatestNEWS2Score
+                                          ? valueOrDefault<String>(
+                                              widget
+                                                  .patientRow?.latestNEWS2Score
+                                                  .toString(),
+                                              'NEWS',
+                                            )
+                                          : '-NA-',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                            color: valueOrDefault<Color>(
+                                              () {
+                                                if (widget.patientRow!
+                                                        .latestNEWS2Score >=
+                                                    7) {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .error;
+                                                } else if ((widget.patientRow!
+                                                            .latestNEWS2Score <=
+                                                        4) &&
+                                                    !widget.patientRow!
+                                                        .latestSingleRedScore) {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .success;
+                                                } else {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .tertiary;
+                                                }
+                                              }(),
+                                              FlutterFlowTheme.of(context)
+                                                  .primary,
+                                            ),
+                                            fontSize: _model.isRowHovered
+                                                ? 15.0
+                                                : 14.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                    )),
+                                    SelectionArea(
+                                        child: Text(
+                                      functions
+                                          .decodeNewsScore(
+                                              widget
+                                                  .patientRow!.latestNEWS2Score,
+                                              widget.patientRow!
+                                                  .latestSingleRedScore)
+                                          .interpretation,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                            color: valueOrDefault<Color>(
+                                              () {
+                                                if (widget.patientRow!
+                                                        .latestNEWS2Score >=
+                                                    7) {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .error;
+                                                } else if ((widget.patientRow!
+                                                            .latestNEWS2Score <=
+                                                        4) &&
+                                                    !widget.patientRow!
+                                                        .latestSingleRedScore) {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .success;
+                                                } else {
+                                                  return FlutterFlowTheme.of(
+                                                          context)
+                                                      .tertiary;
+                                                }
+                                              }(),
+                                              FlutterFlowTheme.of(context)
+                                                  .primary,
+                                            ),
+                                            fontSize: _model.isRowHovered
+                                                ? 15.0
+                                                : 14.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                    )),
+                                  ],
+                                ),
+                                Builder(
+                                  builder: (context) {
+                                    if (widget.patientRow!.latestNEWS2Score >=
+                                        7) {
+                                      return Icon(
+                                        Icons.wb_incandescent_rounded,
+                                        color:
+                                            FlutterFlowTheme.of(context).error,
+                                        size: 30.0,
+                                      ).animateOnPageLoad(animationsMap[
+                                          'iconOnPageLoadAnimation']!);
+                                    } else if ((widget
+                                                .patientRow!.latestNEWS2Score <=
+                                            4) &&
+                                        !widget
+                                            .patientRow!.latestSingleRedScore) {
+                                      return FaIcon(
+                                        FontAwesomeIcons.smile,
+                                        color: FlutterFlowTheme.of(context)
+                                            .success,
+                                        size: 30.0,
+                                      );
+                                    } else {
+                                      return Icon(
+                                        Icons.wb_incandescent_outlined,
+                                        color: FlutterFlowTheme.of(context)
+                                            .tertiary,
+                                        size: 30.0,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ].divide(SizedBox(width: 10.0)),
+                            );
+                          } else {
+                            return Text(
+                              '-NA-',
+                              style: FlutterFlowTheme.of(context)
                                   .bodyMedium
-                                  .fontWeight,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .fontStyle,
-                            ),
-                      )),
+                                  .override(
+                                    font: GoogleFonts.inter(
+                                      fontWeight: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .fontWeight,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .fontStyle,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ),
                   Expanded(

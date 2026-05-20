@@ -1622,3 +1622,222 @@ String? datetimeToISO8601String(DateTime? date) {
   if (date == null) return null;
   return date.toUtc().toIso8601String();
 }
+
+NewsScoreDecodeStruct decodeNewsScore(
+  int newsScore,
+  bool singleRedScore,
+) {
+  String interpretation = '';
+  String assessmentBy = '';
+  String action1 = '';
+  String action2 = '';
+
+  if (newsScore >= 7) {
+    interpretation = 'High Risk';
+    assessmentBy = 'Inform RMO and Consultant immediately';
+    action1 = 'Monitor Vitals every 15 mins (Continuous)';
+    action2 = 'Transfer patient to ICU';
+  } else if (newsScore >= 5) {
+    interpretation = 'Moderate Risk';
+    assessmentBy = 'Inform RMO immediately';
+    action1 = 'Monitor Vitals every 1 hour';
+    action2 = 'Doctor to decide on ICU transfer';
+  } else if (singleRedScore) {
+    interpretation = 'Moderate Risk';
+    assessmentBy = 'Inform RMO immediately';
+    action1 = 'Monitor Vitals every 1 hour (at least)';
+    action2 = 'Doctor to decide on ICU transfer';
+  } else {
+    interpretation = 'Low Risk';
+    assessmentBy = 'Continue Monitoring by Nurse.';
+    action1 = 'Monitor Vitals every 4 hours';
+  }
+  return NewsScoreDecodeStruct(
+      interpretation: interpretation,
+      assessmentBy: assessmentBy,
+      action1: action1,
+      action2: action2);
+}
+
+List<DateTime> convertUTCtoISTDatetime(List<DateTime> utcDatesList) {
+  // convert utc datetimes liste to IST datetimes list
+  return utcDatesList.map((utcDate) {
+    // IST is UTC + 5 hours and 30 minutes
+    return utcDate.toUtc().add(Duration(hours: 5, minutes: 30));
+  }).toList();
+}
+
+int calculateNews2IndividualScores(
+  String componentName,
+  String componentValue,
+  bool? hypercapneicRespiratoryFailure,
+  bool? isOnSupplementalO2,
+) {
+  final String name = componentName.trim().toLowerCase();
+  final String value = componentValue.trim().toLowerCase();
+
+  if (value.isEmpty) {
+    return 0;
+  }
+
+  double? parseNumber(String input) {
+    final cleaned = input
+        .replaceAll('%', '')
+        .replaceAll('°c', '')
+        .replaceAll('°f', '')
+        .replaceAll('c', '')
+        .replaceAll('f', '')
+        .trim();
+
+    return double.tryParse(cleaned);
+  }
+
+  bool parseOxygenValue(String input) {
+    final cleaned = input.trim().toLowerCase();
+
+    return cleaned == 'oxygen' ||
+        cleaned == 'o2' ||
+        cleaned == 'supplemental oxygen' ||
+        cleaned == 'supplemental o2' ||
+        cleaned == 'yes' ||
+        cleaned == 'true' ||
+        cleaned == '1' ||
+        cleaned.contains('oxygen') ||
+        cleaned.contains('o2');
+  }
+
+  final double? numericValue = parseNumber(value);
+
+  switch (name) {
+    case 'respiratoryrate':
+      if (numericValue == null) return 0;
+
+      if (numericValue <= 8) {
+        return 3;
+      } else if (numericValue >= 9 && numericValue <= 11) {
+        return 1;
+      } else if (numericValue >= 12 && numericValue <= 20) {
+        return 0;
+      } else if (numericValue >= 21 && numericValue <= 24) {
+        return 2;
+      } else {
+        return 3; // >= 25
+      }
+
+    case 'pulse':
+      if (numericValue == null) return 0;
+
+      if (numericValue <= 40) {
+        return 3;
+      } else if (numericValue >= 41 && numericValue <= 50) {
+        return 1;
+      } else if (numericValue >= 51 && numericValue <= 90) {
+        return 0;
+      } else if (numericValue >= 91 && numericValue <= 110) {
+        return 1;
+      } else if (numericValue >= 111 && numericValue <= 130) {
+        return 2;
+      } else {
+        return 3; // >= 131
+      }
+
+    case 'systolicbp':
+      if (numericValue == null) return 0;
+
+      if (numericValue <= 90) {
+        return 3;
+      } else if (numericValue >= 91 && numericValue <= 100) {
+        return 2;
+      } else if (numericValue >= 101 && numericValue <= 110) {
+        return 1;
+      } else if (numericValue >= 111 && numericValue <= 219) {
+        return 0;
+      } else {
+        return 3; // >= 220
+      }
+
+    case 'temperature':
+      if (numericValue == null) return 0;
+
+      // NEWS2 temperature thresholds are in Celsius.
+      // If a Fahrenheit-like value is passed, convert automatically.
+      double tempC = numericValue;
+      if (tempC > 45) {
+        tempC = (tempC - 32) * 5 / 9;
+      }
+
+      if (tempC <= 35.0) {
+        return 3;
+      } else if (tempC >= 35.1 && tempC <= 36.0) {
+        return 1;
+      } else if (tempC >= 36.1 && tempC <= 38.0) {
+        return 0;
+      } else if (tempC >= 38.1 && tempC <= 39.0) {
+        return 1;
+      } else {
+        return 2; // >= 39.1
+      }
+
+    case 'spo2':
+      if (numericValue == null) return 0;
+
+      final bool useScale2 = hypercapneicRespiratoryFailure == true;
+      final bool onOxygen = isOnSupplementalO2 == true;
+
+      if (!useScale2) {
+        // SpO2 Scale 1
+        if (numericValue <= 91) {
+          return 3;
+        } else if (numericValue >= 92 && numericValue <= 93) {
+          return 2;
+        } else if (numericValue >= 94 && numericValue <= 95) {
+          return 1;
+        } else {
+          return 0; // >= 96
+        }
+      } else {
+        // SpO2 Scale 2: for hypercapnic respiratory failure / target 88–92%.
+        if (numericValue <= 83) {
+          return 3;
+        } else if (numericValue >= 84 && numericValue <= 85) {
+          return 2;
+        } else if (numericValue >= 86 && numericValue <= 87) {
+          return 1;
+        } else if (numericValue >= 88 && numericValue <= 92) {
+          return 0;
+        } else if (numericValue >= 93 && numericValue <= 94) {
+          return onOxygen ? 1 : 0;
+        } else if (numericValue >= 95 && numericValue <= 96) {
+          return onOxygen ? 2 : 1;
+        } else {
+          return onOxygen ? 3 : 2; // >= 97
+        }
+      }
+
+    case 'airoroxygen':
+      return parseOxygenValue(value) ? 2 : 0;
+
+    case 'consciousness':
+      if (value == 'alert' || value == 'a') {
+        return 0;
+      }
+
+      if (value == 'new confusion' ||
+          value == 'confusion' ||
+          value == 'confused' ||
+          value == 'c' ||
+          value == 'voice' ||
+          value == 'v' ||
+          value == 'pain' ||
+          value == 'p' ||
+          value == 'unresponsive' ||
+          value == 'u') {
+        return 3;
+      }
+
+      return 0;
+
+    default:
+      return 0;
+  }
+}

@@ -78,7 +78,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
           int index, Function(PatientStruct) updateFn) =>
       allFHIRSearchPatients[index] = updateFn(allFHIRSearchPatients[index]);
 
-  String? selectedTableColumn = 'Latest News Score';
+  String? selectedTableColumn = 'Latest NEWS2 Score';
 
   bool isAscendingSelectedTableColumn = false;
 
@@ -324,6 +324,10 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels3;
+  // Stores action output result for [Custom Action - fetchFhirPatientsWithLatestNews2] action in IconButton widget.
+  List<PatientStruct>? fetchPatientsWithNews4;
+  // Stores action output result for [Backend Call - API (Patient Bundle Requests)] action in IconButton widget.
+  ApiCallResponse? bundleResponse2;
   // Model for RecordedAt.
   late CustomTableHeaderComponentModel recordedAtModel;
   // Model for PulseRate.
@@ -334,6 +338,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel respiratoryRateModel;
   // Model for Temperature.
   late CustomTableHeaderComponentModel temperatureModel;
+  // Model for AirOxygen.
+  late CustomTableHeaderComponentModel airOxygenModel;
   // Model for SpO2.
   late CustomTableHeaderComponentModel spO2Model;
   // Model for AVPU.
@@ -406,6 +412,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     temperatureModel =
         createModel(context, () => CustomTableHeaderComponentModel());
+    airOxygenModel =
+        createModel(context, () => CustomTableHeaderComponentModel());
     spO2Model = createModel(context, () => CustomTableHeaderComponentModel());
     avpuModel = createModel(context, () => CustomTableHeaderComponentModel());
     nEWS2ScoreModel =
@@ -461,6 +469,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     bloodPressureModel.dispose();
     respiratoryRateModel.dispose();
     temperatureModel.dispose();
+    airOxygenModel.dispose();
     spO2Model.dispose();
     avpuModel.dispose();
     nEWS2ScoreModel.dispose();
