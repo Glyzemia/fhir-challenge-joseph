@@ -97,7 +97,7 @@ class _AddNewObservationSetComponentWidgetState
       children: [
         Container(
           width: 1000.0,
-          height: 850.0,
+          height: 880.0,
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(10.0),
@@ -2966,6 +2966,7 @@ class _AddNewObservationSetComponentWidgetState
                       ),
                       FFButtonWidget(
                         onPressed: () async {
+                          var _shouldSetState = false;
                           if (_model.formKey.currentState == null ||
                               !_model.formKey.currentState!.validate()) {
                             return;
@@ -2988,6 +2989,168 @@ class _AddNewObservationSetComponentWidgetState
                                 );
                               },
                             );
+                            return;
+                          }
+                          if (!((String pulse) {
+                            return int.parse(pulse) > 30 &&
+                                int.parse(pulse) <= 220;
+                          }(_model.pulseTextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text('Pulse value is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!((String sbp) {
+                            return int.parse(sbp) > 60 && int.parse(sbp) <= 300;
+                          }(_model.systolicBPTextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content:
+                                      Text('Systolic BP value is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!((String dbp) {
+                            return int.parse(dbp) > 30 && int.parse(dbp) <= 180;
+                          }(_model.diastolicBPTextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content:
+                                      Text('Diastolic BP value is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!(int.parse(
+                                  _model.systolicBPTextController.text) >
+                              int.parse(
+                                  _model.diastolicBPTextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text(
+                                      'Systolic BP can\'t be less than Diastolic BP..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!((String rr) {
+                            return int.parse(rr) > 0 && int.parse(rr) <= 70;
+                          }(_model.respiratoryRateTextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content:
+                                      Text('Respiratory Late is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!((double tempFah) {
+                            return tempFah > 53.0 && tempFah <= 110;
+                          }(_model.tempFahrenheit!))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content:
+                                      Text('Temperature value is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
+                            return;
+                          }
+                          if (!((String spo2) {
+                            return int.parse(spo2) > 20 &&
+                                int.parse(spo2) <= 100;
+                          }(_model.spO2TextController.text))) {
+                            await showDialog(
+                              context: context,
+                              builder: (alertDialogContext) {
+                                return AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text('SpO2 value is invalid..!!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(alertDialogContext),
+                                      child: Text('Ok'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (_shouldSetState) safeSetState(() {});
                             return;
                           }
                           _model.postNEWSObservations =
@@ -3024,6 +3187,7 @@ class _AddNewObservationSetComponentWidgetState
                                     _model.respiratoryFailureValue == 'Yes'),
                           );
 
+                          _shouldSetState = true;
                           if ((_model.postNEWSObservations?.succeeded ??
                               true)) {
                             Navigator.pop(context);
@@ -3062,7 +3226,7 @@ class _AddNewObservationSetComponentWidgetState
                             );
                           }
 
-                          safeSetState(() {});
+                          if (_shouldSetState) safeSetState(() {});
                         },
                         text: 'Submit',
                         icon: Icon(
