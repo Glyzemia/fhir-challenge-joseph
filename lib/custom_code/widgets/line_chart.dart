@@ -133,7 +133,7 @@ class _LineChartState extends State<LineChart> {
                             title: AxisTitle(text: widget.yAxisTitle ?? ''),
                             minimum: widget.minCount * (1 - widget.factor),
                             maximum: widget.maxCount * (1 + widget.factor),
-                            decimalPlaces: 5,
+                            decimalPlaces: 0,
                           ),
                     zoomPanBehavior:
                         widget.isExpanded ? _zoomPanBehavior : null,
@@ -156,6 +156,8 @@ class _LineChartState extends State<LineChart> {
             name: widget.name1 ?? '',
             xValueMapper: (_ChartPoint point, _) => point.x,
             yValueMapper: (_ChartPoint point, _) => point.y,
+            // Prevents excessive curve overshoot
+            splineType: SplineType.monotonic,
             markerSettings: const MarkerSettings(isVisible: true),
           ),
           if (count2 > 0) ...[
@@ -164,6 +166,8 @@ class _LineChartState extends State<LineChart> {
               name: widget.name2 ?? '',
               xValueMapper: (_ChartPoint point, _) => point.x,
               yValueMapper: (_ChartPoint point, _) => point.y,
+              // Prevents excessive curve overshoot
+              splineType: SplineType.monotonic,
               markerSettings: const MarkerSettings(isVisible: true),
             )
           ],
@@ -173,6 +177,8 @@ class _LineChartState extends State<LineChart> {
               name: widget.name3 ?? '',
               xValueMapper: (_ChartPoint point, _) => point.x,
               yValueMapper: (_ChartPoint point, _) => point.y,
+              // Prevents excessive curve overshoot
+              splineType: SplineType.monotonic,
               markerSettings: const MarkerSettings(isVisible: true),
             )
           ],
