@@ -4698,6 +4698,203 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.max,
                                                 children: [
+                                                  FFButtonWidget(
+                                                    onPressed: () async {
+                                                      final _datePickedDate =
+                                                          await showDatePicker(
+                                                        context: context,
+                                                        initialDate:
+                                                            getCurrentTimestamp,
+                                                        firstDate:
+                                                            DateTime(1900),
+                                                        lastDate:
+                                                            (getCurrentTimestamp ??
+                                                                DateTime(2050)),
+                                                        builder:
+                                                            (context, child) {
+                                                          return wrapInMaterialDatePickerTheme(
+                                                            context,
+                                                            child!,
+                                                            headerBackgroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                            headerForegroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .info,
+                                                            headerTextStyle:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .headlineLarge
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .readexPro(
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                        fontStyle: FlutterFlowTheme.of(context)
+                                                                            .headlineLarge
+                                                                            .fontStyle,
+                                                                      ),
+                                                                      fontSize:
+                                                                          32.0,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .headlineLarge
+                                                                          .fontStyle,
+                                                                    ),
+                                                            pickerBackgroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .secondaryBackground,
+                                                            pickerForegroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primaryText,
+                                                            selectedDateTimeBackgroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                            selectedDateTimeForegroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .info,
+                                                            actionButtonForegroundColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primaryText,
+                                                            iconSize: 24.0,
+                                                          );
+                                                        },
+                                                      );
+
+                                                      if (_datePickedDate !=
+                                                          null) {
+                                                        safeSetState(() {
+                                                          _model.datePicked =
+                                                              DateTime(
+                                                            _datePickedDate
+                                                                .year,
+                                                            _datePickedDate
+                                                                .month,
+                                                            _datePickedDate.day,
+                                                          );
+                                                        });
+                                                      } else if (_model
+                                                              .datePicked !=
+                                                          null) {
+                                                        safeSetState(() {
+                                                          _model.datePicked =
+                                                              getCurrentTimestamp;
+                                                        });
+                                                      }
+                                                      _model.selectedDob =
+                                                          _model.datePicked;
+                                                      safeSetState(() {});
+                                                    },
+                                                    text: _model.selectedDob !=
+                                                            null
+                                                        ? dateTimeFormat(
+                                                            "y-MM-dd",
+                                                            _model.selectedDob)
+                                                        : 'Select DOB',
+                                                    icon: Icon(
+                                                      Icons.calendar_month,
+                                                      size: 30.0,
+                                                    ),
+                                                    options: FFButtonOptions(
+                                                      width: 200.0,
+                                                      height: 40.0,
+                                                      padding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  16.0,
+                                                                  0.0,
+                                                                  16.0,
+                                                                  0.0),
+                                                      iconPadding:
+                                                          EdgeInsetsDirectional
+                                                              .fromSTEB(
+                                                                  0.0,
+                                                                  0.0,
+                                                                  0.0,
+                                                                  0.0),
+                                                      color: Colors.transparent,
+                                                      textStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .titleSmall
+                                                              .override(
+                                                                font:
+                                                                    GoogleFonts
+                                                                        .inter(
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .titleSmall
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .titleSmall
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleSmall
+                                                                    .fontWeight,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleSmall
+                                                                    .fontStyle,
+                                                              ),
+                                                      elevation: 0.0,
+                                                      borderSide: BorderSide(
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20.0),
+                                                      hoverColor:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .primary,
+                                                      hoverBorderSide:
+                                                          BorderSide(
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                      ),
+                                                      hoverTextColor:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .info,
+                                                    ),
+                                                  ),
+                                                ]
+                                                    .divide(
+                                                        SizedBox(width: 20.0))
+                                                    .around(
+                                                        SizedBox(width: 20.0)),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                children: [
                                                   Column(
                                                     mainAxisSize:
                                                         MainAxisSize.max,
@@ -5451,6 +5648,88 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                     .success,
                                                           ),
                                                         );
+                                                        _model.admitPatient =
+                                                            await AdmitPatientCall
+                                                                .call(
+                                                          token: FFAppState()
+                                                              .fhirBearerToken,
+                                                          id: CreateNewPatientCall
+                                                              .createdPatientID(
+                                                            (_model.createNewPatient
+                                                                    ?.jsonBody ??
+                                                                ''),
+                                                          ),
+                                                          startPeriod: functions
+                                                              .datetimeToISO8601String(
+                                                                  getCurrentTimestamp),
+                                                          encounterID:
+                                                              'NEWS2-${CreateNewPatientCall.createdPatientID(
+                                                            (_model.createNewPatient
+                                                                    ?.jsonBody ??
+                                                                ''),
+                                                          )}',
+                                                        );
+
+                                                        _shouldSetState = true;
+                                                        if ((_model.admitPatient
+                                                                ?.succeeded ??
+                                                            true)) {
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .clearSnackBars();
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                'Patient admitted successfully..!!',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .info,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
+                                                              duration: Duration(
+                                                                  milliseconds:
+                                                                      4000),
+                                                              backgroundColor:
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .success,
+                                                            ),
+                                                          );
+                                                        } else {
+                                                          await showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (alertDialogContext) {
+                                                              return AlertDialog(
+                                                                title: Text(
+                                                                    'Error'),
+                                                                content: Text((_model
+                                                                        .admitPatient
+                                                                        ?.bodyText ??
+                                                                    '')),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed: () =>
+                                                                        Navigator.pop(
+                                                                            alertDialogContext),
+                                                                    child: Text(
+                                                                        'Ok'),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
+                                                          if (_shouldSetState)
+                                                            safeSetState(() {});
+                                                          return;
+                                                        }
                                                       } else {
                                                         await showDialog(
                                                           context: context,
@@ -5637,13 +5916,13 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                   text: _model.patientMode ==
                                                           PatientMode.edit
                                                       ? 'Edit Patient'
-                                                      : 'Create Patient',
+                                                      : 'Create and Admit Patient',
                                                   icon: Icon(
                                                     Icons.add_rounded,
                                                     size: 24.0,
                                                   ),
                                                   options: FFButtonOptions(
-                                                    width: 200.0,
+                                                    width: 250.0,
                                                     height: 50.0,
                                                     padding:
                                                         EdgeInsetsDirectional

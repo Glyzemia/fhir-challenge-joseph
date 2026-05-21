@@ -260,6 +260,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   String? get genderCCValue => genderCCValueController?.value?.firstOrNull;
   set genderCCValue(String? val) =>
       genderCCValueController?.value = val != null ? [val] : [];
+  DateTime? datePicked;
   // State field(s) for PhoneNumber widget.
   FocusNode? phoneNumberFocusNode;
   TextEditingController? phoneNumberTextController;
@@ -278,6 +279,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   // Stores action output result for [Backend Call - API (Create New Patient)] action in Button widget.
   ApiCallResponse? createNewPatient;
+  // Stores action output result for [Backend Call - API (Admit Patient)] action in Button widget.
+  ApiCallResponse? admitPatient;
   // Stores action output result for [Backend Call - API (Edit Patient)] action in Button widget.
   ApiCallResponse? editPatient;
   // Stores action output result for [Custom Action - fetchFhirPatientsWithLatestNews2] action in Button widget.

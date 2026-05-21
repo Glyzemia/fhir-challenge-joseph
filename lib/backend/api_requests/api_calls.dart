@@ -387,6 +387,12 @@ class CreateNewPatientCall {
       alwaysAllowBody: false,
     );
   }
+
+  static String? createdPatientID(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.id''',
+      ));
 }
 
 class EditPatientCall {
