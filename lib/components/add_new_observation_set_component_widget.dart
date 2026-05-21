@@ -97,7 +97,7 @@ class _AddNewObservationSetComponentWidgetState
       children: [
         Container(
           width: 1000.0,
-          height: 800.0,
+          height: 850.0,
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).secondaryBackground,
             borderRadius: BorderRadius.circular(10.0),
@@ -175,35 +175,12 @@ class _AddNewObservationSetComponentWidgetState
                                   Duration(milliseconds: 100),
                                   () async {
                                     if (_model.pulseTextController.text != '') {
-                                      _model.pulseScore = () {
-                                        if ((String pr) {
-                                          return int.parse(pr) <= 40;
-                                        }(_model.pulseTextController.text)) {
-                                          return 3;
-                                        } else if ((String pr) {
-                                          return int.parse(pr) >= 41 &&
-                                              int.parse(pr) <= 50;
-                                        }(_model.pulseTextController.text)) {
-                                          return 1;
-                                        } else if ((String pr) {
-                                          return int.parse(pr) >= 51 &&
-                                              int.parse(pr) <= 90;
-                                        }(_model.pulseTextController.text)) {
-                                          return 0;
-                                        } else if ((String pr) {
-                                          return int.parse(pr) >= 91 &&
-                                              int.parse(pr) <= 110;
-                                        }(_model.pulseTextController.text)) {
-                                          return 1;
-                                        } else if ((String pr) {
-                                          return int.parse(pr) >= 111 &&
-                                              int.parse(pr) <= 130;
-                                        }(_model.pulseTextController.text)) {
-                                          return 2;
-                                        } else {
-                                          return 3;
-                                        }
-                                      }();
+                                      _model.pulseScore = functions
+                                          .calculateNews2IndividualScores(
+                                              'pulse',
+                                              _model.pulseTextController.text,
+                                              false,
+                                              false);
                                       safeSetState(() {});
                                       if ((_model.pulseTextController.text != '') &&
                                           (_model.systolicBPTextController.text !=
@@ -228,179 +205,48 @@ class _AddNewObservationSetComponentWidgetState
                                                       .text !=
                                                   '') &&
                                           (_model.tempFahrenheit != null)) {
-                                        _model.bloodPressureScore = () {
-                                          if ((String sbp) {
-                                            return int.parse(sbp) <= 90;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 3;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 91 &&
-                                                int.parse(sbp) <= 100;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 2;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 101 &&
-                                                int.parse(sbp) <= 110;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 1;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 111 &&
-                                                int.parse(sbp) <= 219;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 0;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.temperatureScore = () {
-                                          if ((double tempFah) {
-                                            return tempFah <= 95;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 3;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 95.0 &&
-                                                tempFah <= 96.88;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 96.8 &&
-                                                tempFah <= 100.4;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 0;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 100.4 &&
-                                                tempFah <= 102.2;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else {
-                                            return 2;
-                                          }
-                                        }();
-                                        _model.respiratoryScore = () {
-                                          if ((String rr) {
-                                            return int.parse(rr) <= 8;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 3;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 9 &&
-                                                int.parse(rr) <= 11;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 1;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 12 &&
-                                                int.parse(rr) <= 20;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 0;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 21 &&
-                                                int.parse(rr) <= 24;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 2;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.consciousnessScore =
-                                            _model.consciousnessValue == 'Alert'
-                                                ? 0
-                                                : 3;
-                                        _model.spo2Score = _model
-                                                    .respiratoryFailureValue ==
-                                                'No'
-                                            ? () {
-                                                if ((String spo) {
-                                                  return int.parse(spo) <= 91;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 3;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 92 &&
-                                                      int.parse(spo) <= 93;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 2;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 94 &&
-                                                      int.parse(spo) <= 95;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 1;
-                                                } else {
-                                                  return 0;
-                                                }
-                                              }()
-                                            : () {
-                                                if ((String spo) {
-                                                  return int.parse(spo) <= 83;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 3;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 84 &&
-                                                      int.parse(spo) <= 85;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 2;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 86 &&
-                                                      int.parse(spo) <= 87;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 1;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 88 &&
-                                                      int.parse(spo) <= 92;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 0;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 93 &&
-                                                      osupp == 'Room Air';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 0;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 93 &&
-                                                      int.parse(spo) <= 94 &&
-                                                      osupp ==
-                                                          'Supplemental Oxygen';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 1;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 95 &&
-                                                      int.parse(spo) <= 96 &&
-                                                      osupp ==
-                                                          'Supplemental Oxygen';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
-                                        _model.airOrOxygenScore =
-                                            _model.airOrOxygenValue ==
-                                                    'Supplemental Oxygen'
-                                                ? 2
-                                                : 0;
+                                        _model.bloodPressureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'systolicBp',
+                                                _model.systolicBPTextController
+                                                    .text,
+                                                false,
+                                                false);
+                                        _model.temperatureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'temperature',
+                                                _model.tempFahrenheit!
+                                                    .toString(),
+                                                false,
+                                                false);
+                                        _model.respiratoryScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'respiratoryRate',
+                                                _model
+                                                    .respiratoryRateTextController
+                                                    .text,
+                                                false,
+                                                false);
+                                        _model.consciousnessScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'consciousness',
+                                                _model.consciousnessValue!,
+                                                false,
+                                                false);
+                                        _model.spo2Score = functions
+                                            .calculateNews2IndividualScores(
+                                                'SpO2',
+                                                _model.spO2TextController.text,
+                                                _model.respiratoryFailureValue ==
+                                                    'Yes',
+                                                _model.airOrOxygenValue ==
+                                                    'Supplemental Oxygen');
+                                        _model.airOrOxygenScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'airOrOxygen',
+                                                _model.airOrOxygenValue!,
+                                                false,
+                                                false);
                                         safeSetState(() {});
                                         _model.totalScore =
                                             (_model.pulseScore!) +
@@ -598,34 +444,14 @@ class _AddNewObservationSetComponentWidgetState
                                           if (_model.systolicBPTextController
                                                       .text !=
                                                   '') {
-                                            _model.bloodPressureScore = () {
-                                              if ((String sbp) {
-                                                return int.parse(sbp) <= 90;
-                                              }(_model.systolicBPTextController
-                                                  .text)) {
-                                                return 3;
-                                              } else if ((String sbp) {
-                                                return int.parse(sbp) >= 91 &&
-                                                    int.parse(sbp) <= 100;
-                                              }(_model.systolicBPTextController
-                                                  .text)) {
-                                                return 2;
-                                              } else if ((String sbp) {
-                                                return int.parse(sbp) >= 101 &&
-                                                    int.parse(sbp) <= 110;
-                                              }(_model.systolicBPTextController
-                                                  .text)) {
-                                                return 1;
-                                              } else if ((String sbp) {
-                                                return int.parse(sbp) >= 111 &&
-                                                    int.parse(sbp) <= 219;
-                                              }(_model.systolicBPTextController
-                                                  .text)) {
-                                                return 0;
-                                              } else {
-                                                return 3;
-                                              }
-                                            }();
+                                            _model.bloodPressureScore = functions
+                                                .calculateNews2IndividualScores(
+                                                    'systolicBp',
+                                                    _model
+                                                        .systolicBPTextController
+                                                        .text,
+                                                    false,
+                                                    false);
                                             safeSetState(() {});
                                             if ((_model.pulseTextController.text != '') &&
                                                 (_model.systolicBPTextController.text !=
@@ -653,242 +479,50 @@ class _AddNewObservationSetComponentWidgetState
                                                         '') &&
                                                 (_model.tempFahrenheit !=
                                                     null)) {
-                                              _model.temperatureScore = () {
-                                                if ((double tempFah) {
-                                                  return tempFah <= 95;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 3;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 95.0 &&
-                                                      tempFah <= 96.88;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 96.8 &&
-                                                      tempFah <= 100.4;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 0;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 100.4 &&
-                                                      tempFah <= 102.2;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else {
-                                                  return 2;
-                                                }
-                                              }();
-                                              _model.respiratoryScore = () {
-                                                if ((String rr) {
-                                                  return int.parse(rr) <= 8;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 3;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 9 &&
-                                                      int.parse(rr) <= 11;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 12 &&
-                                                      int.parse(rr) <= 20;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 0;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 21 &&
-                                                      int.parse(rr) <= 24;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
-                                              _model.consciousnessScore =
-                                                  _model.consciousnessValue ==
-                                                          'Alert'
-                                                      ? 0
-                                                      : 3;
-                                              _model.spo2Score =
-                                                  _model.respiratoryFailureValue ==
-                                                          'No'
-                                                      ? () {
-                                                          if ((String spo) {
-                                                            return int.parse(
-                                                                    spo) <=
-                                                                91;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 3;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    92 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    93;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 2;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    94 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    95;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 1;
-                                                          } else {
-                                                            return 0;
-                                                          }
-                                                        }()
-                                                      : () {
-                                                          if ((String spo) {
-                                                            return int.parse(
-                                                                    spo) <=
-                                                                83;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 3;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    84 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    85;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 2;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    86 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    87;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 1;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    88 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    92;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 0;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    93 &&
-                                                                osupp ==
-                                                                    'Room Air';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model
-                                                                  .airOrOxygenValue!)) {
-                                                            return 0;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    93 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    94 &&
-                                                                osupp ==
-                                                                    'Supplemental Oxygen';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model
-                                                                  .airOrOxygenValue!)) {
-                                                            return 1;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    95 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    96 &&
-                                                                osupp ==
-                                                                    'Supplemental Oxygen';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model.airOrOxygenValue!)) {
-                                                            return 2;
-                                                          } else {
-                                                            return 3;
-                                                          }
-                                                        }();
-                                              _model.airOrOxygenScore =
-                                                  _model.airOrOxygenValue ==
-                                                          'Supplemental Oxygen'
-                                                      ? 2
-                                                      : 0;
-                                              _model.pulseScore = () {
-                                                if ((String pr) {
-                                                  return int.parse(pr) <= 40;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 3;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 41 &&
-                                                      int.parse(pr) <= 50;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 51 &&
-                                                      int.parse(pr) <= 90;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 0;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 91 &&
-                                                      int.parse(pr) <= 110;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 111 &&
-                                                      int.parse(pr) <= 130;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
+                                              _model.temperatureScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'temperature',
+                                                      _model.tempFahrenheit!
+                                                          .toString(),
+                                                      false,
+                                                      false);
+                                              _model.respiratoryScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'respiratoryRate',
+                                                      _model
+                                                          .respiratoryRateTextController
+                                                          .text,
+                                                      false,
+                                                      false);
+                                              _model.consciousnessScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'consciousness',
+                                                      _model
+                                                          .consciousnessValue!,
+                                                      false,
+                                                      false);
+                                              _model.spo2Score = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'SpO2',
+                                                      _model.spO2TextController
+                                                          .text,
+                                                      _model.respiratoryFailureValue ==
+                                                          'Yes',
+                                                      _model.airOrOxygenValue ==
+                                                          'Supplemental Oxygen');
+                                              _model.airOrOxygenScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'airOrOxygen',
+                                                      _model.airOrOxygenValue!,
+                                                      false,
+                                                      false);
+                                              _model.pulseScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'pulse',
+                                                      _model.pulseTextController
+                                                          .text,
+                                                      false,
+                                                      false);
                                               safeSetState(() {});
                                               _model.totalScore = (_model
                                                       .pulseScore!) +
@@ -1114,276 +748,58 @@ class _AddNewObservationSetComponentWidgetState
                                                         '') &&
                                                 (_model.tempFahrenheit !=
                                                     null)) {
-                                              _model.temperatureScore = () {
-                                                if ((double tempFah) {
-                                                  return tempFah <= 95;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 3;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 95.0 &&
-                                                      tempFah <= 96.88;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 96.8 &&
-                                                      tempFah <= 100.4;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 0;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 100.4 &&
-                                                      tempFah <= 102.2;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else {
-                                                  return 2;
-                                                }
-                                              }();
-                                              _model.respiratoryScore = () {
-                                                if ((String rr) {
-                                                  return int.parse(rr) <= 8;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 3;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 9 &&
-                                                      int.parse(rr) <= 11;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 12 &&
-                                                      int.parse(rr) <= 20;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 0;
-                                                } else if ((String rr) {
-                                                  return int.parse(rr) >= 21 &&
-                                                      int.parse(rr) <= 24;
-                                                }(_model
-                                                    .respiratoryRateTextController
-                                                    .text)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
-                                              _model.consciousnessScore =
-                                                  _model.consciousnessValue ==
-                                                          'Alert'
-                                                      ? 0
-                                                      : 3;
-                                              _model.spo2Score =
-                                                  _model.respiratoryFailureValue ==
-                                                          'No'
-                                                      ? () {
-                                                          if ((String spo) {
-                                                            return int.parse(
-                                                                    spo) <=
-                                                                91;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 3;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    92 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    93;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 2;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    94 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    95;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 1;
-                                                          } else {
-                                                            return 0;
-                                                          }
-                                                        }()
-                                                      : () {
-                                                          if ((String spo) {
-                                                            return int.parse(
-                                                                    spo) <=
-                                                                83;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 3;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    84 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    85;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 2;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    86 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    87;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 1;
-                                                          } else if ((String
-                                                              spo) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    88 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    92;
-                                                          }(_model
-                                                              .spO2TextController
-                                                              .text)) {
-                                                            return 0;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    93 &&
-                                                                osupp ==
-                                                                    'Room Air';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model
-                                                                  .airOrOxygenValue!)) {
-                                                            return 0;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    93 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    94 &&
-                                                                osupp ==
-                                                                    'Supplemental Oxygen';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model
-                                                                  .airOrOxygenValue!)) {
-                                                            return 1;
-                                                          } else if ((String spo,
-                                                                  String osupp) {
-                                                            return int.parse(
-                                                                        spo) >=
-                                                                    95 &&
-                                                                int.parse(
-                                                                        spo) <=
-                                                                    96 &&
-                                                                osupp ==
-                                                                    'Supplemental Oxygen';
-                                                          }(
-                                                              _model
-                                                                  .spO2TextController
-                                                                  .text,
-                                                              _model.airOrOxygenValue!)) {
-                                                            return 2;
-                                                          } else {
-                                                            return 3;
-                                                          }
-                                                        }();
-                                              _model.airOrOxygenScore =
-                                                  _model.airOrOxygenValue ==
-                                                          'Supplemental Oxygen'
-                                                      ? 2
-                                                      : 0;
-                                              _model.pulseScore = () {
-                                                if ((String pr) {
-                                                  return int.parse(pr) <= 40;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 3;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 41 &&
-                                                      int.parse(pr) <= 50;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 51 &&
-                                                      int.parse(pr) <= 90;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 0;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 91 &&
-                                                      int.parse(pr) <= 110;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String pr) {
-                                                  return int.parse(pr) >= 111 &&
-                                                      int.parse(pr) <= 130;
-                                                }(_model.pulseTextController
-                                                    .text)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
-                                              _model.bloodPressureScore = () {
-                                                if ((String sbp) {
-                                                  return int.parse(sbp) <= 90;
-                                                }(_model
-                                                    .systolicBPTextController
-                                                    .text)) {
-                                                  return 3;
-                                                } else if ((String sbp) {
-                                                  return int.parse(sbp) >= 91 &&
-                                                      int.parse(sbp) <= 100;
-                                                }(_model
-                                                    .systolicBPTextController
-                                                    .text)) {
-                                                  return 2;
-                                                } else if ((String sbp) {
-                                                  return int.parse(sbp) >=
-                                                          101 &&
-                                                      int.parse(sbp) <= 110;
-                                                }(_model
-                                                    .systolicBPTextController
-                                                    .text)) {
-                                                  return 1;
-                                                } else if ((String sbp) {
-                                                  return int.parse(sbp) >=
-                                                          111 &&
-                                                      int.parse(sbp) <= 219;
-                                                }(_model
-                                                    .systolicBPTextController
-                                                    .text)) {
-                                                  return 0;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
+                                              _model.bloodPressureScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'systolicBp',
+                                                      _model
+                                                          .systolicBPTextController
+                                                          .text,
+                                                      false,
+                                                      false);
+                                              _model.temperatureScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'temperature',
+                                                      _model.tempFahrenheit!
+                                                          .toString(),
+                                                      false,
+                                                      false);
+                                              _model.respiratoryScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'respiratoryRate',
+                                                      _model
+                                                          .respiratoryRateTextController
+                                                          .text,
+                                                      false,
+                                                      false);
+                                              _model.consciousnessScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'consciousness',
+                                                      _model
+                                                          .consciousnessValue!,
+                                                      false,
+                                                      false);
+                                              _model.spo2Score = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'SpO2',
+                                                      _model.spO2TextController
+                                                          .text,
+                                                      _model.respiratoryFailureValue ==
+                                                          'Yes',
+                                                      _model.airOrOxygenValue ==
+                                                          'Supplemental Oxygen');
+                                              _model.airOrOxygenScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'airOrOxygen',
+                                                      _model.airOrOxygenValue!,
+                                                      false,
+                                                      false);
+                                              _model.pulseScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'pulse',
+                                                      _model.pulseTextController
+                                                          .text,
+                                                      false,
+                                                      false);
                                               safeSetState(() {});
                                               _model.totalScore = (_model
                                                       .pulseScore!) +
@@ -1592,34 +1008,14 @@ class _AddNewObservationSetComponentWidgetState
                                     if (_model.respiratoryRateTextController
                                                 .text !=
                                             '') {
-                                      _model.respiratoryScore = () {
-                                        if ((String rr) {
-                                          return int.parse(rr) <= 8;
-                                        }(_model.respiratoryRateTextController
-                                            .text)) {
-                                          return 3;
-                                        } else if ((String rr) {
-                                          return int.parse(rr) >= 9 &&
-                                              int.parse(rr) <= 11;
-                                        }(_model.respiratoryRateTextController
-                                            .text)) {
-                                          return 1;
-                                        } else if ((String rr) {
-                                          return int.parse(rr) >= 12 &&
-                                              int.parse(rr) <= 20;
-                                        }(_model.respiratoryRateTextController
-                                            .text)) {
-                                          return 0;
-                                        } else if ((String rr) {
-                                          return int.parse(rr) >= 21 &&
-                                              int.parse(rr) <= 24;
-                                        }(_model.respiratoryRateTextController
-                                            .text)) {
-                                          return 2;
-                                        } else {
-                                          return 3;
-                                        }
-                                      }();
+                                      _model.respiratoryScore = functions
+                                          .calculateNews2IndividualScores(
+                                              'respiratoryRate',
+                                              _model
+                                                  .respiratoryRateTextController
+                                                  .text,
+                                              false,
+                                              false);
                                       safeSetState(() {});
                                       if ((_model.pulseTextController.text != '') &&
                                           (_model.systolicBPTextController.text !=
@@ -1644,180 +1040,47 @@ class _AddNewObservationSetComponentWidgetState
                                                       .text !=
                                                   '') &&
                                           (_model.tempFahrenheit != null)) {
-                                        _model.temperatureScore = () {
-                                          if ((double tempFah) {
-                                            return tempFah <= 95;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 3;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 95.0 &&
-                                                tempFah <= 96.88;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 96.8 &&
-                                                tempFah <= 100.4;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 0;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 100.4 &&
-                                                tempFah <= 102.2;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else {
-                                            return 2;
-                                          }
-                                        }();
-                                        _model.consciousnessScore =
-                                            _model.consciousnessValue == 'Alert'
-                                                ? 0
-                                                : 3;
-                                        _model.spo2Score = _model
-                                                    .respiratoryFailureValue ==
-                                                'No'
-                                            ? () {
-                                                if ((String spo) {
-                                                  return int.parse(spo) <= 91;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 3;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 92 &&
-                                                      int.parse(spo) <= 93;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 2;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 94 &&
-                                                      int.parse(spo) <= 95;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 1;
-                                                } else {
-                                                  return 0;
-                                                }
-                                              }()
-                                            : () {
-                                                if ((String spo) {
-                                                  return int.parse(spo) <= 83;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 3;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 84 &&
-                                                      int.parse(spo) <= 85;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 2;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 86 &&
-                                                      int.parse(spo) <= 87;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 1;
-                                                } else if ((String spo) {
-                                                  return int.parse(spo) >= 88 &&
-                                                      int.parse(spo) <= 92;
-                                                }(_model
-                                                    .spO2TextController.text)) {
-                                                  return 0;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 93 &&
-                                                      osupp == 'Room Air';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 0;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 93 &&
-                                                      int.parse(spo) <= 94 &&
-                                                      osupp ==
-                                                          'Supplemental Oxygen';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 1;
-                                                } else if ((String spo,
-                                                        String osupp) {
-                                                  return int.parse(spo) >= 95 &&
-                                                      int.parse(spo) <= 96 &&
-                                                      osupp ==
-                                                          'Supplemental Oxygen';
-                                                }(
-                                                    _model.spO2TextController
-                                                        .text,
-                                                    _model.airOrOxygenValue!)) {
-                                                  return 2;
-                                                } else {
-                                                  return 3;
-                                                }
-                                              }();
-                                        _model.airOrOxygenScore =
-                                            _model.airOrOxygenValue ==
-                                                    'Supplemental Oxygen'
-                                                ? 2
-                                                : 0;
-                                        _model.pulseScore = () {
-                                          if ((String pr) {
-                                            return int.parse(pr) <= 40;
-                                          }(_model.pulseTextController.text)) {
-                                            return 3;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 41 &&
-                                                int.parse(pr) <= 50;
-                                          }(_model.pulseTextController.text)) {
-                                            return 1;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 51 &&
-                                                int.parse(pr) <= 90;
-                                          }(_model.pulseTextController.text)) {
-                                            return 0;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 91 &&
-                                                int.parse(pr) <= 110;
-                                          }(_model.pulseTextController.text)) {
-                                            return 1;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 111 &&
-                                                int.parse(pr) <= 130;
-                                          }(_model.pulseTextController.text)) {
-                                            return 2;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.bloodPressureScore = () {
-                                          if ((String sbp) {
-                                            return int.parse(sbp) <= 90;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 3;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 91 &&
-                                                int.parse(sbp) <= 100;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 2;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 101 &&
-                                                int.parse(sbp) <= 110;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 1;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 111 &&
-                                                int.parse(sbp) <= 219;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 0;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
+                                        _model.bloodPressureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'systolicBp',
+                                                _model.systolicBPTextController
+                                                    .text,
+                                                false,
+                                                false);
+                                        _model.temperatureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'temperature',
+                                                _model.tempFahrenheit!
+                                                    .toString(),
+                                                false,
+                                                false);
+                                        _model.consciousnessScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'consciousness',
+                                                _model.consciousnessValue!,
+                                                false,
+                                                false);
+                                        _model.spo2Score = functions
+                                            .calculateNews2IndividualScores(
+                                                'SpO2',
+                                                _model.spO2TextController.text,
+                                                _model.respiratoryFailureValue ==
+                                                    'Yes',
+                                                _model.airOrOxygenValue ==
+                                                    'Supplemental Oxygen');
+                                        _model.airOrOxygenScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'airOrOxygen',
+                                                _model.airOrOxygenValue!,
+                                                false,
+                                                false);
+                                        _model.pulseScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'pulse',
+                                                _model.pulseTextController.text,
+                                                false,
+                                                false);
+                                        safeSetState(() {});
                                         _model.totalScore =
                                             (_model.pulseScore!) +
                                                 (_model.bloodPressureScore!) +
@@ -2026,30 +1289,13 @@ class _AddNewObservationSetComponentWidgetState
                                                           .temperatureTextController
                                                           .text));
                                               safeSetState(() {});
-                                              _model.temperatureScore = () {
-                                                if ((double tempFah) {
-                                                  return tempFah <= 95;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 3;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 95.0 &&
-                                                      tempFah <= 96.88;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 96.8 &&
-                                                      tempFah <= 100.4;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 0;
-                                                } else if ((double tempFah) {
-                                                  return tempFah > 100.4 &&
-                                                      tempFah <= 102.2;
-                                                }(_model.tempFahrenheit!)) {
-                                                  return 1;
-                                                } else {
-                                                  return 2;
-                                                }
-                                              }();
+                                              _model.temperatureScore = functions
+                                                  .calculateNews2IndividualScores(
+                                                      'temperature',
+                                                      _model.tempFahrenheit!
+                                                          .toString(),
+                                                      false,
+                                                      false);
                                               safeSetState(() {});
                                               if ((_model.pulseTextController.text != '') &&
                                                   (_model.systolicBPTextController.text !=
@@ -2077,259 +1323,55 @@ class _AddNewObservationSetComponentWidgetState
                                                           '') &&
                                                   (_model.tempFahrenheit !=
                                                       null)) {
-                                                _model.respiratoryScore = () {
-                                                  if ((String rr) {
-                                                    return int.parse(rr) <= 8;
-                                                  }(_model
-                                                      .respiratoryRateTextController
-                                                      .text)) {
-                                                    return 3;
-                                                  } else if ((String rr) {
-                                                    return int.parse(rr) >= 9 &&
-                                                        int.parse(rr) <= 11;
-                                                  }(_model
-                                                      .respiratoryRateTextController
-                                                      .text)) {
-                                                    return 1;
-                                                  } else if ((String rr) {
-                                                    return int.parse(rr) >=
-                                                            12 &&
-                                                        int.parse(rr) <= 20;
-                                                  }(_model
-                                                      .respiratoryRateTextController
-                                                      .text)) {
-                                                    return 0;
-                                                  } else if ((String rr) {
-                                                    return int.parse(rr) >=
-                                                            21 &&
-                                                        int.parse(rr) <= 24;
-                                                  }(_model
-                                                      .respiratoryRateTextController
-                                                      .text)) {
-                                                    return 2;
-                                                  } else {
-                                                    return 3;
-                                                  }
-                                                }();
-                                                _model.consciousnessScore =
-                                                    _model.consciousnessValue ==
-                                                            'Alert'
-                                                        ? 0
-                                                        : 3;
-                                                _model.spo2Score =
-                                                    _model.respiratoryFailureValue ==
-                                                            'No'
-                                                        ? () {
-                                                            if ((String spo) {
-                                                              return int.parse(
-                                                                      spo) <=
-                                                                  91;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 3;
-                                                            } else if ((String
-                                                                spo) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      92 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      93;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 2;
-                                                            } else if ((String
-                                                                spo) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      94 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      95;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 1;
-                                                            } else {
-                                                              return 0;
-                                                            }
-                                                          }()
-                                                        : () {
-                                                            if ((String spo) {
-                                                              return int.parse(
-                                                                      spo) <=
-                                                                  83;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 3;
-                                                            } else if ((String
-                                                                spo) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      84 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      85;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 2;
-                                                            } else if ((String
-                                                                spo) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      86 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      87;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 1;
-                                                            } else if ((String
-                                                                spo) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      88 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      92;
-                                                            }(_model
-                                                                .spO2TextController
-                                                                .text)) {
-                                                              return 0;
-                                                            } else if ((String spo,
-                                                                    String osupp) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      93 &&
-                                                                  osupp ==
-                                                                      'Room Air';
-                                                            }(
-                                                                _model
-                                                                    .spO2TextController
-                                                                    .text,
-                                                                _model
-                                                                    .airOrOxygenValue!)) {
-                                                              return 0;
-                                                            } else if ((String spo,
-                                                                    String osupp) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      93 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      94 &&
-                                                                  osupp ==
-                                                                      'Supplemental Oxygen';
-                                                            }(
-                                                                _model
-                                                                    .spO2TextController
-                                                                    .text,
-                                                                _model
-                                                                    .airOrOxygenValue!)) {
-                                                              return 1;
-                                                            } else if ((String spo,
-                                                                    String osupp) {
-                                                              return int.parse(
-                                                                          spo) >=
-                                                                      95 &&
-                                                                  int.parse(
-                                                                          spo) <=
-                                                                      96 &&
-                                                                  osupp ==
-                                                                      'Supplemental Oxygen';
-                                                            }(
-                                                                _model
-                                                                    .spO2TextController
-                                                                    .text,
-                                                                _model.airOrOxygenValue!)) {
-                                                              return 2;
-                                                            } else {
-                                                              return 3;
-                                                            }
-                                                          }();
-                                                _model.airOrOxygenScore = _model
-                                                            .airOrOxygenValue ==
-                                                        'Supplemental Oxygen'
-                                                    ? 2
-                                                    : 0;
-                                                _model.pulseScore = () {
-                                                  if ((String pr) {
-                                                    return int.parse(pr) <= 40;
-                                                  }(_model.pulseTextController
-                                                      .text)) {
-                                                    return 3;
-                                                  } else if ((String pr) {
-                                                    return int.parse(pr) >=
-                                                            41 &&
-                                                        int.parse(pr) <= 50;
-                                                  }(_model.pulseTextController
-                                                      .text)) {
-                                                    return 1;
-                                                  } else if ((String pr) {
-                                                    return int.parse(pr) >=
-                                                            51 &&
-                                                        int.parse(pr) <= 90;
-                                                  }(_model.pulseTextController
-                                                      .text)) {
-                                                    return 0;
-                                                  } else if ((String pr) {
-                                                    return int.parse(pr) >=
-                                                            91 &&
-                                                        int.parse(pr) <= 110;
-                                                  }(_model.pulseTextController
-                                                      .text)) {
-                                                    return 1;
-                                                  } else if ((String pr) {
-                                                    return int.parse(pr) >=
-                                                            111 &&
-                                                        int.parse(pr) <= 130;
-                                                  }(_model.pulseTextController
-                                                      .text)) {
-                                                    return 2;
-                                                  } else {
-                                                    return 3;
-                                                  }
-                                                }();
-                                                _model.bloodPressureScore = () {
-                                                  if ((String sbp) {
-                                                    return int.parse(sbp) <= 90;
-                                                  }(_model
-                                                      .systolicBPTextController
-                                                      .text)) {
-                                                    return 3;
-                                                  } else if ((String sbp) {
-                                                    return int.parse(sbp) >=
-                                                            91 &&
-                                                        int.parse(sbp) <= 100;
-                                                  }(_model
-                                                      .systolicBPTextController
-                                                      .text)) {
-                                                    return 2;
-                                                  } else if ((String sbp) {
-                                                    return int.parse(sbp) >=
-                                                            101 &&
-                                                        int.parse(sbp) <= 110;
-                                                  }(_model
-                                                      .systolicBPTextController
-                                                      .text)) {
-                                                    return 1;
-                                                  } else if ((String sbp) {
-                                                    return int.parse(sbp) >=
-                                                            111 &&
-                                                        int.parse(sbp) <= 219;
-                                                  }(_model
-                                                      .systolicBPTextController
-                                                      .text)) {
-                                                    return 0;
-                                                  } else {
-                                                    return 3;
-                                                  }
-                                                }();
+                                                _model.bloodPressureScore = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'systolicBp',
+                                                        _model
+                                                            .systolicBPTextController
+                                                            .text,
+                                                        false,
+                                                        false);
+                                                _model.respiratoryScore = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'respiratoryRate',
+                                                        _model
+                                                            .respiratoryRateTextController
+                                                            .text,
+                                                        false,
+                                                        false);
+                                                _model.consciousnessScore = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'consciousness',
+                                                        _model
+                                                            .consciousnessValue!,
+                                                        false,
+                                                        false);
+                                                _model.spo2Score = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'SpO2',
+                                                        _model
+                                                            .spO2TextController
+                                                            .text,
+                                                        _model.respiratoryFailureValue ==
+                                                            'Yes',
+                                                        _model.airOrOxygenValue ==
+                                                            'Supplemental Oxygen');
+                                                _model.airOrOxygenScore = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'airOrOxygen',
+                                                        _model
+                                                            .airOrOxygenValue!,
+                                                        false,
+                                                        false);
+                                                _model.pulseScore = functions
+                                                    .calculateNews2IndividualScores(
+                                                        'pulse',
+                                                        _model
+                                                            .pulseTextController
+                                                            .text,
+                                                        false,
+                                                        false);
+                                                safeSetState(() {});
                                                 _model.totalScore = (_model
                                                         .pulseScore!) +
                                                     (_model
@@ -2871,75 +1913,14 @@ class _AddNewObservationSetComponentWidgetState
                                     _model.respiratoryFailureValue =
                                         val?.firstOrNull);
                                 if (_model.spO2TextController.text != '') {
-                                  _model.spo2Score = _model
-                                              .respiratoryFailureValue ==
-                                          'No'
-                                      ? () {
-                                          if ((String spo) {
-                                            return int.parse(spo) <= 91;
-                                          }(_model.spO2TextController.text)) {
-                                            return 3;
-                                          } else if ((String spo) {
-                                            return int.parse(spo) >= 92 &&
-                                                int.parse(spo) <= 93;
-                                          }(_model.spO2TextController.text)) {
-                                            return 2;
-                                          } else if ((String spo) {
-                                            return int.parse(spo) >= 94 &&
-                                                int.parse(spo) <= 95;
-                                          }(_model.spO2TextController.text)) {
-                                            return 1;
-                                          } else {
-                                            return 0;
-                                          }
-                                        }()
-                                      : () {
-                                          if ((String spo) {
-                                            return int.parse(spo) <= 83;
-                                          }(_model.spO2TextController.text)) {
-                                            return 3;
-                                          } else if ((String spo) {
-                                            return int.parse(spo) >= 84 &&
-                                                int.parse(spo) <= 85;
-                                          }(_model.spO2TextController.text)) {
-                                            return 2;
-                                          } else if ((String spo) {
-                                            return int.parse(spo) >= 86 &&
-                                                int.parse(spo) <= 87;
-                                          }(_model.spO2TextController.text)) {
-                                            return 1;
-                                          } else if ((String spo) {
-                                            return int.parse(spo) >= 88 &&
-                                                int.parse(spo) <= 92;
-                                          }(_model.spO2TextController.text)) {
-                                            return 0;
-                                          } else if ((String spo,
-                                                  String osupp) {
-                                            return int.parse(spo) >= 93 &&
-                                                osupp == 'Room Air';
-                                          }(_model.spO2TextController.text,
-                                              _model.airOrOxygenValue!)) {
-                                            return 0;
-                                          } else if ((String spo,
-                                                  String osupp) {
-                                            return int.parse(spo) >= 93 &&
-                                                int.parse(spo) <= 94 &&
-                                                osupp == 'Supplemental Oxygen';
-                                          }(_model.spO2TextController.text,
-                                              _model.airOrOxygenValue!)) {
-                                            return 1;
-                                          } else if ((String spo,
-                                                  String osupp) {
-                                            return int.parse(spo) >= 95 &&
-                                                int.parse(spo) <= 96 &&
-                                                osupp == 'Supplemental Oxygen';
-                                          }(_model.spO2TextController.text,
-                                              _model.airOrOxygenValue!)) {
-                                            return 2;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
+                                  _model.spo2Score =
+                                      functions.calculateNews2IndividualScores(
+                                          'SpO2',
+                                          _model.spO2TextController.text,
+                                          _model.respiratoryFailureValue ==
+                                              'Yes',
+                                          _model.airOrOxygenValue ==
+                                              'Supplemental Oxygen');
                                   safeSetState(() {});
                                   if ((_model.pulseTextController.text !=
                                               '') &&
@@ -2963,120 +1944,45 @@ class _AddNewObservationSetComponentWidgetState
                                                   .text !=
                                               '') &&
                                       (_model.tempFahrenheit != null)) {
-                                    _model.temperatureScore = () {
-                                      if ((double tempFah) {
-                                        return tempFah <= 95;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 3;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 95.0 &&
-                                            tempFah <= 96.88;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 96.8 &&
-                                            tempFah <= 100.4;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 0;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 100.4 &&
-                                            tempFah <= 102.2;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else {
-                                        return 2;
-                                      }
-                                    }();
-                                    _model.pulseScore = () {
-                                      if ((String pr) {
-                                        return int.parse(pr) <= 40;
-                                      }(_model.pulseTextController.text)) {
-                                        return 3;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 41 &&
-                                            int.parse(pr) <= 50;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 51 &&
-                                            int.parse(pr) <= 90;
-                                      }(_model.pulseTextController.text)) {
-                                        return 0;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 91 &&
-                                            int.parse(pr) <= 110;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 111 &&
-                                            int.parse(pr) <= 130;
-                                      }(_model.pulseTextController.text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.bloodPressureScore = () {
-                                      if ((String sbp) {
-                                        return int.parse(sbp) <= 90;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 3;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 91 &&
-                                            int.parse(sbp) <= 100;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 2;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 101 &&
-                                            int.parse(sbp) <= 110;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 1;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 111 &&
-                                            int.parse(sbp) <= 219;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 0;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.respiratoryScore = () {
-                                      if ((String rr) {
-                                        return int.parse(rr) <= 8;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 3;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 9 &&
-                                            int.parse(rr) <= 11;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 1;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 12 &&
-                                            int.parse(rr) <= 20;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 0;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 21 &&
-                                            int.parse(rr) <= 24;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.consciousnessScore =
-                                        _model.consciousnessValue == 'Alert'
-                                            ? 0
-                                            : 3;
-                                    _model.airOrOxygenScore =
-                                        _model.airOrOxygenValue ==
-                                                'Supplemental Oxygen'
-                                            ? 2
-                                            : 0;
+                                    _model.bloodPressureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'systolicBp',
+                                            _model
+                                                .systolicBPTextController.text,
+                                            false,
+                                            false);
+                                    _model.temperatureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'temperature',
+                                            _model.tempFahrenheit!.toString(),
+                                            false,
+                                            false);
+                                    _model.respiratoryScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'respiratoryRate',
+                                            _model.respiratoryRateTextController
+                                                .text,
+                                            false,
+                                            false);
+                                    _model.consciousnessScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'consciousness',
+                                            _model.consciousnessValue!,
+                                            false,
+                                            false);
+                                    _model.airOrOxygenScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'airOrOxygen',
+                                            _model.airOrOxygenValue!,
+                                            false,
+                                            false);
+                                    _model.pulseScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'pulse',
+                                            _model.pulseTextController.text,
+                                            false,
+                                            false);
+                                    safeSetState(() {});
                                     _model.totalScore = (_model.pulseScore!) +
                                         (_model.bloodPressureScore!) +
                                         (_model.respiratoryScore!) +
@@ -3212,10 +2118,11 @@ class _AddNewObservationSetComponentWidgetState
                                 if (_model.airOrOxygenValue != null &&
                                     _model.airOrOxygenValue != '') {
                                   _model.airOrOxygenScore =
-                                      _model.airOrOxygenValue ==
-                                              'Supplemental Oxygen'
-                                          ? 2
-                                          : 0;
+                                      functions.calculateNews2IndividualScores(
+                                          'airOrOxygen',
+                                          _model.airOrOxygenValue!,
+                                          false,
+                                          false);
                                   safeSetState(() {});
                                   if ((_model.pulseTextController.text !=
                                               '') &&
@@ -3239,186 +2146,47 @@ class _AddNewObservationSetComponentWidgetState
                                                   .text !=
                                               '') &&
                                       (_model.tempFahrenheit != null)) {
-                                    _model.temperatureScore = () {
-                                      if ((double tempFah) {
-                                        return tempFah <= 95;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 3;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 95.0 &&
-                                            tempFah <= 96.88;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 96.8 &&
-                                            tempFah <= 100.4;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 0;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 100.4 &&
-                                            tempFah <= 102.2;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else {
-                                        return 2;
-                                      }
-                                    }();
-                                    _model.spo2Score = _model
-                                                .respiratoryFailureValue ==
-                                            'No'
-                                        ? () {
-                                            if ((String spo) {
-                                              return int.parse(spo) <= 91;
-                                            }(_model.spO2TextController.text)) {
-                                              return 3;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 92 &&
-                                                  int.parse(spo) <= 93;
-                                            }(_model.spO2TextController.text)) {
-                                              return 2;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 94 &&
-                                                  int.parse(spo) <= 95;
-                                            }(_model.spO2TextController.text)) {
-                                              return 1;
-                                            } else {
-                                              return 0;
-                                            }
-                                          }()
-                                        : () {
-                                            if ((String spo) {
-                                              return int.parse(spo) <= 83;
-                                            }(_model.spO2TextController.text)) {
-                                              return 3;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 84 &&
-                                                  int.parse(spo) <= 85;
-                                            }(_model.spO2TextController.text)) {
-                                              return 2;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 86 &&
-                                                  int.parse(spo) <= 87;
-                                            }(_model.spO2TextController.text)) {
-                                              return 1;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 88 &&
-                                                  int.parse(spo) <= 92;
-                                            }(_model.spO2TextController.text)) {
-                                              return 0;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 93 &&
-                                                  osupp == 'Room Air';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 0;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 93 &&
-                                                  int.parse(spo) <= 94 &&
-                                                  osupp ==
-                                                      'Supplemental Oxygen';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 1;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 95 &&
-                                                  int.parse(spo) <= 96 &&
-                                                  osupp ==
-                                                      'Supplemental Oxygen';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 2;
-                                            } else {
-                                              return 3;
-                                            }
-                                          }();
-                                    _model.pulseScore = () {
-                                      if ((String pr) {
-                                        return int.parse(pr) <= 40;
-                                      }(_model.pulseTextController.text)) {
-                                        return 3;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 41 &&
-                                            int.parse(pr) <= 50;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 51 &&
-                                            int.parse(pr) <= 90;
-                                      }(_model.pulseTextController.text)) {
-                                        return 0;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 91 &&
-                                            int.parse(pr) <= 110;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 111 &&
-                                            int.parse(pr) <= 130;
-                                      }(_model.pulseTextController.text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.bloodPressureScore = () {
-                                      if ((String sbp) {
-                                        return int.parse(sbp) <= 90;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 3;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 91 &&
-                                            int.parse(sbp) <= 100;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 2;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 101 &&
-                                            int.parse(sbp) <= 110;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 1;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 111 &&
-                                            int.parse(sbp) <= 219;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 0;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.respiratoryScore = () {
-                                      if ((String rr) {
-                                        return int.parse(rr) <= 8;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 3;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 9 &&
-                                            int.parse(rr) <= 11;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 1;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 12 &&
-                                            int.parse(rr) <= 20;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 0;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 21 &&
-                                            int.parse(rr) <= 24;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.consciousnessScore =
-                                        _model.consciousnessValue == 'Alert'
-                                            ? 0
-                                            : 3;
+                                    _model.bloodPressureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'systolicBp',
+                                            _model
+                                                .systolicBPTextController.text,
+                                            false,
+                                            false);
+                                    _model.temperatureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'temperature',
+                                            _model.tempFahrenheit!.toString(),
+                                            false,
+                                            false);
+                                    _model.respiratoryScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'respiratoryRate',
+                                            _model.respiratoryRateTextController
+                                                .text,
+                                            false,
+                                            false);
+                                    _model.consciousnessScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'consciousness',
+                                            _model.consciousnessValue!,
+                                            false,
+                                            false);
+                                    _model.spo2Score = functions
+                                        .calculateNews2IndividualScores(
+                                            'SpO2',
+                                            _model.spO2TextController.text,
+                                            _model.respiratoryFailureValue ==
+                                                'Yes',
+                                            _model.airOrOxygenValue ==
+                                                'Supplemental Oxygen');
+                                    _model.pulseScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'pulse',
+                                            _model.pulseTextController.text,
+                                            false,
+                                            false);
+                                    safeSetState(() {});
                                     _model.totalScore = (_model.pulseScore!) +
                                         (_model.bloodPressureScore!) +
                                         (_model.respiratoryScore!) +
@@ -3551,84 +2319,14 @@ class _AddNewObservationSetComponentWidgetState
                                   Duration(milliseconds: 100),
                                   () async {
                                     if (_model.spO2TextController.text != '') {
-                                      _model.spo2Score = _model
-                                                  .respiratoryFailureValue ==
-                                              'No'
-                                          ? () {
-                                              if ((String spo) {
-                                                return int.parse(spo) <= 91;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 3;
-                                              } else if ((String spo) {
-                                                return int.parse(spo) >= 92 &&
-                                                    int.parse(spo) <= 93;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 2;
-                                              } else if ((String spo) {
-                                                return int.parse(spo) >= 94 &&
-                                                    int.parse(spo) <= 95;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 1;
-                                              } else {
-                                                return 0;
-                                              }
-                                            }()
-                                          : () {
-                                              if ((String spo) {
-                                                return int.parse(spo) <= 83;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 3;
-                                              } else if ((String spo) {
-                                                return int.parse(spo) >= 84 &&
-                                                    int.parse(spo) <= 85;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 2;
-                                              } else if ((String spo) {
-                                                return int.parse(spo) >= 86 &&
-                                                    int.parse(spo) <= 87;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 1;
-                                              } else if ((String spo) {
-                                                return int.parse(spo) >= 88 &&
-                                                    int.parse(spo) <= 92;
-                                              }(_model
-                                                  .spO2TextController.text)) {
-                                                return 0;
-                                              } else if ((String spo,
-                                                      String osupp) {
-                                                return int.parse(spo) >= 93 &&
-                                                    osupp == 'Room Air';
-                                              }(_model.spO2TextController.text,
-                                                  _model.airOrOxygenValue!)) {
-                                                return 0;
-                                              } else if ((String spo,
-                                                      String osupp) {
-                                                return int.parse(spo) >= 93 &&
-                                                    int.parse(spo) <= 94 &&
-                                                    osupp ==
-                                                        'Supplemental Oxygen';
-                                              }(_model.spO2TextController.text,
-                                                  _model.airOrOxygenValue!)) {
-                                                return 1;
-                                              } else if ((String spo,
-                                                      String osupp) {
-                                                return int.parse(spo) >= 95 &&
-                                                    int.parse(spo) <= 96 &&
-                                                    osupp ==
-                                                        'Supplemental Oxygen';
-                                              }(_model.spO2TextController.text,
-                                                  _model.airOrOxygenValue!)) {
-                                                return 2;
-                                              } else {
-                                                return 3;
-                                              }
-                                            }();
+                                      _model.spo2Score = functions
+                                          .calculateNews2IndividualScores(
+                                              'SpO2',
+                                              _model.spO2TextController.text,
+                                              _model.respiratoryFailureValue ==
+                                                  'Yes',
+                                              _model.airOrOxygenValue ==
+                                                  'Supplemental Oxygen');
                                       safeSetState(() {});
                                       if ((_model.pulseTextController.text != '') &&
                                           (_model.systolicBPTextController.text !=
@@ -3653,124 +2351,47 @@ class _AddNewObservationSetComponentWidgetState
                                                       .text !=
                                                   '') &&
                                           (_model.tempFahrenheit != null)) {
-                                        _model.temperatureScore = () {
-                                          if ((double tempFah) {
-                                            return tempFah <= 95;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 3;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 95.0 &&
-                                                tempFah <= 96.88;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 96.8 &&
-                                                tempFah <= 100.4;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 0;
-                                          } else if ((double tempFah) {
-                                            return tempFah > 100.4 &&
-                                                tempFah <= 102.2;
-                                          }(_model.tempFahrenheit!)) {
-                                            return 1;
-                                          } else {
-                                            return 2;
-                                          }
-                                        }();
-                                        _model.pulseScore = () {
-                                          if ((String pr) {
-                                            return int.parse(pr) <= 40;
-                                          }(_model.pulseTextController.text)) {
-                                            return 3;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 41 &&
-                                                int.parse(pr) <= 50;
-                                          }(_model.pulseTextController.text)) {
-                                            return 1;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 51 &&
-                                                int.parse(pr) <= 90;
-                                          }(_model.pulseTextController.text)) {
-                                            return 0;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 91 &&
-                                                int.parse(pr) <= 110;
-                                          }(_model.pulseTextController.text)) {
-                                            return 1;
-                                          } else if ((String pr) {
-                                            return int.parse(pr) >= 111 &&
-                                                int.parse(pr) <= 130;
-                                          }(_model.pulseTextController.text)) {
-                                            return 2;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.bloodPressureScore = () {
-                                          if ((String sbp) {
-                                            return int.parse(sbp) <= 90;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 3;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 91 &&
-                                                int.parse(sbp) <= 100;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 2;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 101 &&
-                                                int.parse(sbp) <= 110;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 1;
-                                          } else if ((String sbp) {
-                                            return int.parse(sbp) >= 111 &&
-                                                int.parse(sbp) <= 219;
-                                          }(_model
-                                              .systolicBPTextController.text)) {
-                                            return 0;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.respiratoryScore = () {
-                                          if ((String rr) {
-                                            return int.parse(rr) <= 8;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 3;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 9 &&
-                                                int.parse(rr) <= 11;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 1;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 12 &&
-                                                int.parse(rr) <= 20;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 0;
-                                          } else if ((String rr) {
-                                            return int.parse(rr) >= 21 &&
-                                                int.parse(rr) <= 24;
-                                          }(_model.respiratoryRateTextController
-                                              .text)) {
-                                            return 2;
-                                          } else {
-                                            return 3;
-                                          }
-                                        }();
-                                        _model.consciousnessScore =
-                                            _model.consciousnessValue == 'Alert'
-                                                ? 0
-                                                : 3;
-                                        _model.airOrOxygenScore =
-                                            _model.airOrOxygenValue ==
-                                                    'Supplemental Oxygen'
-                                                ? 2
-                                                : 0;
+                                        _model.bloodPressureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'systolicBp',
+                                                _model.systolicBPTextController
+                                                    .text,
+                                                false,
+                                                false);
+                                        _model.temperatureScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'temperature',
+                                                _model.tempFahrenheit!
+                                                    .toString(),
+                                                false,
+                                                false);
+                                        _model.respiratoryScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'respiratoryRate',
+                                                _model
+                                                    .respiratoryRateTextController
+                                                    .text,
+                                                false,
+                                                false);
+                                        _model.consciousnessScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'consciousness',
+                                                _model.consciousnessValue!,
+                                                false,
+                                                false);
+                                        _model.airOrOxygenScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'airOrOxygen',
+                                                _model.airOrOxygenValue!,
+                                                false,
+                                                false);
+                                        _model.pulseScore = functions
+                                            .calculateNews2IndividualScores(
+                                                'pulse',
+                                                _model.pulseTextController.text,
+                                                false,
+                                                false);
+                                        safeSetState(() {});
                                         _model.totalScore =
                                             (_model.pulseScore!) +
                                                 (_model.bloodPressureScore!) +
@@ -3967,9 +2588,11 @@ class _AddNewObservationSetComponentWidgetState
                                 if (_model.consciousnessValue != null &&
                                     _model.consciousnessValue != '') {
                                   _model.consciousnessScore =
-                                      _model.consciousnessValue == 'Alert'
-                                          ? 0
-                                          : 3;
+                                      functions.calculateNews2IndividualScores(
+                                          'consciousness',
+                                          _model.consciousnessValue!,
+                                          false,
+                                          false);
                                   safeSetState(() {});
                                   if ((_model.pulseTextController.text !=
                                               '') &&
@@ -3993,187 +2616,47 @@ class _AddNewObservationSetComponentWidgetState
                                                   .text !=
                                               '') &&
                                       (_model.tempFahrenheit != null)) {
-                                    _model.temperatureScore = () {
-                                      if ((double tempFah) {
-                                        return tempFah <= 95;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 3;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 95.0 &&
-                                            tempFah <= 96.88;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 96.8 &&
-                                            tempFah <= 100.4;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 0;
-                                      } else if ((double tempFah) {
-                                        return tempFah > 100.4 &&
-                                            tempFah <= 102.2;
-                                      }(_model.tempFahrenheit!)) {
-                                        return 1;
-                                      } else {
-                                        return 2;
-                                      }
-                                    }();
-                                    _model.spo2Score = _model
-                                                .respiratoryFailureValue ==
-                                            'No'
-                                        ? () {
-                                            if ((String spo) {
-                                              return int.parse(spo) <= 91;
-                                            }(_model.spO2TextController.text)) {
-                                              return 3;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 92 &&
-                                                  int.parse(spo) <= 93;
-                                            }(_model.spO2TextController.text)) {
-                                              return 2;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 94 &&
-                                                  int.parse(spo) <= 95;
-                                            }(_model.spO2TextController.text)) {
-                                              return 1;
-                                            } else {
-                                              return 0;
-                                            }
-                                          }()
-                                        : () {
-                                            if ((String spo) {
-                                              return int.parse(spo) <= 83;
-                                            }(_model.spO2TextController.text)) {
-                                              return 3;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 84 &&
-                                                  int.parse(spo) <= 85;
-                                            }(_model.spO2TextController.text)) {
-                                              return 2;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 86 &&
-                                                  int.parse(spo) <= 87;
-                                            }(_model.spO2TextController.text)) {
-                                              return 1;
-                                            } else if ((String spo) {
-                                              return int.parse(spo) >= 88 &&
-                                                  int.parse(spo) <= 92;
-                                            }(_model.spO2TextController.text)) {
-                                              return 0;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 93 &&
-                                                  osupp == 'Room Air';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 0;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 93 &&
-                                                  int.parse(spo) <= 94 &&
-                                                  osupp ==
-                                                      'Supplemental Oxygen';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 1;
-                                            } else if ((String spo,
-                                                    String osupp) {
-                                              return int.parse(spo) >= 95 &&
-                                                  int.parse(spo) <= 96 &&
-                                                  osupp ==
-                                                      'Supplemental Oxygen';
-                                            }(_model.spO2TextController.text,
-                                                _model.airOrOxygenValue!)) {
-                                              return 2;
-                                            } else {
-                                              return 3;
-                                            }
-                                          }();
-                                    _model.airOrOxygenScore =
-                                        _model.airOrOxygenValue ==
-                                                'Supplemental Oxygen'
-                                            ? 2
-                                            : 0;
-                                    _model.pulseScore = () {
-                                      if ((String pr) {
-                                        return int.parse(pr) <= 40;
-                                      }(_model.pulseTextController.text)) {
-                                        return 3;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 41 &&
-                                            int.parse(pr) <= 50;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 51 &&
-                                            int.parse(pr) <= 90;
-                                      }(_model.pulseTextController.text)) {
-                                        return 0;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 91 &&
-                                            int.parse(pr) <= 110;
-                                      }(_model.pulseTextController.text)) {
-                                        return 1;
-                                      } else if ((String pr) {
-                                        return int.parse(pr) >= 111 &&
-                                            int.parse(pr) <= 130;
-                                      }(_model.pulseTextController.text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.bloodPressureScore = () {
-                                      if ((String sbp) {
-                                        return int.parse(sbp) <= 90;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 3;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 91 &&
-                                            int.parse(sbp) <= 100;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 2;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 101 &&
-                                            int.parse(sbp) <= 110;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 1;
-                                      } else if ((String sbp) {
-                                        return int.parse(sbp) >= 111 &&
-                                            int.parse(sbp) <= 219;
-                                      }(_model.systolicBPTextController.text)) {
-                                        return 0;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
-                                    _model.respiratoryScore = () {
-                                      if ((String rr) {
-                                        return int.parse(rr) <= 8;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 3;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 9 &&
-                                            int.parse(rr) <= 11;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 1;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 12 &&
-                                            int.parse(rr) <= 20;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 0;
-                                      } else if ((String rr) {
-                                        return int.parse(rr) >= 21 &&
-                                            int.parse(rr) <= 24;
-                                      }(_model.respiratoryRateTextController
-                                          .text)) {
-                                        return 2;
-                                      } else {
-                                        return 3;
-                                      }
-                                    }();
+                                    _model.bloodPressureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'systolicBp',
+                                            _model
+                                                .systolicBPTextController.text,
+                                            false,
+                                            false);
+                                    _model.temperatureScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'temperature',
+                                            _model.tempFahrenheit!.toString(),
+                                            false,
+                                            false);
+                                    _model.respiratoryScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'respiratoryRate',
+                                            _model.respiratoryRateTextController
+                                                .text,
+                                            false,
+                                            false);
+                                    _model.spo2Score = functions
+                                        .calculateNews2IndividualScores(
+                                            'SpO2',
+                                            _model.spO2TextController.text,
+                                            _model.respiratoryFailureValue ==
+                                                'Yes',
+                                            _model.airOrOxygenValue ==
+                                                'Supplemental Oxygen');
+                                    _model.airOrOxygenScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'airOrOxygen',
+                                            _model.airOrOxygenValue!,
+                                            false,
+                                            false);
+                                    _model.pulseScore = functions
+                                        .calculateNews2IndividualScores(
+                                            'pulse',
+                                            _model.pulseTextController.text,
+                                            false,
+                                            false);
+                                    safeSetState(() {});
                                     _model.totalScore = (_model.pulseScore!) +
                                         (_model.bloodPressureScore!) +
                                         (_model.respiratoryScore!) +

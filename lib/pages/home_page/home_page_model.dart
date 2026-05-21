@@ -4,6 +4,7 @@ import '/backend/schema/structs/index.dart';
 import '/components/conditioon_table_row_component_widget.dart';
 import '/components/custom_dot_component_page_view_widget.dart';
 import '/components/custom_table_header_component_widget.dart';
+import '/components/empty_widget_widget.dart';
 import '/components/fire_component_widget.dart';
 import '/components/medications_table_row_component_widget.dart';
 import '/components/menu_items_component_widget.dart';
@@ -156,6 +157,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   int currentNews2Page = 0;
 
+  bool isPatientDetailsLoading = false;
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();
@@ -306,6 +309,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Models for ConditioonTableRowComponent dynamic component.
   late FlutterFlowDynamicModels<ConditioonTableRowComponentModel>
       conditioonTableRowComponentModels;
+  // Model for EmptyWidget component.
+  late EmptyWidgetModel emptyWidgetModel1;
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels2;
@@ -331,6 +336,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Models for MedicationsTableRowComponent dynamic component.
   late FlutterFlowDynamicModels<MedicationsTableRowComponentModel>
       medicationsTableRowComponentModels;
+  // Model for EmptyWidget component.
+  late EmptyWidgetModel emptyWidgetModel2;
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels3;
@@ -366,6 +373,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
       : 0;
   // Models for NEWSRowComponent dynamic component.
   late FlutterFlowDynamicModels<NEWSRowComponentModel> nEWSRowComponentModels;
+  // Model for EmptyWidget component.
+  late EmptyWidgetModel emptyWidgetModel3;
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels4;
@@ -407,6 +416,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     conditioonTableRowComponentModels =
         FlutterFlowDynamicModels(() => ConditioonTableRowComponentModel());
+    emptyWidgetModel1 = createModel(context, () => EmptyWidgetModel());
     customDotComponentPageViewModels2 =
         FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
     tableHeaderComponentNameModel3 =
@@ -421,6 +431,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     medicationsTableRowComponentModels =
         FlutterFlowDynamicModels(() => MedicationsTableRowComponentModel());
+    emptyWidgetModel2 = createModel(context, () => EmptyWidgetModel());
     customDotComponentPageViewModels3 =
         FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
     recordedAtModel =
@@ -441,6 +452,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     nEWSRowComponentModels =
         FlutterFlowDynamicModels(() => NEWSRowComponentModel());
+    emptyWidgetModel3 = createModel(context, () => EmptyWidgetModel());
     customDotComponentPageViewModels4 =
         FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
   }
@@ -479,6 +491,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     tableHeaderComponentDOBModel2.dispose();
     tableHeaderComponentPhoneNumberModel3.dispose();
     conditioonTableRowComponentModels.dispose();
+    emptyWidgetModel1.dispose();
     customDotComponentPageViewModels2.dispose();
     tableHeaderComponentNameModel3.dispose();
     tableHeaderComponentGenderModel3.dispose();
@@ -486,6 +499,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     tableHeaderComponentPhoneNumberModel4.dispose();
     tableHeaderComponentPhoneNumberModel5.dispose();
     medicationsTableRowComponentModels.dispose();
+    emptyWidgetModel2.dispose();
     customDotComponentPageViewModels3.dispose();
     recordedAtModel.dispose();
     pulseRateModel.dispose();
@@ -497,6 +511,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     avpuModel.dispose();
     nEWS2ScoreModel.dispose();
     nEWSRowComponentModels.dispose();
+    emptyWidgetModel3.dispose();
     customDotComponentPageViewModels4.dispose();
   }
 

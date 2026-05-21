@@ -66,8 +66,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       setDarkModeSetting(context, ThemeMode.light);
-      if (animationsMap['iconOnActionTriggerAnimation'] != null) {
-        animationsMap['iconOnActionTriggerAnimation']!.controller
+      if (animationsMap['iconOnActionTriggerAnimation1'] != null) {
+        animationsMap['iconOnActionTriggerAnimation1']!.controller
           ..reset()
           ..repeat();
       }
@@ -162,8 +162,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
       _model.isPageLoading = false;
       safeSetState(() {});
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      if (animationsMap['iconOnActionTriggerAnimation'] != null) {
-        animationsMap['iconOnActionTriggerAnimation']!.controller.stop();
+      if (animationsMap['iconOnActionTriggerAnimation1'] != null) {
+        animationsMap['iconOnActionTriggerAnimation1']!.controller.stop();
       }
     });
 
@@ -186,7 +186,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
     )..addListener(() => safeSetState(() {}));
 
     animationsMap.addAll({
-      'iconOnActionTriggerAnimation': AnimationInfo(
+      'iconOnActionTriggerAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onActionTrigger,
         applyInitialState: true,
         effectsBuilder: () => [
@@ -222,6 +222,19 @@ class _HomePageWidgetState extends State<HomePageWidget>
             duration: 1000.0.ms,
             color: FlutterFlowTheme.of(context).success,
             angle: 0.524,
+          ),
+        ],
+      ),
+      'iconOnActionTriggerAnimation2': AnimationInfo(
+        trigger: AnimationTrigger.onActionTrigger,
+        applyInitialState: true,
+        effectsBuilder: () => [
+          RotateEffect(
+            curve: Curves.linear,
+            delay: 0.0.ms,
+            duration: 500.0.ms,
+            begin: 0.0,
+            end: 1.0,
           ),
         ],
       ),
@@ -1515,7 +1528,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             size: 24.0,
                                           ).animateOnActionTrigger(
                                             animationsMap[
-                                                'iconOnActionTriggerAnimation']!,
+                                                'iconOnActionTriggerAnimation1']!,
                                           ),
                                           Text(
                                             'Fetching Data..!! Please wait..!!',
@@ -2411,7 +2424,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                         }
                                                       } else if (_model
                                                               .selectedTableColumn ==
-                                                          'Latest News Score') {
+                                                          'Latest NEWS2 Score') {
                                                         if (_model
                                                             .isAscendingSelectedTableColumn) {
                                                           _model.sortedAllPatients = _model
@@ -8685,98 +8698,120 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             Builder(
                                                               builder:
                                                                   (context) {
-                                                                final conditionPages = functions
-                                                                    .createPageIndices(
-                                                                        _model
-                                                                            .patientConditions
-                                                                            .length,
-                                                                        5)
-                                                                    .toList();
-                                                                if (conditionPages
-                                                                    .isEmpty) {
-                                                                  return Center(
-                                                                    child:
-                                                                        EmptyWidgetWidget(),
-                                                                  );
-                                                                }
+                                                                if (_model
+                                                                    .patientConditions
+                                                                    .isNotEmpty) {
+                                                                  return Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      final conditionPages = functions
+                                                                          .createPageIndices(
+                                                                              _model.patientConditions.length,
+                                                                              5)
+                                                                          .toList();
+                                                                      if (conditionPages
+                                                                          .isEmpty) {
+                                                                        return Center(
+                                                                          child:
+                                                                              EmptyWidgetWidget(),
+                                                                        );
+                                                                      }
 
-                                                                return Container(
-                                                                  width: MediaQuery.sizeOf(
-                                                                              context)
-                                                                          .width *
-                                                                      1.0,
-                                                                  height: 270.0,
-                                                                  child: PageView
-                                                                      .builder(
-                                                                    controller: _model
-                                                                            .conditionsPageViewController ??=
-                                                                        PageController(
-                                                                            initialPage:
-                                                                                max(0, min(0, conditionPages.length - 1))),
-                                                                    scrollDirection:
-                                                                        Axis.horizontal,
-                                                                    itemCount:
-                                                                        conditionPages
-                                                                            .length,
-                                                                    itemBuilder:
-                                                                        (context,
-                                                                            conditionPagesIndex) {
-                                                                      final conditionPagesItem =
-                                                                          conditionPages[
-                                                                              conditionPagesIndex];
-                                                                      return Builder(
-                                                                        builder:
-                                                                            (context) {
-                                                                          final conditionsList =
-                                                                              functions.sliceConditionsListForTablePages(_model.patientConditions.toList(), conditionPagesItem * 5, (conditionPagesItem + 1) * 5)?.toList() ?? [];
+                                                                      return Container(
+                                                                        width: MediaQuery.sizeOf(context).width *
+                                                                            1.0,
+                                                                        height:
+                                                                            270.0,
+                                                                        child: PageView
+                                                                            .builder(
+                                                                          controller: _model.conditionsPageViewController ??=
+                                                                              PageController(initialPage: max(0, min(0, conditionPages.length - 1))),
+                                                                          scrollDirection:
+                                                                              Axis.horizontal,
+                                                                          itemCount:
+                                                                              conditionPages.length,
+                                                                          itemBuilder:
+                                                                              (context, conditionPagesIndex) {
+                                                                            final conditionPagesItem =
+                                                                                conditionPages[conditionPagesIndex];
+                                                                            return Builder(
+                                                                              builder: (context) {
+                                                                                final conditionsList = functions.sliceConditionsListForTablePages(_model.patientConditions.toList(), conditionPagesItem * 5, (conditionPagesItem + 1) * 5)?.toList() ?? [];
 
-                                                                          return SingleChildScrollView(
-                                                                            primary:
-                                                                                false,
-                                                                            child:
-                                                                                Column(
-                                                                              mainAxisSize: MainAxisSize.min,
-                                                                              children: List.generate(conditionsList.length, (conditionsListIndex) {
-                                                                                final conditionsListItem = conditionsList[conditionsListIndex];
-                                                                                return wrapWithModel(
-                                                                                  model: _model.conditioonTableRowComponentModels.getModel(
-                                                                                    conditionsListIndex.toString(),
-                                                                                    conditionsListIndex,
-                                                                                  ),
-                                                                                  updateCallback: () => safeSetState(() {}),
-                                                                                  child: ConditioonTableRowComponentWidget(
-                                                                                    key: Key(
-                                                                                      'Keyjli_${conditionsListIndex.toString()}',
-                                                                                    ),
-                                                                                    conditionsRow: conditionsListItem,
+                                                                                return SingleChildScrollView(
+                                                                                  primary: false,
+                                                                                  child: Column(
+                                                                                    mainAxisSize: MainAxisSize.min,
+                                                                                    children: List.generate(conditionsList.length, (conditionsListIndex) {
+                                                                                      final conditionsListItem = conditionsList[conditionsListIndex];
+                                                                                      return wrapWithModel(
+                                                                                        model: _model.conditioonTableRowComponentModels.getModel(
+                                                                                          conditionsListIndex.toString(),
+                                                                                          conditionsListIndex,
+                                                                                        ),
+                                                                                        updateCallback: () => safeSetState(() {}),
+                                                                                        child: ConditioonTableRowComponentWidget(
+                                                                                          key: Key(
+                                                                                            'Keyjli_${conditionsListIndex.toString()}',
+                                                                                          ),
+                                                                                          conditionsRow: conditionsListItem,
+                                                                                        ),
+                                                                                      );
+                                                                                    }),
                                                                                   ),
                                                                                 );
-                                                                              }),
-                                                                            ),
-                                                                          );
-                                                                        },
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
                                                                       );
                                                                     },
-                                                                  ),
-                                                                );
+                                                                  );
+                                                                } else {
+                                                                  return Padding(
+                                                                    padding:
+                                                                        EdgeInsets.all(
+                                                                            10.0),
+                                                                    child:
+                                                                        wrapWithModel(
+                                                                      model: _model
+                                                                          .emptyWidgetModel1,
+                                                                      updateCallback:
+                                                                          () =>
+                                                                              safeSetState(() {}),
+                                                                      child:
+                                                                          EmptyWidgetWidget(),
+                                                                    ),
+                                                                  );
+                                                                }
                                                               },
                                                             ),
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                Text(
-                                                                  'Pages',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
+                                                            if (_model
+                                                                .patientConditions
+                                                                .isNotEmpty)
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Text(
+                                                                    'Pages',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
                                                                           fontWeight: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontWeight,
@@ -8784,83 +8819,69 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    final conditionPages2 = functions
-                                                                        .createPageIndices(
-                                                                            _model.patientConditions.length,
-                                                                            5)
-                                                                        .toList();
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      final conditionPages2 = functions
+                                                                          .createPageIndices(
+                                                                              _model.patientConditions.length,
+                                                                              5)
+                                                                          .toList();
 
-                                                                    return Row(
-                                                                      mainAxisSize:
-                                                                          MainAxisSize
-                                                                              .max,
-                                                                      children: List.generate(
-                                                                          conditionPages2
-                                                                              .length,
-                                                                          (conditionPages2Index) {
-                                                                        final conditionPages2Item =
-                                                                            conditionPages2[conditionPages2Index];
-                                                                        return InkWell(
-                                                                          splashColor:
-                                                                              Colors.transparent,
-                                                                          focusColor:
-                                                                              Colors.transparent,
-                                                                          hoverColor:
-                                                                              Colors.transparent,
-                                                                          highlightColor:
-                                                                              Colors.transparent,
-                                                                          onTap:
-                                                                              () async {
-                                                                            _model.currentConditionsPage =
-                                                                                conditionPages2Item;
-                                                                            safeSetState(() {});
-                                                                            await _model.conditionsPageViewController?.animateToPage(
-                                                                              _model.currentConditionsPage,
-                                                                              duration: Duration(milliseconds: 500),
-                                                                              curve: Curves.ease,
-                                                                            );
-                                                                          },
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.customDotComponentPageViewModels2.getModel(
-                                                                              conditionPages2Item.toString(),
-                                                                              conditionPages2Index,
-                                                                            ),
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
+                                                                      return Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        children: List.generate(
+                                                                            conditionPages2.length,
+                                                                            (conditionPages2Index) {
+                                                                          final conditionPages2Item =
+                                                                              conditionPages2[conditionPages2Index];
+                                                                          return InkWell(
+                                                                            splashColor:
+                                                                                Colors.transparent,
+                                                                            focusColor:
+                                                                                Colors.transparent,
+                                                                            hoverColor:
+                                                                                Colors.transparent,
+                                                                            highlightColor:
+                                                                                Colors.transparent,
+                                                                            onTap:
+                                                                                () async {
+                                                                              _model.currentConditionsPage = conditionPages2Item;
+                                                                              safeSetState(() {});
+                                                                              await _model.conditionsPageViewController?.animateToPage(
+                                                                                _model.currentConditionsPage,
+                                                                                duration: Duration(milliseconds: 500),
+                                                                                curve: Curves.ease,
+                                                                              );
+                                                                            },
                                                                             child:
-                                                                                CustomDotComponentPageViewWidget(
-                                                                              key: Key(
-                                                                                'Key9no_${conditionPages2Item.toString()}',
+                                                                                wrapWithModel(
+                                                                              model: _model.customDotComponentPageViewModels2.getModel(
+                                                                                conditionPages2Item.toString(),
+                                                                                conditionPages2Index,
                                                                               ),
-                                                                              isSelected: _model.currentConditionsPage == conditionPages2Item,
-                                                                              assignedIdx: conditionPages2Item,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomDotComponentPageViewWidget(
+                                                                                key: Key(
+                                                                                  'Key9no_${conditionPages2Item.toString()}',
+                                                                                ),
+                                                                                isSelected: _model.currentConditionsPage == conditionPages2Item,
+                                                                                assignedIdx: conditionPages2Item,
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                        );
-                                                                      }).divide(SizedBox(
-                                                                          width:
-                                                                              10.0)),
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ].divide(SizedBox(
-                                                                  width: 10.0)),
-                                                            ),
+                                                                          );
+                                                                        }).divide(SizedBox(
+                                                                            width:
+                                                                                10.0)),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ].divide(SizedBox(
+                                                                    width:
+                                                                        10.0)),
+                                                              ),
                                                           ],
                                                         ),
                                                       ].addToStart(SizedBox(
@@ -9289,98 +9310,120 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             Builder(
                                                               builder:
                                                                   (context) {
-                                                                final medicationPages = functions
-                                                                    .createPageIndices(
-                                                                        _model
-                                                                            .patientMedications
-                                                                            .length,
-                                                                        5)
-                                                                    .toList();
-                                                                if (medicationPages
-                                                                    .isEmpty) {
-                                                                  return Center(
-                                                                    child:
-                                                                        EmptyWidgetWidget(),
-                                                                  );
-                                                                }
+                                                                if (_model
+                                                                    .patientMedications
+                                                                    .isNotEmpty) {
+                                                                  return Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      final medicationPages = functions
+                                                                          .createPageIndices(
+                                                                              _model.patientMedications.length,
+                                                                              5)
+                                                                          .toList();
+                                                                      if (medicationPages
+                                                                          .isEmpty) {
+                                                                        return Center(
+                                                                          child:
+                                                                              EmptyWidgetWidget(),
+                                                                        );
+                                                                      }
 
-                                                                return Container(
-                                                                  width: MediaQuery.sizeOf(
-                                                                              context)
-                                                                          .width *
-                                                                      1.0,
-                                                                  height: 270.0,
-                                                                  child: PageView
-                                                                      .builder(
-                                                                    controller: _model
-                                                                            .medicationsPageViewController ??=
-                                                                        PageController(
-                                                                            initialPage:
-                                                                                max(0, min(0, medicationPages.length - 1))),
-                                                                    scrollDirection:
-                                                                        Axis.horizontal,
-                                                                    itemCount:
-                                                                        medicationPages
-                                                                            .length,
-                                                                    itemBuilder:
-                                                                        (context,
-                                                                            medicationPagesIndex) {
-                                                                      final medicationPagesItem =
-                                                                          medicationPages[
-                                                                              medicationPagesIndex];
-                                                                      return Builder(
-                                                                        builder:
-                                                                            (context) {
-                                                                          final medicationsList =
-                                                                              functions.sliceMedicationsListForTablePages(_model.patientMedications.toList(), medicationPagesItem * 5, (medicationPagesItem + 1) * 5)?.toList() ?? [];
+                                                                      return Container(
+                                                                        width: MediaQuery.sizeOf(context).width *
+                                                                            1.0,
+                                                                        height:
+                                                                            270.0,
+                                                                        child: PageView
+                                                                            .builder(
+                                                                          controller: _model.medicationsPageViewController ??=
+                                                                              PageController(initialPage: max(0, min(0, medicationPages.length - 1))),
+                                                                          scrollDirection:
+                                                                              Axis.horizontal,
+                                                                          itemCount:
+                                                                              medicationPages.length,
+                                                                          itemBuilder:
+                                                                              (context, medicationPagesIndex) {
+                                                                            final medicationPagesItem =
+                                                                                medicationPages[medicationPagesIndex];
+                                                                            return Builder(
+                                                                              builder: (context) {
+                                                                                final medicationsList = functions.sliceMedicationsListForTablePages(_model.patientMedications.toList(), medicationPagesItem * 5, (medicationPagesItem + 1) * 5)?.toList() ?? [];
 
-                                                                          return SingleChildScrollView(
-                                                                            primary:
-                                                                                false,
-                                                                            child:
-                                                                                Column(
-                                                                              mainAxisSize: MainAxisSize.min,
-                                                                              children: List.generate(medicationsList.length, (medicationsListIndex) {
-                                                                                final medicationsListItem = medicationsList[medicationsListIndex];
-                                                                                return wrapWithModel(
-                                                                                  model: _model.medicationsTableRowComponentModels.getModel(
-                                                                                    medicationsListIndex.toString(),
-                                                                                    medicationsListIndex,
-                                                                                  ),
-                                                                                  updateCallback: () => safeSetState(() {}),
-                                                                                  child: MedicationsTableRowComponentWidget(
-                                                                                    key: Key(
-                                                                                      'Keyffw_${medicationsListIndex.toString()}',
-                                                                                    ),
-                                                                                    medicationsRow: medicationsListItem,
+                                                                                return SingleChildScrollView(
+                                                                                  primary: false,
+                                                                                  child: Column(
+                                                                                    mainAxisSize: MainAxisSize.min,
+                                                                                    children: List.generate(medicationsList.length, (medicationsListIndex) {
+                                                                                      final medicationsListItem = medicationsList[medicationsListIndex];
+                                                                                      return wrapWithModel(
+                                                                                        model: _model.medicationsTableRowComponentModels.getModel(
+                                                                                          medicationsListIndex.toString(),
+                                                                                          medicationsListIndex,
+                                                                                        ),
+                                                                                        updateCallback: () => safeSetState(() {}),
+                                                                                        child: MedicationsTableRowComponentWidget(
+                                                                                          key: Key(
+                                                                                            'Keyffw_${medicationsListIndex.toString()}',
+                                                                                          ),
+                                                                                          medicationsRow: medicationsListItem,
+                                                                                        ),
+                                                                                      );
+                                                                                    }),
                                                                                   ),
                                                                                 );
-                                                                              }),
-                                                                            ),
-                                                                          );
-                                                                        },
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
                                                                       );
                                                                     },
-                                                                  ),
-                                                                );
+                                                                  );
+                                                                } else {
+                                                                  return Padding(
+                                                                    padding:
+                                                                        EdgeInsets.all(
+                                                                            10.0),
+                                                                    child:
+                                                                        wrapWithModel(
+                                                                      model: _model
+                                                                          .emptyWidgetModel2,
+                                                                      updateCallback:
+                                                                          () =>
+                                                                              safeSetState(() {}),
+                                                                      child:
+                                                                          EmptyWidgetWidget(),
+                                                                    ),
+                                                                  );
+                                                                }
                                                               },
                                                             ),
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                Text(
-                                                                  'Pages',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
+                                                            if (_model
+                                                                .patientMedications
+                                                                .isNotEmpty)
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Text(
+                                                                    'Pages',
+                                                                    style: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .override(
+                                                                          font:
+                                                                              GoogleFonts.inter(
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          letterSpacing:
+                                                                              0.0,
                                                                           fontWeight: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .fontWeight,
@@ -9388,83 +9431,69 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               .bodyMedium
                                                                               .fontStyle,
                                                                         ),
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                Builder(
-                                                                  builder:
-                                                                      (context) {
-                                                                    final medicationPages2 = functions
-                                                                        .createPageIndices(
-                                                                            _model.patientMedications.length,
-                                                                            5)
-                                                                        .toList();
+                                                                  ),
+                                                                  Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      final medicationPages2 = functions
+                                                                          .createPageIndices(
+                                                                              _model.patientMedications.length,
+                                                                              5)
+                                                                          .toList();
 
-                                                                    return Row(
-                                                                      mainAxisSize:
-                                                                          MainAxisSize
-                                                                              .max,
-                                                                      children: List.generate(
-                                                                          medicationPages2
-                                                                              .length,
-                                                                          (medicationPages2Index) {
-                                                                        final medicationPages2Item =
-                                                                            medicationPages2[medicationPages2Index];
-                                                                        return InkWell(
-                                                                          splashColor:
-                                                                              Colors.transparent,
-                                                                          focusColor:
-                                                                              Colors.transparent,
-                                                                          hoverColor:
-                                                                              Colors.transparent,
-                                                                          highlightColor:
-                                                                              Colors.transparent,
-                                                                          onTap:
-                                                                              () async {
-                                                                            _model.currentMedicationspage =
-                                                                                medicationPages2Item;
-                                                                            safeSetState(() {});
-                                                                            await _model.medicationsPageViewController?.animateToPage(
-                                                                              _model.currentMedicationspage,
-                                                                              duration: Duration(milliseconds: 500),
-                                                                              curve: Curves.ease,
-                                                                            );
-                                                                          },
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.customDotComponentPageViewModels3.getModel(
-                                                                              medicationPages2Item.toString(),
-                                                                              medicationPages2Index,
-                                                                            ),
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
+                                                                      return Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        children: List.generate(
+                                                                            medicationPages2.length,
+                                                                            (medicationPages2Index) {
+                                                                          final medicationPages2Item =
+                                                                              medicationPages2[medicationPages2Index];
+                                                                          return InkWell(
+                                                                            splashColor:
+                                                                                Colors.transparent,
+                                                                            focusColor:
+                                                                                Colors.transparent,
+                                                                            hoverColor:
+                                                                                Colors.transparent,
+                                                                            highlightColor:
+                                                                                Colors.transparent,
+                                                                            onTap:
+                                                                                () async {
+                                                                              _model.currentMedicationspage = medicationPages2Item;
+                                                                              safeSetState(() {});
+                                                                              await _model.medicationsPageViewController?.animateToPage(
+                                                                                _model.currentMedicationspage,
+                                                                                duration: Duration(milliseconds: 500),
+                                                                                curve: Curves.ease,
+                                                                              );
+                                                                            },
                                                                             child:
-                                                                                CustomDotComponentPageViewWidget(
-                                                                              key: Key(
-                                                                                'Key0qq_${medicationPages2Item.toString()}',
+                                                                                wrapWithModel(
+                                                                              model: _model.customDotComponentPageViewModels3.getModel(
+                                                                                medicationPages2Item.toString(),
+                                                                                medicationPages2Index,
                                                                               ),
-                                                                              isSelected: _model.currentMedicationspage == medicationPages2Item,
-                                                                              assignedIdx: medicationPages2Item,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomDotComponentPageViewWidget(
+                                                                                key: Key(
+                                                                                  'Key0qq_${medicationPages2Item.toString()}',
+                                                                                ),
+                                                                                isSelected: _model.currentMedicationspage == medicationPages2Item,
+                                                                                assignedIdx: medicationPages2Item,
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                        );
-                                                                      }).divide(SizedBox(
-                                                                          width:
-                                                                              10.0)),
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ].divide(SizedBox(
-                                                                  width: 10.0)),
-                                                            ),
+                                                                          );
+                                                                        }).divide(SizedBox(
+                                                                            width:
+                                                                                10.0)),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ].divide(SizedBox(
+                                                                    width:
+                                                                        10.0)),
+                                                              ),
                                                           ],
                                                         ),
                                                       ].addToStart(SizedBox(
@@ -9486,267 +9515,289 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                     .max,
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
-                                                                    .end,
+                                                                    .center,
                                                             children: [
-                                                              AlignedTooltip(
-                                                                content:
-                                                                    Padding(
-                                                                  padding:
-                                                                      EdgeInsets
-                                                                          .all(
-                                                                              4.0),
-                                                                  child: Text(
-                                                                    'Add New Observation',
-                                                                    style: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyLarge
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.inter(
-                                                                            fontWeight:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                              Expanded(
+                                                                child: Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .max,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  children: [
+                                                                    if (_model
+                                                                        .isPatientDetailsLoading)
+                                                                      Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.center,
+                                                                        children:
+                                                                            [
+                                                                          Icon(
+                                                                            Icons.refresh_rounded,
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).tertiary,
+                                                                            size:
+                                                                                24.0,
+                                                                          ).animateOnActionTrigger(
+                                                                            animationsMap['iconOnActionTriggerAnimation2']!,
                                                                           ),
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .bodyLarge
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .bodyLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                  ),
+                                                                          Text(
+                                                                            'Fetching Data..!! Please wait..!!',
+                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                  font: GoogleFonts.inter(
+                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  ),
+                                                                                  letterSpacing: 0.0,
+                                                                                  fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                          ),
+                                                                        ].divide(SizedBox(width: 20.0)),
+                                                                      ),
+                                                                  ],
                                                                 ),
-                                                                offset: 4.0,
-                                                                preferredDirection:
-                                                                    AxisDirection
-                                                                        .down,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            8.0),
-                                                                backgroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondaryBackground,
-                                                                elevation: 4.0,
-                                                                tailBaseWidth:
-                                                                    24.0,
-                                                                tailLength:
-                                                                    12.0,
-                                                                waitDuration:
-                                                                    Duration(
-                                                                        milliseconds:
-                                                                            100),
-                                                                showDuration:
-                                                                    Duration(
-                                                                        milliseconds:
-                                                                            1500),
-                                                                triggerMode:
-                                                                    TooltipTriggerMode
-                                                                        .tap,
-                                                                child: Builder(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          FlutterFlowIconButton(
-                                                                    borderColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .primary,
-                                                                    borderRadius:
-                                                                        20.0,
-                                                                    buttonSize:
-                                                                        40.0,
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .add_rounded,
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary,
-                                                                      size:
-                                                                          24.0,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () async {
-                                                                      await showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (dialogContext) {
-                                                                          return Dialog(
-                                                                            elevation:
-                                                                                0,
-                                                                            insetPadding:
-                                                                                EdgeInsets.zero,
-                                                                            backgroundColor:
-                                                                                Colors.transparent,
-                                                                            alignment:
-                                                                                AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                            child:
-                                                                                Container(
-                                                                              width: 1000.0,
-                                                                              child: AddNewObservationSetComponentWidget(
-                                                                                practitionerID: functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()),
-                                                                                encounterID: GetAdmissionEncounterByPatientIDCall.encounterID(
-                                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
-                                                                                )!,
-                                                                                admissionDate: functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
-                                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
-                                                                                ))!,
-                                                                                patientID: _model.patientSelectedForDetails?.identifier,
+                                                              ),
+                                                              Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .max,
+                                                                children: [
+                                                                  AlignedTooltip(
+                                                                    content:
+                                                                        Padding(
+                                                                      padding:
+                                                                          EdgeInsets.all(
+                                                                              4.0),
+                                                                      child:
+                                                                          Text(
+                                                                        'Add New Observation',
+                                                                        style: FlutterFlowTheme.of(context)
+                                                                            .bodyLarge
+                                                                            .override(
+                                                                              font: GoogleFonts.inter(
+                                                                                fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                               ),
+                                                                              letterSpacing: 0.0,
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                             ),
-                                                                          );
-                                                                        },
-                                                                      );
-
-                                                                      ScaffoldMessenger.of(
-                                                                              context)
-                                                                          .clearSnackBars();
-                                                                      ScaffoldMessenger.of(
-                                                                              context)
-                                                                          .showSnackBar(
-                                                                        SnackBar(
-                                                                          content:
-                                                                              Text(
-                                                                            'Fectching Updated Records. Please wait..!!',
-                                                                            style:
-                                                                                TextStyle(
-                                                                              color: FlutterFlowTheme.of(context).info,
-                                                                            ),
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                          ),
-                                                                          duration:
-                                                                              Duration(milliseconds: 4000),
-                                                                          backgroundColor:
-                                                                              FlutterFlowTheme.of(context).tertiary,
+                                                                      ),
+                                                                    ),
+                                                                    offset: 4.0,
+                                                                    preferredDirection:
+                                                                        AxisDirection
+                                                                            .down,
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            8.0),
+                                                                    backgroundColor:
+                                                                        FlutterFlowTheme.of(context)
+                                                                            .secondaryBackground,
+                                                                    elevation:
+                                                                        4.0,
+                                                                    tailBaseWidth:
+                                                                        24.0,
+                                                                    tailLength:
+                                                                        12.0,
+                                                                    waitDuration:
+                                                                        Duration(
+                                                                            milliseconds:
+                                                                                100),
+                                                                    showDuration:
+                                                                        Duration(
+                                                                            milliseconds:
+                                                                                1500),
+                                                                    triggerMode:
+                                                                        TooltipTriggerMode
+                                                                            .tap,
+                                                                    child:
+                                                                        Builder(
+                                                                      builder:
+                                                                          (context) =>
+                                                                              FlutterFlowIconButton(
+                                                                        borderColor:
+                                                                            FlutterFlowTheme.of(context).primary,
+                                                                        borderRadius:
+                                                                            20.0,
+                                                                        buttonSize:
+                                                                            40.0,
+                                                                        icon:
+                                                                            Icon(
+                                                                          Icons
+                                                                              .add_rounded,
+                                                                          color:
+                                                                              FlutterFlowTheme.of(context).primary,
+                                                                          size:
+                                                                              24.0,
                                                                         ),
-                                                                      );
-                                                                      _model.fetchPatientsWithNews4 =
-                                                                          await actions
-                                                                              .fetchFhirPatientsWithLatestNews2(
-                                                                        FFAppState()
-                                                                            .fhirBaseUrl,
-                                                                        FFAppState()
-                                                                            .fhirBearerToken,
-                                                                        '2026-05-18',
-                                                                      );
-                                                                      _model.allPatients = _model
-                                                                          .fetchPatientsWithNews4!
-                                                                          .toList()
-                                                                          .cast<
-                                                                              PatientStruct>();
-                                                                      _model.sortedAllPatients = _model
-                                                                          .fetchPatientsWithNews4!
-                                                                          .sortedList(
-                                                                              keyOf: (e) => e.latestNEWS2Score,
-                                                                              desc: true)
-                                                                          .toList()
-                                                                          .cast<PatientStruct>();
-                                                                      _model.selectedTableColumn =
-                                                                          'Latest NEWS2 Score';
-                                                                      _model.isAscendingSelectedTableColumn =
-                                                                          false;
-                                                                      _model
-                                                                          .updatePatientSelectedForDetailsStruct(
-                                                                        (e) => e
-                                                                          ..hasLatestNEWS2Score = _model
-                                                                              .allPatients
-                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
-                                                                              .toList()
-                                                                              .firstOrNull
-                                                                              ?.hasLatestNEWS2Score
-                                                                          ..latestNEWS2Score = _model
-                                                                              .allPatients
-                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
-                                                                              .toList()
-                                                                              .firstOrNull
-                                                                              ?.latestNEWS2Score
-                                                                          ..latestSingleRedScore = _model
-                                                                              .allPatients
-                                                                              .where((e) => e.identifier == _model.patientSelectedForDetails?.identifier)
-                                                                              .toList()
-                                                                              .firstOrNull
-                                                                              ?.latestSingleRedScore,
-                                                                      );
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      _model.bundleResponse2 =
-                                                                          await PatientBundleRequestsCall
-                                                                              .call(
-                                                                        token: FFAppState()
-                                                                            .fhirBearerToken,
-                                                                        id: _model
-                                                                            .patientSelectedForDetails
-                                                                            ?.identifier,
-                                                                      );
-
-                                                                      if ((_model
-                                                                              .bundleResponse2
-                                                                              ?.succeeded ??
-                                                                          true)) {
-                                                                        if (PatientBundleRequestsCall.observationTotal(
-                                                                              (_model.bundleResponse2?.jsonBody ?? ''),
-                                                                            )! >
-                                                                            0) {
-                                                                          _model.patientObservations = functions
-                                                                              .parseFhirObservations(PatientBundleRequestsCall.observationEntries(
-                                                                                (_model.bundleResponse2?.jsonBody ?? ''),
-                                                                              )!
-                                                                                  .toList())
-                                                                              .toList()
-                                                                              .cast<ObservationStruct>();
-                                                                          safeSetState(
-                                                                              () {});
-                                                                        } else {
+                                                                        onPressed:
+                                                                            () async {
                                                                           await showDialog(
                                                                             context:
                                                                                 context,
                                                                             builder:
-                                                                                (alertDialogContext) {
-                                                                              return AlertDialog(
-                                                                                title: Text('Error'),
-                                                                                content: Text('No observations noted'),
-                                                                                actions: [
-                                                                                  TextButton(
-                                                                                    onPressed: () => Navigator.pop(alertDialogContext),
-                                                                                    child: Text('Ok'),
+                                                                                (dialogContext) {
+                                                                              return Dialog(
+                                                                                elevation: 0,
+                                                                                insetPadding: EdgeInsets.zero,
+                                                                                backgroundColor: Colors.transparent,
+                                                                                alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
+                                                                                child: Container(
+                                                                                  width: 1000.0,
+                                                                                  child: AddNewObservationSetComponentWidget(
+                                                                                    practitionerID: functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()),
+                                                                                    encounterID: GetAdmissionEncounterByPatientIDCall.encounterID(
+                                                                                      patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                                    )!,
+                                                                                    admissionDate: functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
+                                                                                      patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                                    ))!,
+                                                                                    patientID: _model.patientSelectedForDetails?.identifier,
                                                                                   ),
-                                                                                ],
+                                                                                ),
                                                                               );
                                                                             },
                                                                           );
-                                                                        }
 
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .hideCurrentSnackBar();
-                                                                      } else {
-                                                                        await showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (alertDialogContext) {
-                                                                            return AlertDialog(
-                                                                              title: Text('Error'),
-                                                                              content: Text((_model.bundleResponse2?.bodyText ?? '')),
-                                                                              actions: [
-                                                                                TextButton(
-                                                                                  onPressed: () => Navigator.pop(alertDialogContext),
-                                                                                  child: Text('Ok'),
+                                                                          _model.isPatientDetailsLoading =
+                                                                              true;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                          await Future
+                                                                              .delayed(
+                                                                            Duration(
+                                                                              milliseconds: 100,
+                                                                            ),
+                                                                          );
+                                                                          if (animationsMap['iconOnActionTriggerAnimation2'] !=
+                                                                              null) {
+                                                                            animationsMap['iconOnActionTriggerAnimation2']!.controller
+                                                                              ..reset()
+                                                                              ..repeat();
+                                                                          }
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .clearSnackBars();
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(
+                                                                            SnackBar(
+                                                                              content: Text(
+                                                                                'Fectching Updated Records. Please wait..!!',
+                                                                                style: TextStyle(
+                                                                                  color: FlutterFlowTheme.of(context).info,
                                                                                 ),
-                                                                              ],
-                                                                            );
-                                                                          },
-                                                                        );
-                                                                      }
+                                                                                textAlign: TextAlign.center,
+                                                                              ),
+                                                                              duration: Duration(milliseconds: 4000),
+                                                                              backgroundColor: FlutterFlowTheme.of(context).tertiary,
+                                                                            ),
+                                                                          );
+                                                                          _model.fetchPatientsWithNews4 =
+                                                                              await actions.fetchFhirPatientsWithLatestNews2(
+                                                                            FFAppState().fhirBaseUrl,
+                                                                            FFAppState().fhirBearerToken,
+                                                                            '2026-05-18',
+                                                                          );
+                                                                          _model.allPatients = _model
+                                                                              .fetchPatientsWithNews4!
+                                                                              .toList()
+                                                                              .cast<PatientStruct>();
+                                                                          _model.sortedAllPatients = _model
+                                                                              .fetchPatientsWithNews4!
+                                                                              .sortedList(keyOf: (e) => e.latestNEWS2Score, desc: true)
+                                                                              .toList()
+                                                                              .cast<PatientStruct>();
+                                                                          _model.selectedTableColumn =
+                                                                              'Latest NEWS2 Score';
+                                                                          _model.isAscendingSelectedTableColumn =
+                                                                              false;
+                                                                          _model
+                                                                              .updatePatientSelectedForDetailsStruct(
+                                                                            (e) => e
+                                                                              ..hasLatestNEWS2Score = _model.allPatients.where((e) => e.identifier == _model.patientSelectedForDetails?.identifier).toList().firstOrNull?.hasLatestNEWS2Score
+                                                                              ..latestNEWS2Score = _model.allPatients.where((e) => e.identifier == _model.patientSelectedForDetails?.identifier).toList().firstOrNull?.latestNEWS2Score
+                                                                              ..latestSingleRedScore = _model.allPatients.where((e) => e.identifier == _model.patientSelectedForDetails?.identifier).toList().firstOrNull?.latestSingleRedScore,
+                                                                          );
+                                                                          safeSetState(
+                                                                              () {});
+                                                                          _model.bundleResponse2 =
+                                                                              await PatientBundleRequestsCall.call(
+                                                                            token:
+                                                                                FFAppState().fhirBearerToken,
+                                                                            id: _model.patientSelectedForDetails?.identifier,
+                                                                          );
 
-                                                                      safeSetState(
-                                                                          () {});
-                                                                    },
+                                                                          if ((_model.bundleResponse2?.succeeded ??
+                                                                              true)) {
+                                                                            if (PatientBundleRequestsCall.observationTotal(
+                                                                                  (_model.bundleResponse2?.jsonBody ?? ''),
+                                                                                )! >
+                                                                                0) {
+                                                                              _model.patientObservations = functions
+                                                                                  .parseFhirObservations(PatientBundleRequestsCall.observationEntries(
+                                                                                    (_model.bundleResponse2?.jsonBody ?? ''),
+                                                                                  )!
+                                                                                      .toList())
+                                                                                  .toList()
+                                                                                  .cast<ObservationStruct>();
+                                                                              safeSetState(() {});
+                                                                            } else {
+                                                                              await showDialog(
+                                                                                context: context,
+                                                                                builder: (alertDialogContext) {
+                                                                                  return AlertDialog(
+                                                                                    title: Text('Error'),
+                                                                                    content: Text('No observations noted'),
+                                                                                    actions: [
+                                                                                      TextButton(
+                                                                                        onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                        child: Text('Ok'),
+                                                                                      ),
+                                                                                    ],
+                                                                                  );
+                                                                                },
+                                                                              );
+                                                                            }
+
+                                                                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                                                          } else {
+                                                                            await showDialog(
+                                                                              context: context,
+                                                                              builder: (alertDialogContext) {
+                                                                                return AlertDialog(
+                                                                                  title: Text('Error'),
+                                                                                  content: Text((_model.bundleResponse2?.bodyText ?? '')),
+                                                                                  actions: [
+                                                                                    TextButton(
+                                                                                      onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                      child: Text('Ok'),
+                                                                                    ),
+                                                                                  ],
+                                                                                );
+                                                                              },
+                                                                            );
+                                                                          }
+
+                                                                          _model.isPatientDetailsLoading =
+                                                                              false;
+                                                                          safeSetState(
+                                                                              () {});
+                                                                          if (animationsMap['iconOnActionTriggerAnimation2'] !=
+                                                                              null) {
+                                                                            animationsMap['iconOnActionTriggerAnimation2']!.controller.stop();
+                                                                          }
+
+                                                                          safeSetState(
+                                                                              () {});
+                                                                        },
+                                                                      ),
+                                                                    ),
                                                                   ),
-                                                                ),
+                                                                ],
                                                               ),
                                                             ]
                                                                 .divide(SizedBox(
@@ -9928,121 +9979,142 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             Builder(
                                                                           builder:
                                                                               (context) {
-                                                                            final newsPages =
-                                                                                functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+                                                                            if (_model.patientObservations.isNotEmpty) {
+                                                                              return Builder(
+                                                                                builder: (context) {
+                                                                                  final newsPages = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
 
-                                                                            return Container(
-                                                                              width: double.infinity,
-                                                                              height: 540.0,
-                                                                              child: Padding(
-                                                                                padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 40.0),
-                                                                                child: PageView.builder(
-                                                                                  controller: _model.nEWS2PageViewController ??= PageController(initialPage: max(0, min(0, newsPages.length - 1))),
-                                                                                  scrollDirection: Axis.horizontal,
-                                                                                  itemCount: newsPages.length,
-                                                                                  itemBuilder: (context, newsPagesIndex) {
-                                                                                    final newsPagesItem = newsPages[newsPagesIndex];
-                                                                                    return Column(
-                                                                                      mainAxisSize: MainAxisSize.max,
-                                                                                      children: [
-                                                                                        Builder(
-                                                                                          builder: (context) {
-                                                                                            final newsRows = functions.sliceDatesListForTablePages(_model.patientObservations.unique((e) => e.recordedAt!).sortedList(keyOf: (e) => e.recordedAt!, desc: true).map((e) => e.recordedAt).withoutNulls.toList(), newsPagesItem * 10, (newsPagesItem + 1) * 10)?.toList() ?? [];
+                                                                                  return Container(
+                                                                                    width: double.infinity,
+                                                                                    height: 540.0,
+                                                                                    child: Padding(
+                                                                                      padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 40.0),
+                                                                                      child: PageView.builder(
+                                                                                        controller: _model.nEWS2PageViewController ??= PageController(initialPage: max(0, min(0, newsPages.length - 1))),
+                                                                                        scrollDirection: Axis.horizontal,
+                                                                                        itemCount: newsPages.length,
+                                                                                        itemBuilder: (context, newsPagesIndex) {
+                                                                                          final newsPagesItem = newsPages[newsPagesIndex];
+                                                                                          return Column(
+                                                                                            mainAxisSize: MainAxisSize.max,
+                                                                                            children: [
+                                                                                              Builder(
+                                                                                                builder: (context) {
+                                                                                                  final newsRows = functions.sliceDatesListForTablePages(_model.patientObservations.unique((e) => e.recordedAt!).sortedList(keyOf: (e) => e.recordedAt!, desc: true).map((e) => e.recordedAt).withoutNulls.toList(), newsPagesItem * 10, (newsPagesItem + 1) * 10)?.toList() ?? [];
 
-                                                                                            return Column(
-                                                                                              mainAxisSize: MainAxisSize.max,
-                                                                                              children: List.generate(newsRows.length, (newsRowsIndex) {
-                                                                                                final newsRowsItem = newsRows[newsRowsIndex];
-                                                                                                return wrapWithModel(
-                                                                                                  model: _model.nEWSRowComponentModels.getModel(
-                                                                                                    newsRowsIndex.toString(),
-                                                                                                    newsRowsIndex,
-                                                                                                  ),
-                                                                                                  updateCallback: () => safeSetState(() {}),
-                                                                                                  child: NEWSRowComponentWidget(
-                                                                                                    key: Key(
-                                                                                                      'Keyqy8_${newsRowsIndex.toString()}',
-                                                                                                    ),
-                                                                                                    observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
-                                                                                                    isLatest: newsRowsIndex == 0,
-                                                                                                  ),
-                                                                                                );
-                                                                                              }),
-                                                                                            );
-                                                                                          },
-                                                                                        ),
-                                                                                      ],
-                                                                                    );
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                      ),
-                                                                      Row(
-                                                                        mainAxisSize:
-                                                                            MainAxisSize.max,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.center,
-                                                                        children:
-                                                                            [
-                                                                          Text(
-                                                                            'Pages',
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.inter(
-                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                ),
-                                                                          ),
-                                                                          Builder(
-                                                                            builder:
-                                                                                (context) {
-                                                                              final newsPages2 = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
-
-                                                                              return Row(
-                                                                                mainAxisSize: MainAxisSize.max,
-                                                                                children: List.generate(newsPages2.length, (newsPages2Index) {
-                                                                                  final newsPages2Item = newsPages2[newsPages2Index];
-                                                                                  return InkWell(
-                                                                                    splashColor: Colors.transparent,
-                                                                                    focusColor: Colors.transparent,
-                                                                                    hoverColor: Colors.transparent,
-                                                                                    highlightColor: Colors.transparent,
-                                                                                    onTap: () async {
-                                                                                      _model.currentNews2Page = newsPages2Item;
-                                                                                      safeSetState(() {});
-                                                                                      await _model.nEWS2PageViewController?.animateToPage(
-                                                                                        _model.currentNews2Page,
-                                                                                        duration: Duration(milliseconds: 500),
-                                                                                        curve: Curves.ease,
-                                                                                      );
-                                                                                    },
-                                                                                    child: wrapWithModel(
-                                                                                      model: _model.customDotComponentPageViewModels4.getModel(
-                                                                                        newsPages2Item.toString(),
-                                                                                        newsPages2Index,
-                                                                                      ),
-                                                                                      updateCallback: () => safeSetState(() {}),
-                                                                                      child: CustomDotComponentPageViewWidget(
-                                                                                        key: Key(
-                                                                                          'Keymho_${newsPages2Item.toString()}',
-                                                                                        ),
-                                                                                        isSelected: _model.currentNews2Page == newsPages2Item,
-                                                                                        assignedIdx: newsPages2Item,
+                                                                                                  return Column(
+                                                                                                    mainAxisSize: MainAxisSize.max,
+                                                                                                    children: List.generate(newsRows.length, (newsRowsIndex) {
+                                                                                                      final newsRowsItem = newsRows[newsRowsIndex];
+                                                                                                      return wrapWithModel(
+                                                                                                        model: _model.nEWSRowComponentModels.getModel(
+                                                                                                          newsRowsIndex.toString(),
+                                                                                                          newsRowsIndex,
+                                                                                                        ),
+                                                                                                        updateCallback: () => safeSetState(() {}),
+                                                                                                        child: NEWSRowComponentWidget(
+                                                                                                          key: Key(
+                                                                                                            'Keyqy8_${newsRowsIndex.toString()}',
+                                                                                                          ),
+                                                                                                          observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                                          isLatest: newsRowsIndex == 0,
+                                                                                                        ),
+                                                                                                      );
+                                                                                                    }),
+                                                                                                  );
+                                                                                                },
+                                                                                              ),
+                                                                                            ],
+                                                                                          );
+                                                                                        },
                                                                                       ),
                                                                                     ),
                                                                                   );
-                                                                                }).divide(SizedBox(width: 10.0)),
+                                                                                },
                                                                               );
-                                                                            },
-                                                                          ),
-                                                                        ].divide(SizedBox(width: 10.0)),
+                                                                            } else {
+                                                                              return Padding(
+                                                                                padding: EdgeInsets.all(10.0),
+                                                                                child: Column(
+                                                                                  mainAxisSize: MainAxisSize.max,
+                                                                                  children: [
+                                                                                    wrapWithModel(
+                                                                                      model: _model.emptyWidgetModel3,
+                                                                                      updateCallback: () => safeSetState(() {}),
+                                                                                      child: EmptyWidgetWidget(),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              );
+                                                                            }
+                                                                          },
+                                                                        ),
                                                                       ),
+                                                                      if (_model
+                                                                          .patientObservations
+                                                                          .isNotEmpty)
+                                                                        Row(
+                                                                          mainAxisSize:
+                                                                              MainAxisSize.max,
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.center,
+                                                                          children:
+                                                                              [
+                                                                            Text(
+                                                                              'Pages',
+                                                                              style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                    font: GoogleFonts.inter(
+                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                    ),
+                                                                                    letterSpacing: 0.0,
+                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  ),
+                                                                            ),
+                                                                            Builder(
+                                                                              builder: (context) {
+                                                                                final newsPages2 = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+
+                                                                                return Row(
+                                                                                  mainAxisSize: MainAxisSize.max,
+                                                                                  children: List.generate(newsPages2.length, (newsPages2Index) {
+                                                                                    final newsPages2Item = newsPages2[newsPages2Index];
+                                                                                    return InkWell(
+                                                                                      splashColor: Colors.transparent,
+                                                                                      focusColor: Colors.transparent,
+                                                                                      hoverColor: Colors.transparent,
+                                                                                      highlightColor: Colors.transparent,
+                                                                                      onTap: () async {
+                                                                                        _model.currentNews2Page = newsPages2Item;
+                                                                                        safeSetState(() {});
+                                                                                        await _model.nEWS2PageViewController?.animateToPage(
+                                                                                          _model.currentNews2Page,
+                                                                                          duration: Duration(milliseconds: 500),
+                                                                                          curve: Curves.ease,
+                                                                                        );
+                                                                                      },
+                                                                                      child: wrapWithModel(
+                                                                                        model: _model.customDotComponentPageViewModels4.getModel(
+                                                                                          newsPages2Item.toString(),
+                                                                                          newsPages2Index,
+                                                                                        ),
+                                                                                        updateCallback: () => safeSetState(() {}),
+                                                                                        child: CustomDotComponentPageViewWidget(
+                                                                                          key: Key(
+                                                                                            'Keymho_${newsPages2Item.toString()}',
+                                                                                          ),
+                                                                                          isSelected: _model.currentNews2Page == newsPages2Item,
+                                                                                          assignedIdx: newsPages2Item,
+                                                                                        ),
+                                                                                      ),
+                                                                                    );
+                                                                                  }).divide(SizedBox(width: 10.0)),
+                                                                                );
+                                                                              },
+                                                                            ),
+                                                                          ].divide(SizedBox(width: 10.0)),
+                                                                        ),
                                                                     ],
                                                                   ),
                                                                 );
@@ -10079,7 +10151,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               }
                                                             },
                                                           ),
-                                                        ],
+                                                        ]
+                                                            .divide(SizedBox(
+                                                                height: 6.0))
+                                                            .around(SizedBox(
+                                                                height: 6.0)),
                                                       ),
                                                     ),
                                                   ],
