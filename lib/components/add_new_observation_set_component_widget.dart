@@ -3191,20 +3191,6 @@ class _AddNewObservationSetComponentWidgetState
                           if ((_model.postNEWSObservations?.succeeded ??
                               true)) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Successfully recorded Observations..!!',
-                                  style: TextStyle(
-                                    color: FlutterFlowTheme.of(context).info,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                duration: Duration(milliseconds: 4000),
-                                backgroundColor:
-                                    FlutterFlowTheme.of(context).success,
-                              ),
-                            );
                           } else {
                             await showDialog(
                               context: context,

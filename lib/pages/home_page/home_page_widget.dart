@@ -66,8 +66,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       setDarkModeSetting(context, ThemeMode.light);
-      if (animationsMap['iconOnActionTriggerAnimation1'] != null) {
-        animationsMap['iconOnActionTriggerAnimation1']!.controller
+      if (animationsMap['iconOnActionTriggerAnimation'] != null) {
+        animationsMap['iconOnActionTriggerAnimation']!.controller
           ..reset()
           ..repeat();
       }
@@ -162,8 +162,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
       _model.isPageLoading = false;
       safeSetState(() {});
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      if (animationsMap['iconOnActionTriggerAnimation1'] != null) {
-        animationsMap['iconOnActionTriggerAnimation1']!.controller.stop();
+      if (animationsMap['iconOnActionTriggerAnimation'] != null) {
+        animationsMap['iconOnActionTriggerAnimation']!.controller.stop();
       }
     });
 
@@ -186,7 +186,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
     )..addListener(() => safeSetState(() {}));
 
     animationsMap.addAll({
-      'iconOnActionTriggerAnimation1': AnimationInfo(
+      'iconOnActionTriggerAnimation': AnimationInfo(
         trigger: AnimationTrigger.onActionTrigger,
         applyInitialState: true,
         effectsBuilder: () => [
@@ -225,9 +225,9 @@ class _HomePageWidgetState extends State<HomePageWidget>
           ),
         ],
       ),
-      'iconOnActionTriggerAnimation2': AnimationInfo(
-        trigger: AnimationTrigger.onActionTrigger,
-        applyInitialState: true,
+      'iconOnPageLoadAnimation': AnimationInfo(
+        loop: true,
+        trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
           RotateEffect(
             curve: Curves.linear,
@@ -1528,7 +1528,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             size: 24.0,
                                           ).animateOnActionTrigger(
                                             animationsMap[
-                                                'iconOnActionTriggerAnimation1']!,
+                                                'iconOnActionTriggerAnimation']!,
                                           ),
                                           Text(
                                             'Fetching Data..!! Please wait..!!',
@@ -9541,9 +9541,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                                 FlutterFlowTheme.of(context).tertiary,
                                                                             size:
                                                                                 24.0,
-                                                                          ).animateOnActionTrigger(
-                                                                            animationsMap['iconOnActionTriggerAnimation2']!,
-                                                                          ),
+                                                                          ).animateOnPageLoad(
+                                                                              animationsMap['iconOnPageLoadAnimation']!),
                                                                           Text(
                                                                             'Fetching Data..!! Please wait..!!',
                                                                             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -9668,18 +9667,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               true;
                                                                           safeSetState(
                                                                               () {});
-                                                                          await Future
-                                                                              .delayed(
-                                                                            Duration(
-                                                                              milliseconds: 100,
-                                                                            ),
-                                                                          );
-                                                                          if (animationsMap['iconOnActionTriggerAnimation2'] !=
-                                                                              null) {
-                                                                            animationsMap['iconOnActionTriggerAnimation2']!.controller
-                                                                              ..reset()
-                                                                              ..repeat();
-                                                                          }
                                                                           ScaffoldMessenger.of(context)
                                                                               .clearSnackBars();
                                                                           ScaffoldMessenger.of(context)
@@ -9786,10 +9773,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               false;
                                                                           safeSetState(
                                                                               () {});
-                                                                          if (animationsMap['iconOnActionTriggerAnimation2'] !=
-                                                                              null) {
-                                                                            animationsMap['iconOnActionTriggerAnimation2']!.controller.stop();
-                                                                          }
 
                                                                           safeSetState(
                                                                               () {});
