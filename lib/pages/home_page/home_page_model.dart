@@ -150,6 +150,12 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   bool isPageLoading = true;
 
+  int currentConditionsPage = 0;
+
+  int currentMedicationspage = 0;
+
+  int currentNews2Page = 0;
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();
@@ -251,7 +257,6 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   String? get genderCCValue => genderCCValueController?.value?.firstOrNull;
   set genderCCValue(String? val) =>
       genderCCValueController?.value = val != null ? [val] : [];
-  DateTime? datePicked;
   // State field(s) for PhoneNumber widget.
   FocusNode? phoneNumberFocusNode;
   TextEditingController? phoneNumberTextController;
@@ -351,8 +356,19 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel avpuModel;
   // Model for NEWS2Score.
   late CustomTableHeaderComponentModel nEWS2ScoreModel;
+  // State field(s) for NEWS2PageView widget.
+  PageController? nEWS2PageViewController;
+
+  int get nEWS2PageViewCurrentIndex => nEWS2PageViewController != null &&
+          nEWS2PageViewController!.hasClients &&
+          nEWS2PageViewController!.page != null
+      ? nEWS2PageViewController!.page!.round()
+      : 0;
   // Models for NEWSRowComponent dynamic component.
   late FlutterFlowDynamicModels<NEWSRowComponentModel> nEWSRowComponentModels;
+  // Models for CustomDotComponentPageView dynamic component.
+  late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
+      customDotComponentPageViewModels4;
 
   @override
   void initState(BuildContext context) {
@@ -425,6 +441,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
         createModel(context, () => CustomTableHeaderComponentModel());
     nEWSRowComponentModels =
         FlutterFlowDynamicModels(() => NEWSRowComponentModel());
+    customDotComponentPageViewModels4 =
+        FlutterFlowDynamicModels(() => CustomDotComponentPageViewModel());
   }
 
   @override
@@ -479,6 +497,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
     avpuModel.dispose();
     nEWS2ScoreModel.dispose();
     nEWSRowComponentModels.dispose();
+    customDotComponentPageViewModels4.dispose();
   }
 
   /// Additional helper methods.

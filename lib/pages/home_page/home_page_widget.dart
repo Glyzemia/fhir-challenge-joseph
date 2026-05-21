@@ -2511,7 +2511,12 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                           initialPage: max(
                                                               0,
                                                               min(
-                                                                  0,
+                                                                  valueOrDefault<
+                                                                      int>(
+                                                                    _model
+                                                                        .currentPatientPage,
+                                                                    0,
+                                                                  ),
                                                                   pages.length -
                                                                       1))),
                                                   scrollDirection:
@@ -2973,6 +2978,54 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                                 null);
                                                                         await _model
                                                                             .waitForApiRequestCompleted();
+                                                                        safeSetState(
+                                                                            () {
+                                                                          _model
+                                                                              .tabBarController!
+                                                                              .animateTo(
+                                                                            0,
+                                                                            duration:
+                                                                                Duration(milliseconds: 300),
+                                                                            curve:
+                                                                                Curves.ease,
+                                                                          );
+                                                                        });
+
+                                                                        await _model
+                                                                            .conditionsPageViewController
+                                                                            ?.animateToPage(
+                                                                          0,
+                                                                          duration:
+                                                                              Duration(milliseconds: 500),
+                                                                          curve:
+                                                                              Curves.ease,
+                                                                        );
+                                                                        await _model
+                                                                            .medicationsPageViewController
+                                                                            ?.animateToPage(
+                                                                          0,
+                                                                          duration:
+                                                                              Duration(milliseconds: 500),
+                                                                          curve:
+                                                                              Curves.ease,
+                                                                        );
+                                                                        await _model
+                                                                            .medicationsPageViewController
+                                                                            ?.animateToPage(
+                                                                          0,
+                                                                          duration:
+                                                                              Duration(milliseconds: 500),
+                                                                          curve:
+                                                                              Curves.ease,
+                                                                        );
+                                                                        _model.currentConditionsPage =
+                                                                            0;
+                                                                        _model.currentMedicationspage =
+                                                                            0;
+                                                                        _model.currentNews2Page =
+                                                                            0;
+                                                                        safeSetState(
+                                                                            () {});
                                                                       }),
                                                                     ]);
 
@@ -3170,6 +3223,19 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             _model.patientSelectedForEdit =
                                                 null;
                                             safeSetState(() {});
+                                            await Future.delayed(
+                                              Duration(
+                                                milliseconds: 10,
+                                              ),
+                                            );
+                                            await _model
+                                                .patientsTablePageViewController
+                                                ?.animateToPage(
+                                              _model.currentPatientPage,
+                                              duration:
+                                                  Duration(milliseconds: 500),
+                                              curve: Curves.ease,
+                                            );
                                           },
                                           child: Text(
                                             'Patient',
@@ -3412,6 +3478,19 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             _model.patientSelectedForEdit =
                                                 null;
                                             safeSetState(() {});
+                                            await Future.delayed(
+                                              Duration(
+                                                milliseconds: 10,
+                                              ),
+                                            );
+                                            await _model
+                                                .patientsTablePageViewController
+                                                ?.animateToPage(
+                                              _model.currentPatientPage,
+                                              duration:
+                                                  Duration(milliseconds: 500),
+                                              curve: Curves.ease,
+                                            );
                                           },
                                           text: 'Back to Patients',
                                           icon: Icon(
@@ -4626,316 +4705,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               children: [
                                                                 TextSpan(
                                                                   text:
-                                                                      'Date of Birth  ',
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .titleMedium
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .readexPro(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .titleMedium
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .titleMedium
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .secondaryText,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .titleMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .titleMedium
-                                                                            .fontStyle,
-                                                                      ),
-                                                                ),
-                                                                TextSpan(
-                                                                  text: '*',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .error,
-                                                                  ),
-                                                                )
-                                                              ],
-                                                              style: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .titleMedium
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .readexPro(
-                                                                      fontWeight: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .titleMedium
-                                                                          .fontWeight,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .titleMedium
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .titleMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .titleMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ]
-                                                            .divide(SizedBox(
-                                                                width: 10.0))
-                                                            .around(SizedBox(
-                                                                width: 10.0)),
-                                                      ),
-                                                      FFButtonWidget(
-                                                        onPressed: () async {
-                                                          final _datePickedDate =
-                                                              await showDatePicker(
-                                                            context: context,
-                                                            initialDate:
-                                                                getCurrentTimestamp,
-                                                            firstDate:
-                                                                DateTime(1900),
-                                                            lastDate:
-                                                                (getCurrentTimestamp ??
-                                                                    DateTime(
-                                                                        2050)),
-                                                            builder: (context,
-                                                                child) {
-                                                              return wrapInMaterialDatePickerTheme(
-                                                                context,
-                                                                child!,
-                                                                headerBackgroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                headerForegroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .info,
-                                                                headerTextStyle:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .headlineLarge
-                                                                        .override(
-                                                                          font:
-                                                                              GoogleFonts.readexPro(
-                                                                            fontWeight:
-                                                                                FontWeight.w600,
-                                                                            fontStyle:
-                                                                                FlutterFlowTheme.of(context).headlineLarge.fontStyle,
-                                                                          ),
-                                                                          fontSize:
-                                                                              32.0,
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          fontWeight:
-                                                                              FontWeight.w600,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .headlineLarge
-                                                                              .fontStyle,
-                                                                        ),
-                                                                pickerBackgroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondaryBackground,
-                                                                pickerForegroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primaryText,
-                                                                selectedDateTimeBackgroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                selectedDateTimeForegroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .info,
-                                                                actionButtonForegroundColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primaryText,
-                                                                iconSize: 24.0,
-                                                              );
-                                                            },
-                                                          );
-
-                                                          if (_datePickedDate !=
-                                                              null) {
-                                                            safeSetState(() {
-                                                              _model.datePicked =
-                                                                  DateTime(
-                                                                _datePickedDate
-                                                                    .year,
-                                                                _datePickedDate
-                                                                    .month,
-                                                                _datePickedDate
-                                                                    .day,
-                                                              );
-                                                            });
-                                                          } else if (_model
-                                                                  .datePicked !=
-                                                              null) {
-                                                            safeSetState(() {
-                                                              _model.datePicked =
-                                                                  getCurrentTimestamp;
-                                                            });
-                                                          }
-                                                          if (_model
-                                                                  .patientMode ==
-                                                              PatientMode
-                                                                  .create) {
-                                                            _model.selectedDob =
-                                                                _model
-                                                                    .datePicked;
-                                                            safeSetState(() {});
-                                                          }
-                                                        },
-                                                        text: _model.selectedDob !=
-                                                                null
-                                                            ? dateTimeFormat(
-                                                                "y-MM-dd",
-                                                                _model
-                                                                    .selectedDob)
-                                                            : 'Select Date',
-                                                        icon: Icon(
-                                                          Icons
-                                                              .calendar_month_outlined,
-                                                          size: 30.0,
-                                                        ),
-                                                        options:
-                                                            FFButtonOptions(
-                                                          width: 200.0,
-                                                          height: 50.0,
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0),
-                                                          iconAlignment:
-                                                              IconAlignment.end,
-                                                          iconPadding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      0.0,
-                                                                      0.0,
-                                                                      0.0),
-                                                          iconColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
-                                                          color: Colors
-                                                              .transparent,
-                                                          textStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .titleLarge
-                                                                  .override(
-                                                                    font: GoogleFonts
-                                                                        .readexPro(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      fontStyle: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .titleLarge
-                                                                          .fontStyle,
-                                                                    ),
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                    fontSize:
-                                                                        20.0,
-                                                                    letterSpacing:
-                                                                        0.0,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .normal,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .titleLarge
-                                                                        .fontStyle,
-                                                                  ),
-                                                          elevation: 0.0,
-                                                          borderSide:
-                                                              BorderSide(
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .primary,
-                                                            width: 1.0,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      25.0),
-                                                          hoverColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .cardBlue,
-                                                          hoverBorderSide:
-                                                              BorderSide(
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .primary,
-                                                            width: 1.0,
-                                                          ),
-                                                          hoverTextColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
-                                                          hoverElevation: 8.0,
-                                                        ),
-                                                      ),
-                                                    ]
-                                                        .divide(SizedBox(
-                                                            height: 10.0))
-                                                        .around(SizedBox(
-                                                            height: 10.0)),
-                                                  ),
-                                                ]
-                                                    .divide(
-                                                        SizedBox(width: 20.0))
-                                                    .around(
-                                                        SizedBox(width: 20.0)),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.all(10.0),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.max,
-                                                children: [
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.max,
-                                                        children: [
-                                                          RichText(
-                                                            textScaler:
-                                                                MediaQuery.of(
-                                                                        context)
-                                                                    .textScaler,
-                                                            text: TextSpan(
-                                                              children: [
-                                                                TextSpan(
-                                                                  text:
                                                                       'Phone Number  ',
                                                                   style: FlutterFlowTheme.of(
                                                                           context)
@@ -6032,6 +5801,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                 null;
                                             _model.showPatientDetails = false;
                                             safeSetState(() {});
+                                            await Future.delayed(
+                                              Duration(
+                                                milliseconds: 10,
+                                              ),
+                                            );
                                             await _model
                                                 .patientsTablePageViewController
                                                 ?.animateToPage(
@@ -6226,6 +6000,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                 _model.showPatientDetails =
                                                     false;
                                                 safeSetState(() {});
+                                                await Future.delayed(
+                                                  Duration(
+                                                    milliseconds: 10,
+                                                  ),
+                                                );
                                                 await _model
                                                     .patientsTablePageViewController
                                                     ?.animateToPage(
@@ -7668,10 +7447,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                         padding: EdgeInsetsDirectional.fromSTEB(
                                             20.0, 10.0, 0.0, 0.0),
                                         child: Container(
-                                          width: 1250.0,
-                                          height: MediaQuery.sizeOf(context)
-                                                  .height *
-                                              1.0,
+                                          height: 957.0,
                                           decoration: BoxDecoration(
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryBackground,
@@ -9021,7 +8797,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                 Builder(
                                                                   builder:
                                                                       (context) {
-                                                                    final pages2 = functions
+                                                                    final conditionPages2 = functions
                                                                         .createPageIndices(
                                                                             _model.patientConditions.length,
                                                                             5)
@@ -9032,11 +8808,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                           MainAxisSize
                                                                               .max,
                                                                       children: List.generate(
-                                                                          pages2
+                                                                          conditionPages2
                                                                               .length,
-                                                                          (pages2Index) {
-                                                                        final pages2Item =
-                                                                            pages2[pages2Index];
+                                                                          (conditionPages2Index) {
+                                                                        final conditionPages2Item =
+                                                                            conditionPages2[conditionPages2Index];
                                                                         return InkWell(
                                                                           splashColor:
                                                                               Colors.transparent,
@@ -9048,11 +8824,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               Colors.transparent,
                                                                           onTap:
                                                                               () async {
-                                                                            _model.currentPatientPage =
-                                                                                pages2Item;
+                                                                            _model.currentConditionsPage =
+                                                                                conditionPages2Item;
                                                                             safeSetState(() {});
                                                                             await _model.conditionsPageViewController?.animateToPage(
-                                                                              _model.currentPatientPage,
+                                                                              _model.currentConditionsPage,
                                                                               duration: Duration(milliseconds: 500),
                                                                               curve: Curves.ease,
                                                                             );
@@ -9061,18 +8837,18 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               wrapWithModel(
                                                                             model:
                                                                                 _model.customDotComponentPageViewModels2.getModel(
-                                                                              pages2Item.toString(),
-                                                                              pages2Index,
+                                                                              conditionPages2Item.toString(),
+                                                                              conditionPages2Index,
                                                                             ),
                                                                             updateCallback: () =>
                                                                                 safeSetState(() {}),
                                                                             child:
                                                                                 CustomDotComponentPageViewWidget(
                                                                               key: Key(
-                                                                                'Key9no_${pages2Item.toString()}',
+                                                                                'Key9no_${conditionPages2Item.toString()}',
                                                                               ),
-                                                                              isSelected: _model.currentPatientPage == pages2Item,
-                                                                              assignedIdx: pages2Item,
+                                                                              isSelected: _model.currentConditionsPage == conditionPages2Item,
+                                                                              assignedIdx: conditionPages2Item,
                                                                             ),
                                                                           ),
                                                                         );
@@ -9400,8 +9176,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                       isAscending:
                                                                           _model
                                                                               .isAscendingMedicationTable,
-                                                                      topRIghtBorderRadius:
-                                                                          10.0,
                                                                       bgColor:
                                                                           Color(
                                                                               0xFFFDFDFF),
@@ -9627,7 +9401,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                 Builder(
                                                                   builder:
                                                                       (context) {
-                                                                    final pages2 = functions
+                                                                    final medicationPages2 = functions
                                                                         .createPageIndices(
                                                                             _model.patientMedications.length,
                                                                             5)
@@ -9638,11 +9412,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                           MainAxisSize
                                                                               .max,
                                                                       children: List.generate(
-                                                                          pages2
+                                                                          medicationPages2
                                                                               .length,
-                                                                          (pages2Index) {
-                                                                        final pages2Item =
-                                                                            pages2[pages2Index];
+                                                                          (medicationPages2Index) {
+                                                                        final medicationPages2Item =
+                                                                            medicationPages2[medicationPages2Index];
                                                                         return InkWell(
                                                                           splashColor:
                                                                               Colors.transparent,
@@ -9654,11 +9428,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               Colors.transparent,
                                                                           onTap:
                                                                               () async {
-                                                                            _model.currentPatientPage =
-                                                                                pages2Item;
+                                                                            _model.currentMedicationspage =
+                                                                                medicationPages2Item;
                                                                             safeSetState(() {});
                                                                             await _model.medicationsPageViewController?.animateToPage(
-                                                                              _model.currentPatientPage,
+                                                                              _model.currentMedicationspage,
                                                                               duration: Duration(milliseconds: 500),
                                                                               curve: Curves.ease,
                                                                             );
@@ -9667,18 +9441,18 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                               wrapWithModel(
                                                                             model:
                                                                                 _model.customDotComponentPageViewModels3.getModel(
-                                                                              pages2Item.toString(),
-                                                                              pages2Index,
+                                                                              medicationPages2Item.toString(),
+                                                                              medicationPages2Index,
                                                                             ),
                                                                             updateCallback: () =>
                                                                                 safeSetState(() {}),
                                                                             child:
                                                                                 CustomDotComponentPageViewWidget(
                                                                               key: Key(
-                                                                                'Key0qq_${pages2Item.toString()}',
+                                                                                'Key0qq_${medicationPages2Item.toString()}',
                                                                               ),
-                                                                              isSelected: _model.currentPatientPage == pages2Item,
-                                                                              assignedIdx: pages2Item,
+                                                                              isSelected: _model.currentMedicationspage == medicationPages2Item,
+                                                                              assignedIdx: medicationPages2Item,
                                                                             ),
                                                                           ),
                                                                         );
@@ -9701,7 +9475,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                           BoxDecoration(),
                                                       child: Column(
                                                         mainAxisSize:
-                                                            MainAxisSize.max,
+                                                            MainAxisSize.min,
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
                                                                 .start,
@@ -9987,232 +9761,290 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               if (_model
                                                                   .patientObservations
                                                                   .isNotEmpty) {
-                                                                return Column(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
-                                                                  children: [
-                                                                    Row(
-                                                                      mainAxisSize:
-                                                                          MainAxisSize
-                                                                              .max,
-                                                                      children:
-                                                                          [
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.recordedAtModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
+                                                                return Container(
+                                                                  height: 500.0,
+                                                                  decoration:
+                                                                      BoxDecoration(),
+                                                                  child: Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        children:
+                                                                            [
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
                                                                             child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'Date',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              topLeftBorderRadius: 10.0,
-                                                                              subHeader: 'Time',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.pulseRateModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'PR',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: '/min (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.bloodPressureModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'BP',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: 'mm Hg (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.respiratoryRateModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'RR',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: '/min (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.temperatureModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'Temp',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: '°F (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.airOxygenModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'Air/Oxygen',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: 'value (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.spO2Model,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'SpO2',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: '% (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              1,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.avpuModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'AVPU',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              subHeader: 'Value (score)',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        Expanded(
-                                                                          flex:
-                                                                              2,
-                                                                          child:
-                                                                              wrapWithModel(
-                                                                            model:
-                                                                                _model.nEWS2ScoreModel,
-                                                                            updateCallback: () =>
-                                                                                safeSetState(() {}),
-                                                                            child:
-                                                                                CustomTableHeaderComponentWidget(
-                                                                              columnName: 'NEWS2',
-                                                                              isSelected: false,
-                                                                              isAscending: false,
-                                                                              topRIghtBorderRadius: 10.0,
-                                                                              subHeader: 'score',
-                                                                              onClick: (columnName) async {},
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ].addToStart(SizedBox(width: 20.0)).addToEnd(
-                                                                              SizedBox(width: 20.0)),
-                                                                    ),
-                                                                    Builder(
-                                                                      builder:
-                                                                          (context) {
-                                                                        final newsRows = _model
-                                                                            .patientObservations
-                                                                            .unique((e) =>
-                                                                                e.recordedAt!)
-                                                                            .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                                                                            .map((e) => e.recordedAt)
-                                                                            .withoutNulls
-                                                                            .toList();
-
-                                                                        return Column(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          children: List.generate(
-                                                                              newsRows.length,
-                                                                              (newsRowsIndex) {
-                                                                            final newsRowsItem =
-                                                                                newsRows[newsRowsIndex];
-                                                                            return wrapWithModel(
-                                                                              model: _model.nEWSRowComponentModels.getModel(
-                                                                                newsRowsIndex.toString(),
-                                                                                newsRowsIndex,
-                                                                              ),
+                                                                                wrapWithModel(
+                                                                              model: _model.recordedAtModel,
                                                                               updateCallback: () => safeSetState(() {}),
-                                                                              child: NEWSRowComponentWidget(
-                                                                                key: Key(
-                                                                                  'Key8wu_${newsRowsIndex.toString()}',
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'Date',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                topLeftBorderRadius: 10.0,
+                                                                                subHeader: 'Time',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.pulseRateModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'PR',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: '/min (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.bloodPressureModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'BP',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: 'mm Hg (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.respiratoryRateModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'RR',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: '/min (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.temperatureModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'Temp',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: '°F (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.airOxygenModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'Air/Oxygen',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: 'value (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.spO2Model,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'SpO2',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: '% (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.avpuModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'AVPU',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                subHeader: 'Value (score)',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                2,
+                                                                            child:
+                                                                                wrapWithModel(
+                                                                              model: _model.nEWS2ScoreModel,
+                                                                              updateCallback: () => safeSetState(() {}),
+                                                                              child: CustomTableHeaderComponentWidget(
+                                                                                columnName: 'NEWS2',
+                                                                                isSelected: false,
+                                                                                isAscending: false,
+                                                                                topRIghtBorderRadius: 10.0,
+                                                                                subHeader: 'score',
+                                                                                onClick: (columnName) async {},
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        ].addToStart(SizedBox(width: 20.0)).addToEnd(SizedBox(width: 20.0)),
+                                                                      ),
+                                                                      Expanded(
+                                                                        child:
+                                                                            Builder(
+                                                                          builder:
+                                                                              (context) {
+                                                                            final newsPages =
+                                                                                functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+
+                                                                            return Container(
+                                                                              width: double.infinity,
+                                                                              height: 540.0,
+                                                                              child: Padding(
+                                                                                padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 40.0),
+                                                                                child: PageView.builder(
+                                                                                  controller: _model.nEWS2PageViewController ??= PageController(initialPage: max(0, min(0, newsPages.length - 1))),
+                                                                                  scrollDirection: Axis.horizontal,
+                                                                                  itemCount: newsPages.length,
+                                                                                  itemBuilder: (context, newsPagesIndex) {
+                                                                                    final newsPagesItem = newsPages[newsPagesIndex];
+                                                                                    return Column(
+                                                                                      mainAxisSize: MainAxisSize.max,
+                                                                                      children: [
+                                                                                        Builder(
+                                                                                          builder: (context) {
+                                                                                            final newsRows = functions.sliceDatesListForTablePages(_model.patientObservations.unique((e) => e.recordedAt!).sortedList(keyOf: (e) => e.recordedAt!, desc: true).map((e) => e.recordedAt).withoutNulls.toList(), newsPagesItem * 10, (newsPagesItem + 1) * 10)?.toList() ?? [];
+
+                                                                                            return Column(
+                                                                                              mainAxisSize: MainAxisSize.max,
+                                                                                              children: List.generate(newsRows.length, (newsRowsIndex) {
+                                                                                                final newsRowsItem = newsRows[newsRowsIndex];
+                                                                                                return wrapWithModel(
+                                                                                                  model: _model.nEWSRowComponentModels.getModel(
+                                                                                                    newsRowsIndex.toString(),
+                                                                                                    newsRowsIndex,
+                                                                                                  ),
+                                                                                                  updateCallback: () => safeSetState(() {}),
+                                                                                                  child: NEWSRowComponentWidget(
+                                                                                                    key: Key(
+                                                                                                      'Keyqy8_${newsRowsIndex.toString()}',
+                                                                                                    ),
+                                                                                                    observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                                    isLatest: newsRowsIndex == 0,
+                                                                                                  ),
+                                                                                                );
+                                                                                              }),
+                                                                                            );
+                                                                                          },
+                                                                                        ),
+                                                                                      ],
+                                                                                    );
+                                                                                  },
                                                                                 ),
-                                                                                observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
-                                                                                isLatest: newsRowsIndex == 0,
                                                                               ),
                                                                             );
-                                                                          }),
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ],
+                                                                          },
+                                                                        ),
+                                                                      ),
+                                                                      Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.center,
+                                                                        children:
+                                                                            [
+                                                                          Text(
+                                                                            'Pages',
+                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                  font: GoogleFonts.inter(
+                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  ),
+                                                                                  letterSpacing: 0.0,
+                                                                                  fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                          ),
+                                                                          Builder(
+                                                                            builder:
+                                                                                (context) {
+                                                                              final newsPages2 = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+
+                                                                              return Row(
+                                                                                mainAxisSize: MainAxisSize.max,
+                                                                                children: List.generate(newsPages2.length, (newsPages2Index) {
+                                                                                  final newsPages2Item = newsPages2[newsPages2Index];
+                                                                                  return InkWell(
+                                                                                    splashColor: Colors.transparent,
+                                                                                    focusColor: Colors.transparent,
+                                                                                    hoverColor: Colors.transparent,
+                                                                                    highlightColor: Colors.transparent,
+                                                                                    onTap: () async {
+                                                                                      _model.currentNews2Page = newsPages2Item;
+                                                                                      safeSetState(() {});
+                                                                                      await _model.nEWS2PageViewController?.animateToPage(
+                                                                                        _model.currentNews2Page,
+                                                                                        duration: Duration(milliseconds: 500),
+                                                                                        curve: Curves.ease,
+                                                                                      );
+                                                                                    },
+                                                                                    child: wrapWithModel(
+                                                                                      model: _model.customDotComponentPageViewModels4.getModel(
+                                                                                        newsPages2Item.toString(),
+                                                                                        newsPages2Index,
+                                                                                      ),
+                                                                                      updateCallback: () => safeSetState(() {}),
+                                                                                      child: CustomDotComponentPageViewWidget(
+                                                                                        key: Key(
+                                                                                          'Keymho_${newsPages2Item.toString()}',
+                                                                                        ),
+                                                                                        isSelected: _model.currentNews2Page == newsPages2Item,
+                                                                                        assignedIdx: newsPages2Item,
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                }).divide(SizedBox(width: 10.0)),
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        ].divide(SizedBox(width: 10.0)),
+                                                                      ),
+                                                                    ],
+                                                                  ),
                                                                 );
                                                               } else {
                                                                 return Row(

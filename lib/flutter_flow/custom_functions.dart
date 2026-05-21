@@ -186,6 +186,19 @@ List<MedicationStruct>? sliceMedicationsListForTablePages(
   return medications.sublist(startIndex, endIndex);
 }
 
+List<DateTime>? sliceDatesListForTablePages(
+  List<DateTime>? dates,
+  int startIndex,
+  int endIndex,
+) {
+  // I want the function to take in patients list, and return the sublist from startIndex to endIndex. If endIndex is greater that patients length, return only up to the patients length.
+  if (dates == null || startIndex >= dates.length) {
+    return [];
+  }
+  endIndex = endIndex > dates.length ? dates.length : endIndex;
+  return dates.sublist(startIndex, endIndex);
+}
+
 List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
   if (entries == null || entries is! List) {
     return <ObservationStruct>[];

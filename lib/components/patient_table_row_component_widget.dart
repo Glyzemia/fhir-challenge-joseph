@@ -66,8 +66,8 @@ class _PatientTableRowComponentWidgetState
           FadeEffect(
             curve: Curves.easeInOut,
             delay: 0.0.ms,
-            duration: 500.0.ms,
-            begin: 0.5,
+            duration: 1000.0.ms,
+            begin: 0.0,
             end: 1.0,
           ),
         ],
