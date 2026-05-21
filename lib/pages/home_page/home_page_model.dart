@@ -148,6 +148,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   int ptItems = 0;
 
+  bool isPageLoading = true;
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();
@@ -190,14 +192,15 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel2;
   // Model for TableHeaderComponentActions.
   late CustomTableHeaderComponentModel tableHeaderComponentActionsModel;
-  // State field(s) for PageView widget.
-  PageController? pageViewController1;
+  // State field(s) for PatientsTablePageView widget.
+  PageController? patientsTablePageViewController;
 
-  int get pageViewCurrentIndex1 => pageViewController1 != null &&
-          pageViewController1!.hasClients &&
-          pageViewController1!.page != null
-      ? pageViewController1!.page!.round()
-      : 0;
+  int get patientsTablePageViewCurrentIndex =>
+      patientsTablePageViewController != null &&
+              patientsTablePageViewController!.hasClients &&
+              patientsTablePageViewController!.page != null
+          ? patientsTablePageViewController!.page!.round()
+          : 0;
   // Models for PatientTableRowComponent dynamic component.
   late FlutterFlowDynamicModels<PatientTableRowComponentModel>
       patientTableRowComponentModels;
@@ -286,14 +289,15 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel tableHeaderComponentDOBModel2;
   // Model for TableHeaderComponentPhoneNumber.
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel3;
-  // State field(s) for PageView widget.
-  PageController? pageViewController2;
+  // State field(s) for ConditionsPageView widget.
+  PageController? conditionsPageViewController;
 
-  int get pageViewCurrentIndex2 => pageViewController2 != null &&
-          pageViewController2!.hasClients &&
-          pageViewController2!.page != null
-      ? pageViewController2!.page!.round()
-      : 0;
+  int get conditionsPageViewCurrentIndex =>
+      conditionsPageViewController != null &&
+              conditionsPageViewController!.hasClients &&
+              conditionsPageViewController!.page != null
+          ? conditionsPageViewController!.page!.round()
+          : 0;
   // Models for ConditioonTableRowComponent dynamic component.
   late FlutterFlowDynamicModels<ConditioonTableRowComponentModel>
       conditioonTableRowComponentModels;
@@ -310,14 +314,15 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel4;
   // Model for TableHeaderComponentPhoneNumber.
   late CustomTableHeaderComponentModel tableHeaderComponentPhoneNumberModel5;
-  // State field(s) for PageView widget.
-  PageController? pageViewController3;
+  // State field(s) for MedicationsPageView widget.
+  PageController? medicationsPageViewController;
 
-  int get pageViewCurrentIndex3 => pageViewController3 != null &&
-          pageViewController3!.hasClients &&
-          pageViewController3!.page != null
-      ? pageViewController3!.page!.round()
-      : 0;
+  int get medicationsPageViewCurrentIndex =>
+      medicationsPageViewController != null &&
+              medicationsPageViewController!.hasClients &&
+              medicationsPageViewController!.page != null
+          ? medicationsPageViewController!.page!.round()
+          : 0;
   // Models for MedicationsTableRowComponent dynamic component.
   late FlutterFlowDynamicModels<MedicationsTableRowComponentModel>
       medicationsTableRowComponentModels;
