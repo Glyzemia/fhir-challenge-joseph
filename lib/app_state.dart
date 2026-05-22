@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/backend/schema/structs/index.dart';
+import 'flutter_flow/flutter_flow_util.dart';
 
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
@@ -92,5 +93,43 @@ class FFAppState extends ChangeNotifier {
 
   void insertAtIndexInPractitioners(int index, PractitionerStruct value) {
     practitioners.insert(index, value);
+  }
+
+  String _hospitalID = 'bde7e6cc-c868-49ed-83cd-14028a16cfc2';
+  String get hospitalID => _hospitalID;
+  set hospitalID(String value) {
+    _hospitalID = value;
+  }
+
+  List<LocationStruct> _hospitalWards = [
+    LocationStruct.fromSerializableMap(jsonDecode(
+        '{\"locationID\":\"Hello World\",\"locationName\":\"Hello World\",\"locationType\":\"Hello World\"}'))
+  ];
+  List<LocationStruct> get hospitalWards => _hospitalWards;
+  set hospitalWards(List<LocationStruct> value) {
+    _hospitalWards = value;
+  }
+
+  void addToHospitalWards(LocationStruct value) {
+    hospitalWards.add(value);
+  }
+
+  void removeFromHospitalWards(LocationStruct value) {
+    hospitalWards.remove(value);
+  }
+
+  void removeAtIndexFromHospitalWards(int index) {
+    hospitalWards.removeAt(index);
+  }
+
+  void updateHospitalWardsAtIndex(
+    int index,
+    LocationStruct Function(LocationStruct) updateFn,
+  ) {
+    hospitalWards[index] = updateFn(_hospitalWards[index]);
+  }
+
+  void insertAtIndexInHospitalWards(int index, LocationStruct value) {
+    hospitalWards.insert(index, value);
   }
 }

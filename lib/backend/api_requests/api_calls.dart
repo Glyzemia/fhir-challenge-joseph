@@ -9,16 +9,16 @@ export 'api_manager.dart' show ApiCallResponse;
 
 const _kPrivateApiFunctionName = 'ffPrivateApiCall';
 
-class GetPatientObservationByIDCall {
+class GetAllObservationsByIDForPatientCall {
   static Future<ApiCallResponse> call({
     String? token = '',
     String? id = '',
     String? optionalQueries = '',
   }) async {
     return ApiManager.instance.makeApiCall(
-      callName: 'Get Patient Observation by ID',
+      callName: 'Get All Observations by ID for Patient',
       apiUrl:
-          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}&date=ge2026-05-18&_sort=-value-date&_count=9',
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',
@@ -99,6 +99,107 @@ class GetAdmissionEncounterByPatientIDCall {
       params: {
         '_total': "accurate",
       },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  static List? entries(dynamic response) => getJsonField(
+        response,
+        r'''$.entry''',
+        true,
+      ) as List?;
+  static int? total(dynamic response) => castToType<int>(getJsonField(
+        response,
+        r'''$.total''',
+      ));
+  static String? encounterID(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[0].resource.id''',
+      ));
+  static String? encounterStatus(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[0].resource.status''',
+      ));
+  static String? encounterType(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.class.code''',
+      ));
+  static String? admissionDate(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.period.start''',
+      ));
+  static String? wardName(dynamic response) => castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.location[:].location.display''',
+      ));
+  static String? admittedUnder(dynamic response) =>
+      castToType<String>(getJsonField(
+        response,
+        r'''$.entry[:].resource.participant[:].individual.display''',
+      ));
+}
+
+class PatchAdmissionEncountersForGlyzemiaCall {
+  static Future<ApiCallResponse> call({
+    String? token = '',
+    String? encounterId = '',
+    String? practitionerId = '',
+    String? practitionerDisplay = '',
+  }) async {
+    final ffApiRequestBody = '''
+[
+  {
+    "op": "add",
+    "path": "/participant",
+    "value": [
+      {
+        "type": [
+          {
+            "text": "Admitted under"
+          }
+        ],
+        "individual": {
+          "reference": "Practitioner/${escapeStringForJson(practitionerId)}",
+          "display": "${escapeStringForJson(practitionerDisplay)}"
+        }
+      }
+    ]
+  },
+  {
+    "op": "add",
+    "path": "/location",
+    "value": [
+      {
+        "location": {
+          "reference": "Location/871835e2-6d49-4891-a1f9-af53e5cd927f",
+          "display": "FIRST FLOOR"
+        },
+        "status": "active"
+      }
+    ]
+  }
+]''';
+    return ApiManager.instance.makeApiCall(
+      callName: 'Patch Admission Encounters for Glyzemia',
+      apiUrl:
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Encounter/${encounterId}',
+      callType: ApiCallType.PATCH,
+      headers: {
+        'Authorization': 'Bearer ${token}',
+        'Content-Type': 'application/json-patch+json',
+      },
+      params: {},
+      body: ffApiRequestBody,
+      bodyType: BodyType.JSON,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -285,11 +386,15 @@ class GetAllPractitionersCall {
           .map((x) => castToType<String>(x))
           .withoutNulls
           .toList();
-  static List? prefix(dynamic response) => getJsonField(
+  static List<String>? prefix(dynamic response) => (getJsonField(
         response,
-        r'''$.entry[:].resource.name[:].prefix''',
+        r'''$.entry[:].resource.name[:].prefix[0]''',
         true,
-      ) as List?;
+      ) as List?)
+          ?.withoutNulls
+          .map((x) => castToType<String>(x))
+          .withoutNulls
+          .toList();
 }
 
 class SearchPatientsCall {

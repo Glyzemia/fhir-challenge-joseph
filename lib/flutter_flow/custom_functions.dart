@@ -263,6 +263,7 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
       return 'is_individual_3';
 
     if (value == 'respiratory rate') return 'Respiratory rate';
+    if (value == "Hemoglobin A1c/Hemoglobin.total in Blood") return 'HbA1c';
     if (value == 'hypercapnic respiratory failure')
       return 'Hypercapnic respiratory failure';
 
@@ -1853,4 +1854,15 @@ int calculateNews2IndividualScores(
     default:
       return 0;
   }
+}
+
+int calculateAgeFromDOB(DateTime dateOfBirth) {
+// need to calculate age (as integer) from date of birth.
+  DateTime today = DateTime.now();
+  int age = today.year - dateOfBirth.year;
+  if (today.month < dateOfBirth.month ||
+      (today.month == dateOfBirth.month && today.day < dateOfBirth.day)) {
+    age--;
+  }
+  return age;
 }

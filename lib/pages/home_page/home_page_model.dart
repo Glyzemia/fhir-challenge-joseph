@@ -1,15 +1,15 @@
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
-import '/components/conditioon_table_row_component_widget.dart';
-import '/components/custom_dot_component_page_view_widget.dart';
-import '/components/custom_table_header_component_widget.dart';
-import '/components/empty_widget_widget.dart';
-import '/components/fire_component_widget.dart';
-import '/components/medications_table_row_component_widget.dart';
-import '/components/menu_items_component_widget.dart';
-import '/components/n_e_w_s_row_component_widget.dart';
-import '/components/patient_table_row_component_widget.dart';
+import '/components/conditioon_table_row_component/conditioon_table_row_component_widget.dart';
+import '/components/custom_dot_component_page_view/custom_dot_component_page_view_widget.dart';
+import '/components/custom_table_header_component/custom_table_header_component_widget.dart';
+import '/components/empty_widget/empty_widget_widget.dart';
+import '/components/fire_component/fire_component_widget.dart';
+import '/components/medications_table_row_component/medications_table_row_component_widget.dart';
+import '/components/menu_items_component/menu_items_component_widget.dart';
+import '/components/n_e_w_s_row_component/n_e_w_s_row_component_widget.dart';
+import '/components/patient_table_row_component/patient_table_row_component_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:async';
@@ -158,6 +158,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   int currentNews2Page = 0;
 
   bool isPatientDetailsLoading = false;
+
+  String? randomPractitioner;
 
   ///  State fields for stateful widgets in this page.
 
@@ -381,6 +383,8 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   // Models for CustomDotComponentPageView dynamic component.
   late FlutterFlowDynamicModels<CustomDotComponentPageViewModel>
       customDotComponentPageViewModels4;
+  // Stores action output result for [Backend Call - API (Patch Admission Encounters for Glyzemia)] action in IconButton widget.
+  ApiCallResponse? patchAdmission;
 
   @override
   void initState(BuildContext context) {

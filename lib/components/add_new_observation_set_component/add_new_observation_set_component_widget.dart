@@ -1,5 +1,5 @@
 import '/backend/api_requests/api_calls.dart';
-import '/components/close_component_widget.dart';
+import '/components/close_component/close_component_widget.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_expanded_image_view.dart';

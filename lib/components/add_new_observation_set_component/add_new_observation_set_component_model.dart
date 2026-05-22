@@ -1,5 +1,5 @@
 import '/backend/api_requests/api_calls.dart';
-import '/components/close_component_widget.dart';
+import '/components/close_component/close_component_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'add_new_observation_set_component_widget.dart'
