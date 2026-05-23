@@ -263,7 +263,8 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
       return 'is_individual_3';
 
     if (value == 'respiratory rate') return 'Respiratory rate';
-    if (value == "Hemoglobin A1c/Hemoglobin.total in Blood") return 'HbA1c';
+    if (value == 'body mass index (bmi) [ratio]') return 'BMI';
+    if (value == 'hemoglobin a1c/hemoglobin.total in blood') return 'HbA1c';
     if (value == 'hypercapnic respiratory failure')
       return 'Hypercapnic respiratory failure';
 
@@ -1865,4 +1866,331 @@ int calculateAgeFromDOB(DateTime dateOfBirth) {
     age--;
   }
   return age;
+}
+
+DateTime calculatedDOBFromAgeinYears(double age) {
+  // calculate date of birth from age. If age is given in decimals like 2.5, ensure that the date is  2 years and 6 months ago.
+  int years = age.floor();
+  int months = ((age - years) * 12).round();
+  DateTime today = DateTime.now();
+  DateTime dob = DateTime(today.year - years, today.month - months, today.day);
+  return dob;
+}
+
+dynamic buildDiabetesPOSTJSON(
+  String patientID,
+  String encounterID,
+  String diabetesCode,
+  String diabetesCodeName,
+  String diabetesDisplayText,
+  String diabetesOnsetDate,
+  String recordedAt,
+  String insulinName,
+  int morningInsulinDose,
+  int afternoonInsulinDose,
+  int nightInsulinDose,
+  String ohaName,
+  int morningOHADose,
+  int? afternoonOHADose,
+  int? nightOHADose,
+) {
+  return {
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:diabetes-condition",
+        "resource": {
+          "resourceType": "Condition",
+          "identifier": [
+            {
+              "system":
+                  "https://glyzemia.app/fhir/identifier/diabetes-condition",
+              "value": "Patient-${patientID}-diabetes"
+            }
+          ],
+          "clinicalStatus": {
+            "coding": [
+              {
+                "system":
+                    "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                "code": "active",
+                "display": "Active"
+              }
+            ]
+          },
+          "verificationStatus": {
+            "coding": [
+              {
+                "system":
+                    "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+                "code": "confirmed",
+                "display": "Confirmed"
+              }
+            ]
+          },
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/condition-category",
+                  "code": "problem-list-item",
+                  "display": "Problem List Item"
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": diabetesCode,
+                "display": diabetesCodeName
+              }
+            ],
+            "text": diabetesDisplayText
+          },
+          "subject": {"reference": "Patient/${patientID}"},
+          "onsetDateTime": diabetesOnsetDate
+        },
+        "request": {
+          "method": "POST",
+          "url": "Condition",
+          "ifNoneExist":
+              "identifier=https://glyzemia.app/fhir/identifier/diabetes-condition|Patient-${patientID}-diabetes"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:home-insulin-1",
+        "resource": {
+          "resourceType": "MedicationStatement",
+          "identifier": [
+            {
+              "system": "https://glyzemia.app/fhir/identifier/home-medication",
+              "value": "Encounter-${encounterID}-home-insulin-1"
+            }
+          ],
+          "status": "active",
+          "category": {"text": "Home medication"},
+          "medicationCodeableConcept": {"text": insulinName},
+          "subject": {"reference": "Patient/${patientID}"},
+          "context": {"reference": "Encounter/${encounterID}"},
+          "effectiveDateTime": recordedAt,
+          "dateAsserted": recordedAt,
+          "dosage": [
+            {
+              "sequence": 1,
+              "text": "Morning dose",
+              "timing": {
+                "code": {"text": "Morning"}
+              },
+              "route": {"text": "Subcutaneous"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {
+                    "value": morningInsulinDose,
+                    "unit": "unit",
+                    "system": "http://unitsofmeasure.org",
+                    "code": "U"
+                  }
+                }
+              ]
+            },
+            {
+              "sequence": 2,
+              "text": "Afternoon dose",
+              "timing": {
+                "code": {"text": "Afternoon"}
+              },
+              "route": {"text": "Subcutaneous"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {
+                    "value": afternoonInsulinDose,
+                    "unit": "unit",
+                    "system": "http://unitsofmeasure.org",
+                    "code": "U"
+                  }
+                }
+              ]
+            },
+            {
+              "sequence": 3,
+              "text": "Night dose",
+              "timing": {
+                "code": {"text": "Night"}
+              },
+              "route": {"text": "Subcutaneous"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {
+                    "value": nightInsulinDose,
+                    "unit": "unit",
+                    "system": "http://unitsofmeasure.org",
+                    "code": "U"
+                  }
+                }
+              ]
+            }
+          ],
+          "note": [
+            {"text": "Home insulin dose pattern"}
+          ]
+        },
+        "request": {
+          "method": "POST",
+          "url": "MedicationStatement",
+          "ifNoneExist":
+              "identifier=https://glyzemia.app/fhir/identifier/home-medication|Encounter-${encounterID}-home-insulin-1"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:home-oha-1",
+        "resource": {
+          "resourceType": "MedicationStatement",
+          "identifier": [
+            {
+              "system": "https://glyzemia.app/fhir/identifier/home-medication",
+              "value": "Encounter-${encounterID}-home-oha-1"
+            }
+          ],
+          "status": "active",
+          "category": {"text": "Home medication"},
+          "medicationCodeableConcept": {"text": ohaName},
+          "subject": {"reference": "Patient/${patientID}"},
+          "context": {"reference": "Encounter/${encounterID}"},
+          "effectiveDateTime": recordedAt,
+          "dateAsserted": recordedAt,
+          "dosage": [
+            {
+              "sequence": 1,
+              "text": "Morning dose",
+              "timing": {
+                "code": {"text": "Morning"}
+              },
+              "route": {"text": "Oral"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {"value": morningOHADose, "unit": "tablet"}
+                }
+              ]
+            },
+            {
+              "sequence": 2,
+              "text": "Afternoon dose",
+              "timing": {
+                "code": {"text": "Afternoon"}
+              },
+              "route": {"text": "Oral"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {"value": afternoonOHADose, "unit": "tablet"}
+                }
+              ]
+            },
+            {
+              "sequence": 3,
+              "text": "Night dose",
+              "timing": {
+                "code": {"text": "Night"}
+              },
+              "route": {"text": "Oral"},
+              "doseAndRate": [
+                {
+                  "doseQuantity": {"value": nightOHADose, "unit": "tablet"}
+                }
+              ]
+            }
+          ],
+          "note": [
+            {"text": "Home OHA dose pattern"}
+          ]
+        },
+        "request": {
+          "method": "POST",
+          "url": "MedicationStatement",
+          "ifNoneExist":
+              "identifier=https://glyzemia.app/fhir/identifier/home-medication|Encounter-${encounterID}-home-oha-1"
+        }
+      }
+    ]
+  };
+}
+
+List<MedicationStatementStruct> parseFhirMedicationStatement(
+    List<dynamic>? entries) {
+  final List<MedicationStatementStruct> parsedList = [];
+
+  if (entries == null || entries is! List) {
+    return parsedList;
+  }
+
+  for (final entry in entries) {
+    try {
+      final resource = entry?['resource'];
+
+      if (resource == null ||
+          resource['resourceType'] != 'MedicationStatement') {
+        continue;
+      }
+
+      final medicationName =
+          resource['medicationCodeableConcept']?['text']?.toString() ?? '';
+
+      int morningDose = 0;
+      int afternoonDose = 0;
+      int nightDose = 0;
+      String route = '';
+
+      final dosageList = resource['dosage'];
+
+      if (dosageList != null && dosageList is List) {
+        for (final dosage in dosageList) {
+          final sequence = dosage?['sequence'];
+
+          final doseValueRaw =
+              dosage?['doseAndRate']?[0]?['doseQuantity']?['value'];
+
+          int doseValue = 0;
+
+          if (doseValueRaw is int) {
+            doseValue = doseValueRaw;
+          } else if (doseValueRaw is double) {
+            doseValue = doseValueRaw.round();
+          } else if (doseValueRaw is String) {
+            doseValue = int.tryParse(doseValueRaw) ?? 0;
+          }
+
+          final routeText = dosage?['route']?['text']?.toString() ?? '';
+
+          if (route.isEmpty && routeText.isNotEmpty) {
+            route = routeText;
+          }
+
+          if (sequence == 1) {
+            morningDose = doseValue;
+          } else if (sequence == 2) {
+            afternoonDose = doseValue;
+          } else if (sequence == 3) {
+            nightDose = doseValue;
+          }
+        }
+      }
+
+      parsedList.add(
+        MedicationStatementStruct(
+          medicationName: medicationName,
+          morningDose: morningDose,
+          afternoonDose: afternoonDose,
+          nightDose: nightDose,
+          route: route,
+        ),
+      );
+    } catch (e) {
+      continue;
+    }
+  }
+
+  return parsedList;
 }

@@ -132,4 +132,44 @@ class FFAppState extends ChangeNotifier {
   void insertAtIndexInHospitalWards(int index, LocationStruct value) {
     hospitalWards.insert(index, value);
   }
+
+  List<DiabetesTypesStruct> _diabetesTypes = [
+    DiabetesTypesStruct.fromSerializableMap(jsonDecode(
+        '{\"code\":\"44054006\",\"codeName\":\"Diabetes mellitus type 2\",\"displayName\":\"Type 2 Diabetes Mellitus\",\"onsetDateTIme\":\"l1779516005465\"}')),
+    DiabetesTypesStruct.fromSerializableMap(jsonDecode(
+        '{\"code\":\"46635009\",\"codeName\":\"Diabetes mellitus type 1\",\"displayName\":\"Type 1 Diabetes Mellitus\",\"onsetDateTIme\":\"l1779516063740\"}')),
+    DiabetesTypesStruct.fromSerializableMap(jsonDecode(
+        '{\"code\":\"11687002\",\"codeName\":\"Gestational diabetes mellitus (disorder)\",\"displayName\":\"Gestational Diabetes Mellitus\",\"onsetDateTIme\":\"l1779544016708\"}')),
+    DiabetesTypesStruct.fromSerializableMap(jsonDecode(
+        '{\"code\":\"609561005\",\"codeName\":\"Maturity-onset diabetes of the young (disorder)\",\"displayName\":\"MODY\",\"onsetDateTIme\":\"l1779544135267\"}')),
+    DiabetesTypesStruct.fromSerializableMap(jsonDecode(
+        '{\"code\":\"426875007\",\"codeName\":\" Latent autoimmune diabetes mellitus in adult (disorder)\",\"displayName\":\"LADA\",\"onsetDateTIme\":\"l1779544192227\"}'))
+  ];
+  List<DiabetesTypesStruct> get diabetesTypes => _diabetesTypes;
+  set diabetesTypes(List<DiabetesTypesStruct> value) {
+    _diabetesTypes = value;
+  }
+
+  void addToDiabetesTypes(DiabetesTypesStruct value) {
+    diabetesTypes.add(value);
+  }
+
+  void removeFromDiabetesTypes(DiabetesTypesStruct value) {
+    diabetesTypes.remove(value);
+  }
+
+  void removeAtIndexFromDiabetesTypes(int index) {
+    diabetesTypes.removeAt(index);
+  }
+
+  void updateDiabetesTypesAtIndex(
+    int index,
+    DiabetesTypesStruct Function(DiabetesTypesStruct) updateFn,
+  ) {
+    diabetesTypes[index] = updateFn(_diabetesTypes[index]);
+  }
+
+  void insertAtIndexInDiabetesTypes(int index, DiabetesTypesStruct value) {
+    diabetesTypes.insert(index, value);
+  }
 }
