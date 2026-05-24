@@ -6715,6 +6715,99 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       ),
                                                     ),
                                                   ),
+                                                  if (kDebugMode)
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.all(10.0),
+                                                      child: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.max,
+                                                        children: [
+                                                          InkWell(
+                                                            splashColor: Colors
+                                                                .transparent,
+                                                            focusColor: Colors
+                                                                .transparent,
+                                                            hoverColor: Colors
+                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            onTap: () async {
+                                                              await Clipboard.setData(
+                                                                  ClipboardData(
+                                                                      text: _model
+                                                                          .patientSelectedForDetails!
+                                                                          .identifier));
+                                                            },
+                                                            child: Icon(
+                                                              Icons
+                                                                  .content_copy_rounded,
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .primary,
+                                                              size: 24.0,
+                                                            ),
+                                                          ),
+                                                          InkWell(
+                                                            splashColor: Colors
+                                                                .transparent,
+                                                            focusColor: Colors
+                                                                .transparent,
+                                                            hoverColor: Colors
+                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            onTap: () async {
+                                                              await Clipboard.setData(
+                                                                  ClipboardData(
+                                                                      text: GetAdmissionEncounterByPatientIDCall
+                                                                          .encounterID(
+                                                                patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                    .jsonBody,
+                                                              )!));
+                                                            },
+                                                            child: Icon(
+                                                              Icons
+                                                                  .content_copy_rounded,
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .tertiary,
+                                                              size: 24.0,
+                                                            ),
+                                                          ),
+                                                          InkWell(
+                                                            splashColor: Colors
+                                                                .transparent,
+                                                            focusColor: Colors
+                                                                .transparent,
+                                                            hoverColor: Colors
+                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            onTap: () async {
+                                                              await Clipboard.setData(ClipboardData(
+                                                                  text: functions.getRandomStringFromList(FFAppState()
+                                                                      .practitioners
+                                                                      .map((e) =>
+                                                                          e.id)
+                                                                      .toList())));
+                                                            },
+                                                            child: Icon(
+                                                              Icons
+                                                                  .content_copy_rounded,
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .error,
+                                                              size: 24.0,
+                                                            ),
+                                                          ),
+                                                        ].divide(SizedBox(
+                                                            height: 20.0)),
+                                                      ),
+                                                    ),
                                                   if ((GetAdmissionEncounterByPatientIDCall
                                                               .total(
                                                             patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
@@ -10293,18 +10386,21 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                                                     mainAxisSize: MainAxisSize.max,
                                                                                                     children: List.generate(newsRows.length, (newsRowsIndex) {
                                                                                                       final newsRowsItem = newsRows[newsRowsIndex];
-                                                                                                      return wrapWithModel(
-                                                                                                        model: _model.nEWSRowComponentModels.getModel(
-                                                                                                          newsRowsIndex.toString(),
-                                                                                                          newsRowsIndex,
-                                                                                                        ),
-                                                                                                        updateCallback: () => safeSetState(() {}),
-                                                                                                        child: NEWSRowComponentWidget(
-                                                                                                          key: Key(
-                                                                                                            'Keyqy8_${newsRowsIndex.toString()}',
+                                                                                                      return Visibility(
+                                                                                                        visible: _model.patientObservations.where((e) => (e.recordedAt == newsRowsItem) && (e.name == 'NEWS2 total score')).toList().firstOrNull?.value != null && _model.patientObservations.where((e) => (e.recordedAt == newsRowsItem) && (e.name == 'NEWS2 total score')).toList().firstOrNull?.value != '',
+                                                                                                        child: wrapWithModel(
+                                                                                                          model: _model.nEWSRowComponentModels.getModel(
+                                                                                                            newsRowsIndex.toString(),
+                                                                                                            newsRowsIndex,
                                                                                                           ),
-                                                                                                          observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
-                                                                                                          isLatest: newsRowsIndex == 0,
+                                                                                                          updateCallback: () => safeSetState(() {}),
+                                                                                                          child: NEWSRowComponentWidget(
+                                                                                                            key: Key(
+                                                                                                              'Keyqy8_${newsRowsIndex.toString()}',
+                                                                                                            ),
+                                                                                                            observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                                            isLatest: newsRowsIndex == 0,
+                                                                                                          ),
                                                                                                         ),
                                                                                                       );
                                                                                                     }),
@@ -10665,6 +10761,38 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                               size: 300.0,
                                                             ),
                                                           ),
+                                                        ),
+                                                        Text(
+                                                          'OPEN CHART',
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .headlineLarge
+                                                              .override(
+                                                                font: GoogleFonts
+                                                                    .readexPro(
+                                                                  fontWeight: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .headlineLarge
+                                                                      .fontWeight,
+                                                                  fontStyle: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .headlineLarge
+                                                                      .fontStyle,
+                                                                ),
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontWeight: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .headlineLarge
+                                                                    .fontWeight,
+                                                                fontStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .headlineLarge
+                                                                    .fontStyle,
+                                                              ),
                                                         ),
                                                       ],
                                                     ),

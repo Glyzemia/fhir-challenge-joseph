@@ -10,10 +10,12 @@ class CustomDotComponentPageViewWidget extends StatefulWidget {
     super.key,
     bool? isSelected,
     required this.assignedIdx,
+    this.assignedDate,
   }) : this.isSelected = isSelected ?? false;
 
   final bool isSelected;
   final int? assignedIdx;
+  final DateTime? assignedDate;
 
   @override
   State<CustomDotComponentPageViewWidget> createState() =>
@@ -47,41 +49,90 @@ class _CustomDotComponentPageViewWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 30.0,
-      height: 30.0,
-      decoration: BoxDecoration(
-        color: widget.isSelected
-            ? FlutterFlowTheme.of(context).primary
-            : FlutterFlowTheme.of(context).cardBlue,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: widget.isSelected ? 0.0 : 4.0,
-            color: Color(0x33000000),
-            offset: Offset(
-              widget.isSelected ? 0.0 : 2.0,
-              widget.isSelected ? 0.0 : 2.0,
-            ),
-          )
-        ],
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      alignment: AlignmentDirectional(0.0, 0.0),
-      child: Text(
-        ((widget.assignedIdx!) + 1).toString(),
-        style: FlutterFlowTheme.of(context).bodyMedium.override(
-              font: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-              ),
+    return Builder(
+      builder: (context) {
+        if (widget.assignedDate != null) {
+          return Container(
+            width: widget.isSelected ? 80.0 : 30.0,
+            height: 30.0,
+            decoration: BoxDecoration(
               color: widget.isSelected
-                  ? FlutterFlowTheme.of(context).info
-                  : FlutterFlowTheme.of(context).primary,
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.w600,
-              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                  ? FlutterFlowTheme.of(context).primary
+                  : FlutterFlowTheme.of(context).cardBlue,
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: widget.isSelected ? 0.0 : 4.0,
+                  color: Color(0x33000000),
+                  offset: Offset(
+                    widget.isSelected ? 0.0 : 2.0,
+                    widget.isSelected ? 0.0 : 2.0,
+                  ),
+                )
+              ],
+              borderRadius: BorderRadius.circular(10.0),
             ),
-      ),
+            alignment: AlignmentDirectional(0.0, 0.0),
+            child: Text(
+              widget.isSelected
+                  ? dateTimeFormat("d-MM-yy", widget.assignedDate)
+                  : dateTimeFormat("d", widget.assignedDate),
+              style: FlutterFlowTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontStyle:
+                          FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                    ),
+                    color: widget.isSelected
+                        ? FlutterFlowTheme.of(context).info
+                        : FlutterFlowTheme.of(context).primary,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                    fontStyle:
+                        FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                  ),
+            ),
+          );
+        } else {
+          return Container(
+            width: 30.0,
+            height: 30.0,
+            decoration: BoxDecoration(
+              color: widget.isSelected
+                  ? FlutterFlowTheme.of(context).primary
+                  : FlutterFlowTheme.of(context).cardBlue,
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: widget.isSelected ? 0.0 : 4.0,
+                  color: Color(0x33000000),
+                  offset: Offset(
+                    widget.isSelected ? 0.0 : 2.0,
+                    widget.isSelected ? 0.0 : 2.0,
+                  ),
+                )
+              ],
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            alignment: AlignmentDirectional(0.0, 0.0),
+            child: Text(
+              ((widget.assignedIdx!) + 1).toString(),
+              style: FlutterFlowTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontStyle:
+                          FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                    ),
+                    color: widget.isSelected
+                        ? FlutterFlowTheme.of(context).info
+                        : FlutterFlowTheme.of(context).primary,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                    fontStyle:
+                        FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                  ),
+            ),
+          );
+        }
+      },
     );
   }
 }

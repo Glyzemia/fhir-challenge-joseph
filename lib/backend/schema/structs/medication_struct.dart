@@ -13,12 +13,14 @@ class MedicationStruct extends BaseStruct {
     String? frequency,
     String? route,
     String? status,
+    String? medicationCode,
   })  : _patientID = patientID,
         _medicationName = medicationName,
         _medicationDose = medicationDose,
         _frequency = frequency,
         _route = route,
-        _status = status;
+        _status = status,
+        _medicationCode = medicationCode;
 
   // "patientID" field.
   String? _patientID;
@@ -62,6 +64,13 @@ class MedicationStruct extends BaseStruct {
 
   bool hasStatus() => _status != null;
 
+  // "medicationCode" field.
+  String? _medicationCode;
+  String get medicationCode => _medicationCode ?? '';
+  set medicationCode(String? val) => _medicationCode = val;
+
+  bool hasMedicationCode() => _medicationCode != null;
+
   static MedicationStruct fromMap(Map<String, dynamic> data) =>
       MedicationStruct(
         patientID: data['patientID'] as String?,
@@ -70,6 +79,7 @@ class MedicationStruct extends BaseStruct {
         frequency: data['frequency'] as String?,
         route: data['route'] as String?,
         status: data['status'] as String?,
+        medicationCode: data['medicationCode'] as String?,
       );
 
   static MedicationStruct? maybeFromMap(dynamic data) => data is Map
@@ -83,6 +93,7 @@ class MedicationStruct extends BaseStruct {
         'frequency': _frequency,
         'route': _route,
         'status': _status,
+        'medicationCode': _medicationCode,
       }.withoutNulls;
 
   @override
@@ -109,6 +120,10 @@ class MedicationStruct extends BaseStruct {
         ),
         'status': serializeParam(
           _status,
+          ParamType.String,
+        ),
+        'medicationCode': serializeParam(
+          _medicationCode,
           ParamType.String,
         ),
       }.withoutNulls;
@@ -145,6 +160,11 @@ class MedicationStruct extends BaseStruct {
           ParamType.String,
           false,
         ),
+        medicationCode: deserializeParam(
+          data['medicationCode'],
+          ParamType.String,
+          false,
+        ),
       );
 
   @override
@@ -158,12 +178,20 @@ class MedicationStruct extends BaseStruct {
         medicationDose == other.medicationDose &&
         frequency == other.frequency &&
         route == other.route &&
-        status == other.status;
+        status == other.status &&
+        medicationCode == other.medicationCode;
   }
 
   @override
-  int get hashCode => const ListEquality().hash(
-      [patientID, medicationName, medicationDose, frequency, route, status]);
+  int get hashCode => const ListEquality().hash([
+        patientID,
+        medicationName,
+        medicationDose,
+        frequency,
+        route,
+        status,
+        medicationCode
+      ]);
 }
 
 MedicationStruct createMedicationStruct({
@@ -173,6 +201,7 @@ MedicationStruct createMedicationStruct({
   String? frequency,
   String? route,
   String? status,
+  String? medicationCode,
 }) =>
     MedicationStruct(
       patientID: patientID,
@@ -181,4 +210,5 @@ MedicationStruct createMedicationStruct({
       frequency: frequency,
       route: route,
       status: status,
+      medicationCode: medicationCode,
     );

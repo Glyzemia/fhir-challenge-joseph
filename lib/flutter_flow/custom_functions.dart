@@ -265,6 +265,8 @@ List<ObservationStruct> parseFhirObservations(List<dynamic> entries) {
     if (value == 'respiratory rate') return 'Respiratory rate';
     if (value == 'body mass index (bmi) [ratio]') return 'BMI';
     if (value == 'hemoglobin a1c/hemoglobin.total in blood') return 'HbA1c';
+    if (value == 'creatinine [mass/volume] in serum or plasma' ||
+        value == 'creatinine [mass/volume] in blood') return 'Creatinine';
     if (value == 'hypercapnic respiratory failure')
       return 'Hypercapnic respiratory failure';
 
@@ -550,6 +552,32 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
 
     final ref = subjectRef.toString();
     return ref.contains('/') ? ref.split('/').last : ref;
+  }
+
+  String getMedicationCode(dynamic resource) {
+    final medConcept = resource?['medicationCodeableConcept'];
+
+    if (medConcept != null) {
+      final coding = medConcept['coding'];
+
+      if (coding is List && coding.isNotEmpty) {
+        final code = coding[0]?['code'];
+        if (code != null && code.toString().trim().isNotEmpty) {
+          return code.toString();
+        }
+      }
+    }
+
+    final medRef = resource?['medicationReference'];
+    if (medRef != null) {
+      final reference = medRef['reference'];
+      if (reference != null && reference.toString().trim().isNotEmpty) {
+        final ref = reference.toString();
+        return ref.contains('/') ? ref.split('/').last : ref;
+      }
+    }
+
+    return '';
   }
 
   String getMedicationName(dynamic resource) {
@@ -862,6 +890,7 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
         patientID: getPatientId(resource),
         medicationName: medicationNameDisplay,
         medicationDose: getDose(resource, medicationNameRaw),
+        medicationCode: getMedicationCode(resource),
         frequency: getFrequency(resource),
         route: getRoute(resource, medicationNameRaw),
         status: safeString(resource?['status']),
@@ -2193,4 +2222,1636 @@ List<MedicationStatementStruct> parseFhirMedicationStatement(
   }
 
   return parsedList;
+}
+
+List<DateTime> createDatesList(DateTime dateOfAdmission) {
+  // given a date of admission, I want the function return all the dates from the date of admission, till current date in ascending order.
+  List<DateTime> datesList = [];
+  DateTime currentDate = DateTime.now();
+
+  for (DateTime date = dateOfAdmission;
+      date.isBefore(currentDate) || date.isAtSameMomentAs(currentDate);
+      date = date.add(Duration(days: 1))) {
+    datesList.add(date);
+  }
+
+  return datesList;
+}
+
+String getSteroidStatusFromMedications(
+  List<MedicationStruct> medications,
+  List<MedicationCodesStruct> steroidsList,
+) {
+  if (medications.isEmpty || steroidsList.isEmpty) {
+    return 'NO STEROIDS';
+  }
+
+  String clean(String? value) {
+    return (value ?? '').trim().toLowerCase();
+  }
+
+  final Set<String> steroidCodes = steroidsList
+      .map((e) => clean(e.medicationCode))
+      .where((code) => code.isNotEmpty)
+      .toSet();
+
+  final Set<String> steroidNames = steroidsList
+      .map((e) => clean(e.medicationName))
+      .where((name) => name.isNotEmpty)
+      .toSet();
+
+  bool isActiveMedication(MedicationStruct med) {
+    final status = clean(med.status);
+    return status == 'active';
+  }
+
+  bool isSteroid(MedicationStruct med) {
+    final medCode = clean(med.medicationCode);
+    final medName = clean(med.medicationName);
+
+    if (medCode.isNotEmpty && steroidCodes.contains(medCode)) {
+      return true;
+    }
+
+    if (medName.isNotEmpty) {
+      for (final steroidName in steroidNames) {
+        if (steroidName.isNotEmpty && medName.contains(steroidName)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  bool isTopicalOrLocalRoute(String route) {
+    final r = clean(route);
+
+    return r.contains('topical') ||
+        r.contains('cream') ||
+        r.contains('ointment') ||
+        r.contains('gel') ||
+        r.contains('lotion') ||
+        r.contains('skin') ||
+        r.contains('ophthalmic') ||
+        r.contains('eye') ||
+        r.contains('ocular') ||
+        r.contains('otic') ||
+        r.contains('ear') ||
+        r.contains('nasal') ||
+        r.contains('intranasal') ||
+        r.contains('inhalation') ||
+        r.contains('inhaled') ||
+        r.contains('nebul') ||
+        r.contains('drops') ||
+        r.contains('drop');
+  }
+
+  bool isOralRoute(String route) {
+    final r = clean(route);
+
+    return r.contains('oral') ||
+        r.contains('po') ||
+        r.contains('tablet') ||
+        r.contains('capsule') ||
+        r.contains('syrup') ||
+        r.contains('suspension');
+  }
+
+  bool isIvOrInjectableRoute(String route) {
+    final r = clean(route);
+
+    return r.contains('intravenous') ||
+        r == 'iv' ||
+        r.contains(' iv') ||
+        r.contains('iv ') ||
+        r.contains('injection') ||
+        r.contains('injectable') ||
+        r.contains('parenteral') ||
+        r.contains('intramuscular') ||
+        r.contains('im') ||
+        r.contains('subcutaneous') ||
+        r.contains('sc');
+  }
+
+  // IMPORTANT:
+  // This assumes the medication list is already sorted latest-first
+  // using FHIR query: MedicationRequest?status=active&_sort=-authoredon
+  for (final med in medications) {
+    if (!isActiveMedication(med)) {
+      continue;
+    }
+
+    if (!isSteroid(med)) {
+      continue;
+    }
+
+    final route = med.route;
+
+    // Exclude topical, eye drops, inhaled, nasal, ear drops, etc.
+    if (isTopicalOrLocalRoute(route)) {
+      continue;
+    }
+
+    if (isIvOrInjectableRoute(route)) {
+      return 'IV STEROIDS';
+    }
+
+    if (isOralRoute(route)) {
+      return 'ORAL STEROIDS';
+    }
+
+    // If steroid code matches but route is missing/unclear,
+    // treat as systemic steroid but avoid overcalling IV.
+    return 'ORAL STEROIDS';
+  }
+
+  return 'NO STEROIDS';
+}
+
+String getInotropeStatusFromMedications(
+  List<MedicationStruct> medications,
+  List<MedicationCodesStruct> inotropesList,
+) {
+  if (medications.isEmpty || inotropesList.isEmpty) {
+    return 'NO';
+  }
+
+  String clean(String? value) {
+    return (value ?? '').trim().toLowerCase();
+  }
+
+  final Set<String> inotropeCodes = inotropesList
+      .map((e) => clean(e.medicationCode))
+      .where((code) => code.isNotEmpty)
+      .toSet();
+
+  final Set<String> inotropeNames = inotropesList
+      .map((e) => clean(e.medicationName))
+      .where((name) => name.isNotEmpty)
+      .toSet();
+
+  bool isActiveMedication(MedicationStruct med) {
+    final status = clean(med.status);
+    return status == 'active';
+  }
+
+  bool isInotrope(MedicationStruct med) {
+    final medCode = clean(med.medicationCode);
+    final medName = clean(med.medicationName);
+
+    if (medCode.isNotEmpty && inotropeCodes.contains(medCode)) {
+      return true;
+    }
+
+    if (medName.isNotEmpty) {
+      for (final inotropeName in inotropeNames) {
+        if (inotropeName.isNotEmpty && medName.contains(inotropeName)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // IMPORTANT:
+  // This assumes the medications list is already filtered/sorted appropriately
+  // from the FHIR query, ideally:
+  // MedicationRequest?patient=<patientId>&status=active&_sort=-authoredon
+  for (final med in medications) {
+    if (!isActiveMedication(med)) {
+      continue;
+    }
+
+    if (isInotrope(med)) {
+      return 'YES';
+    }
+  }
+
+  return 'NO';
+}
+
+dynamic createTidChartEntryBundleJson(
+  String patientId,
+  String encounterId,
+  String tidDate,
+  String timespot,
+  String effectiveDateTimeIso,
+  String issuedDateTimeIso,
+  String nursePractitionerId,
+  String nurseDisplayName,
+  String feedStatus,
+  String steroidStatus,
+  String inotropeStatus,
+  String insulinInfusionStatus,
+  double cbg,
+  double? creatinine,
+  double? hba1c,
+  String? nurseNotes,
+) {
+  String clean(String value) => value.trim();
+
+  String normalizeTimespot(String value) {
+    final upper = value.trim().toUpperCase();
+
+    if (upper == 'MORNING') return 'MORNING';
+    if (upper == 'AFTERNOON') return 'AFTERNOON';
+    if (upper == 'NIGHT') return 'NIGHT';
+
+    return upper;
+  }
+
+  String displayTimespot(String value) {
+    final upper = normalizeTimespot(value);
+
+    if (upper == 'MORNING') return 'Morning';
+    if (upper == 'AFTERNOON') return 'Afternoon';
+    if (upper == 'NIGHT') return 'Night';
+
+    return upper;
+  }
+
+  String compactDate(String yyyyMmDd) {
+    return yyyyMmDd.trim().replaceAll('-', '');
+  }
+
+  Map<String, dynamic> codeableComponent({
+    required String code,
+    required String display,
+    required String valueText,
+  }) {
+    return {
+      "code": {
+        "coding": [
+          {
+            "system":
+                "https://glyzemia.app/fhir/CodeSystem/glyzemia-observation",
+            "code": code,
+            "display": display,
+          }
+        ],
+        "text": display,
+      },
+      "valueCodeableConcept": {
+        "text": valueText,
+      },
+    };
+  }
+
+  Map<String, dynamic> quantityComponent({
+    required String code,
+    required String display,
+    required double value,
+    required String unit,
+    required String ucumCode,
+  }) {
+    return {
+      "code": {
+        "coding": [
+          {
+            "system":
+                "https://glyzemia.app/fhir/CodeSystem/glyzemia-observation",
+            "code": code,
+            "display": display,
+          }
+        ],
+        "text": display,
+      },
+      "valueQuantity": {
+        "value": value,
+        "unit": unit,
+        "system": "http://unitsofmeasure.org",
+        "code": ucumCode,
+      },
+    };
+  }
+
+  final normalizedTimespot = normalizeTimespot(timespot);
+  final timespotDisplay = displayTimespot(timespot);
+
+  final tidIdentifier =
+      "TID-${clean(patientId)}-${compactDate(tidDate)}-$normalizedTimespot";
+
+  final List<Map<String, dynamic>> components = [];
+
+  components.add({
+    "code": {
+      "coding": [
+        {
+          "system": "https://glyzemia.app/fhir/CodeSystem/glyzemia-observation",
+          "code": "timespot",
+          "display": "Timespot",
+        }
+      ],
+      "text": "Timespot",
+    },
+    "valueCodeableConcept": {
+      "coding": [
+        {
+          "system": "https://glyzemia.app/fhir/CodeSystem/timespot",
+          "code": normalizedTimespot,
+          "display": timespotDisplay,
+        }
+      ],
+      "text": timespotDisplay,
+    },
+  });
+
+  components.add(
+    codeableComponent(
+      code: "feed-status",
+      display: "Feed status",
+      valueText: feedStatus,
+    ),
+  );
+
+  components.add(
+    codeableComponent(
+      code: "steroid-status",
+      display: "Steroid status",
+      valueText: steroidStatus,
+    ),
+  );
+
+  components.add(
+    codeableComponent(
+      code: "inotrope-status",
+      display: "Inotrope status",
+      valueText: inotropeStatus,
+    ),
+  );
+
+  components.add(
+    codeableComponent(
+      code: "insulin-infusion-status",
+      display: "Insulin infusion status",
+      valueText: insulinInfusionStatus,
+    ),
+  );
+
+  if (creatinine != null) {
+    components.add(
+      quantityComponent(
+        code: "creatinine",
+        display: "Creatinine",
+        value: creatinine,
+        unit: "mg/dL",
+        ucumCode: "mg/dL",
+      ),
+    );
+  }
+
+  components.add(
+    quantityComponent(
+      code: "capillary-blood-glucose",
+      display: "Capillary blood glucose",
+      value: cbg,
+      unit: "mg/dL",
+      ucumCode: "mg/dL",
+    ),
+  );
+
+  if (hba1c != null) {
+    components.add(
+      quantityComponent(
+        code: "hba1c",
+        display: "HbA1c",
+        value: hba1c,
+        unit: "%",
+        ucumCode: "%",
+      ),
+    );
+  }
+
+  final cleanedNotes = nurseNotes?.trim();
+  if (cleanedNotes != null && cleanedNotes.isNotEmpty) {
+    components.add({
+      "code": {
+        "coding": [
+          {
+            "system":
+                "https://glyzemia.app/fhir/CodeSystem/glyzemia-observation",
+            "code": "nurse-notes",
+            "display": "Nurse notes",
+          }
+        ],
+        "text": "Nurse notes",
+      },
+      "valueString": cleanedNotes,
+    });
+  }
+
+  return {
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:tid-entry-${normalizedTimespot.toLowerCase()}",
+        "resource": {
+          "resourceType": "Observation",
+          "identifier": [
+            {
+              "system": "https://glyzemia.app/fhir/identifier/tid-slot",
+              "value": tidIdentifier,
+            }
+          ],
+          "status": "final",
+          "category": [
+            {
+              "coding": [
+                {
+                  "system":
+                      "http://terminology.hl7.org/CodeSystem/observation-category",
+                  "code": "survey",
+                  "display": "Survey",
+                }
+              ]
+            }
+          ],
+          "code": {
+            "coding": [
+              {
+                "system":
+                    "https://glyzemia.app/fhir/CodeSystem/glyzemia-observation",
+                "code": "tid-insulin-chart-entry",
+                "display": "TID Insulin Chart Entry",
+              }
+            ],
+            "text": "TID Insulin Chart Entry",
+          },
+          "subject": {
+            "reference": "Patient/$patientId",
+          },
+          "encounter": {
+            "reference": "Encounter/$encounterId",
+          },
+          "effectiveDateTime": effectiveDateTimeIso,
+          "issued": issuedDateTimeIso,
+          "performer": [
+            {
+              "reference": "Practitioner/$nursePractitionerId",
+              "display": nurseDisplayName,
+            }
+          ],
+          "component": components,
+        },
+        "request": {
+          "method": "POST",
+          "url": "Observation",
+          "ifNoneExist":
+              "identifier=https://glyzemia.app/fhir/identifier/tid-slot|$tidIdentifier",
+        },
+      }
+    ],
+  };
+}
+
+List<TidChartEntryStruct> parseFhirTidChartEntries(List<dynamic> entries) {
+  if (entries.isEmpty) {
+    return <TidChartEntryStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  double safeDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  int safeInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.round();
+
+    return int.tryParse(value.toString()) ??
+        double.tryParse(value.toString())?.round() ??
+        0;
+  }
+
+  DateTime? safeDateTime(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
+  String getReferenceId(dynamic refObj) {
+    final ref = refObj?['reference'];
+    if (ref == null) return '';
+
+    final refString = ref.toString();
+    if (refString.contains('/')) {
+      return refString.split('/').last;
+    }
+
+    return refString;
+  }
+
+  String getIdentifierValue(dynamic resource) {
+    final identifiers = resource?['identifier'];
+
+    if (identifiers is List && identifiers.isNotEmpty) {
+      for (final identifier in identifiers) {
+        final system = safeString(identifier?['system']);
+        final value = safeString(identifier?['value']);
+
+        if (system == 'https://glyzemia.app/fhir/identifier/tid-slot' &&
+            value.isNotEmpty) {
+          return value;
+        }
+      }
+
+      return safeString(identifiers[0]?['value']);
+    }
+
+    return '';
+  }
+
+  DateTime? getDateFromEffectiveDateTime(dynamic resource) {
+    return safeDateTime(
+      resource?['effectiveDateTime'] ??
+          resource?['effectivePeriod']?['start'] ??
+          resource?['issued'],
+    );
+  }
+
+  String getTimespotFromIdentifier(String identifier) {
+    final upper = identifier.toUpperCase();
+
+    if (upper.endsWith('-MORNING')) return 'MORNING';
+    if (upper.endsWith('-AFTERNOON')) return 'AFTERNOON';
+    if (upper.endsWith('-NIGHT')) return 'NIGHT';
+
+    return '';
+  }
+
+  String getCodeKey(dynamic codeObj) {
+    if (codeObj == null) return '';
+
+    final coding = codeObj['coding'];
+
+    if (coding is List && coding.isNotEmpty) {
+      final code = safeString(coding[0]?['code']);
+      if (code.isNotEmpty) {
+        return code.toLowerCase();
+      }
+
+      final display = safeString(coding[0]?['display']);
+      if (display.isNotEmpty) {
+        return display.toLowerCase();
+      }
+    }
+
+    final text = safeString(codeObj['text']);
+    return text.toLowerCase();
+  }
+
+  String getValueText(dynamic obj) {
+    if (obj == null) return '';
+
+    if (obj['valueString'] != null) {
+      return safeString(obj['valueString']);
+    }
+
+    if (obj['valueCodeableConcept'] != null) {
+      final concept = obj['valueCodeableConcept'];
+
+      final text = safeString(concept?['text']);
+      if (text.isNotEmpty) return text;
+
+      final coding = concept?['coding'];
+      if (coding is List && coding.isNotEmpty) {
+        return safeString(coding[0]?['display'] ?? coding[0]?['code']);
+      }
+    }
+
+    if (obj['valueQuantity'] != null) {
+      return safeString(obj['valueQuantity']?['value']);
+    }
+
+    if (obj['valueInteger'] != null) {
+      return safeString(obj['valueInteger']);
+    }
+
+    if (obj['valueBoolean'] != null) {
+      return safeString(obj['valueBoolean']);
+    }
+
+    return '';
+  }
+
+  double getValueQuantityAsDouble(dynamic obj) {
+    if (obj == null) return 0.0;
+
+    final quantity = obj['valueQuantity'];
+    if (quantity == null) return 0.0;
+
+    return safeDouble(quantity['value']);
+  }
+
+  int getValueQuantityAsInt(dynamic obj) {
+    if (obj == null) return 0;
+
+    final quantity = obj['valueQuantity'];
+    if (quantity == null) return 0;
+
+    return safeInt(quantity['value']);
+  }
+
+  final List<TidChartEntryStruct> parsed = [];
+
+  for (final entry in entries) {
+    final resource = entry?['resource'];
+
+    if (resource == null || resource?['resourceType'] != 'Observation') {
+      continue;
+    }
+
+    final observationId = safeString(resource?['id']);
+    final patientId = getReferenceId(resource?['subject']);
+    final encounterId = getReferenceId(resource?['encounter']);
+    final tidIdentifier = getIdentifierValue(resource);
+
+    String timespot = getTimespotFromIdentifier(tidIdentifier);
+
+    String feedStatus = '';
+    String steroidStatus = '';
+    String inotropeStatus = '';
+    String insulinInfusionStatus = '';
+    String nurseNotes = '';
+
+    int cbg = 0;
+    double creatinine = 0.0;
+    double hba1c = 0.0;
+
+    final components = resource?['component'];
+
+    if (components is List) {
+      for (final component in components) {
+        final key = getCodeKey(component?['code']);
+
+        if (key == 'timespot') {
+          final value = getValueText(component);
+          if (value.trim().isNotEmpty) {
+            timespot = value.toUpperCase();
+          }
+        } else if (key == 'feed-status' || key == 'feed status') {
+          feedStatus = getValueText(component);
+        } else if (key == 'steroid-status' || key == 'steroid status') {
+          steroidStatus = getValueText(component);
+        } else if (key == 'inotrope-status' || key == 'inotrope status') {
+          inotropeStatus = getValueText(component);
+        } else if (key == 'insulin-infusion-status' ||
+            key == 'insulin infusion status') {
+          insulinInfusionStatus = getValueText(component);
+        } else if (key == 'capillary-blood-glucose' ||
+            key == 'capillary blood glucose' ||
+            key == 'cbg') {
+          cbg = getValueQuantityAsInt(component);
+        } else if (key == 'creatinine') {
+          creatinine = getValueQuantityAsDouble(component);
+        } else if (key == 'hba1c' ||
+            key == 'hemoglobin a1c/hemoglobin.total in blood') {
+          hba1c = getValueQuantityAsDouble(component);
+        } else if (key == 'nurse-notes' || key == 'nurse notes') {
+          nurseNotes = getValueText(component);
+        }
+      }
+    }
+
+    String nursePractitionerId = '';
+    String nurseDisplayName = '';
+
+    final performers = resource?['performer'];
+
+    if (performers is List && performers.isNotEmpty) {
+      nursePractitionerId = getReferenceId(performers[0]);
+      nurseDisplayName = safeString(performers[0]?['display']);
+    }
+
+    parsed.add(
+      TidChartEntryStruct(
+        observationId: observationId,
+        patientId: patientId,
+        encounterId: encounterId,
+        tidIdentifier: tidIdentifier,
+        date: getDateFromEffectiveDateTime(resource),
+        timespot: timespot,
+        cbg: cbg,
+        feedStatus: feedStatus,
+        steroidStatus: steroidStatus,
+        inotropeStatus: inotropeStatus,
+        insulinInfusionStatus: insulinInfusionStatus,
+        creatinine: creatinine,
+        hba1c: hba1c,
+        nurseNotes: nurseNotes,
+        nursePractitionerId: nursePractitionerId,
+        nurseDisplayName: nurseDisplayName,
+        effectiveDateTime: safeDateTime(resource?['effectiveDateTime']),
+        issuedDateTime: safeDateTime(resource?['issued']),
+      ),
+    );
+  }
+
+  return parsed;
+}
+
+dynamic createInsulinAdviceBundleJson(
+  String patientId,
+  String encounterId,
+  String tidDate,
+  String timespot,
+  String tidObservationId,
+  String doctorPractitionerId,
+  String doctorDisplayName,
+  String authoredOnIso,
+  String shortActingInsulinName,
+  int shortActingInsulinDose,
+  String longOrPremixedInsulinName,
+  int longOrPremixedInsulinDose,
+  String? doctorNotes,
+) {
+  String clean(String value) => value.trim();
+
+  String compactDate(String yyyyMmDd) {
+    return yyyyMmDd.trim().replaceAll('-', '');
+  }
+
+  String normalizeTimespot(String value) {
+    final upper = value.trim().toUpperCase();
+
+    if (upper == 'MORNING') return 'MORNING';
+    if (upper == 'AFTERNOON') return 'AFTERNOON';
+    if (upper == 'NIGHT') return 'NIGHT';
+
+    return upper;
+  }
+
+  String doseTimingText(String normalizedTimespot) {
+    if (normalizedTimespot == 'MORNING') return 'before breakfast';
+    if (normalizedTimespot == 'AFTERNOON') return 'before lunch';
+    if (normalizedTimespot == 'NIGHT') return 'before dinner / night';
+    return normalizedTimespot.toLowerCase();
+  }
+
+  String safeMedicationCodeName(String medicationName) {
+    final cleaned = medicationName
+        .trim()
+        .toUpperCase()
+        .replaceAll(RegExp(r'[^A-Z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+
+    return cleaned.isEmpty ? 'INSULIN' : cleaned;
+  }
+
+  Map<String, dynamic> insulinTypeExtension({
+    required String code,
+    required String display,
+  }) {
+    return {
+      "url": "https://glyzemia.app/fhir/StructureDefinition/insulin-type",
+      "valueCodeableConcept": {
+        "coding": [
+          {
+            "system": "https://glyzemia.app/fhir/CodeSystem/insulin-type",
+            "code": code,
+            "display": display,
+          }
+        ],
+        "text": display,
+      },
+    };
+  }
+
+  Map<String, dynamic> createMedicationRequestEntry({
+    required String fullUrl,
+    required String medicationName,
+    required int dose,
+    required String identifierValue,
+    required String normalizedTimespot,
+    required String timingText,
+    required String insulinTypeCode,
+    required String insulinTypeDisplay,
+    required String? cleanedDoctorNotes,
+  }) {
+    final resource = <String, dynamic>{
+      "resourceType": "MedicationRequest",
+      "identifier": [
+        {
+          "system": "https://glyzemia.app/fhir/identifier/insulin-advice",
+          "value": identifierValue,
+        }
+      ],
+      "extension": [
+        insulinTypeExtension(
+          code: insulinTypeCode,
+          display: insulinTypeDisplay,
+        )
+      ],
+      "status": "active",
+      "intent": "order",
+      "medicationCodeableConcept": {
+        "text": medicationName,
+      },
+      "subject": {
+        "reference": "Patient/$patientId",
+      },
+      "encounter": {
+        "reference": "Encounter/$encounterId",
+      },
+      "authoredOn": authoredOnIso,
+      "requester": {
+        "reference": "Practitioner/$doctorPractitionerId",
+        "display": doctorDisplayName,
+      },
+      "supportingInformation": [
+        {
+          "reference": "Observation/$tidObservationId",
+          "display":
+              "TID-${clean(patientId)}-${compactDate(tidDate)}-$normalizedTimespot",
+        }
+      ],
+      "dosageInstruction": [
+        {
+          "text": "$medicationName $dose units $timingText",
+          "timing": {
+            "code": {
+              "text": normalizedTimespot,
+            }
+          },
+          "route": {
+            "text": "Subcutaneous",
+          },
+          "doseAndRate": [
+            {
+              "doseQuantity": {
+                "value": dose,
+                "unit": "unit",
+                "system": "http://unitsofmeasure.org",
+                "code": "U",
+              }
+            }
+          ],
+        }
+      ],
+    };
+
+    if (cleanedDoctorNotes != null && cleanedDoctorNotes.isNotEmpty) {
+      resource["note"] = [
+        {
+          "text": cleanedDoctorNotes,
+        }
+      ];
+    }
+
+    return {
+      "fullUrl": fullUrl,
+      "resource": resource,
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest",
+        "ifNoneExist":
+            "identifier=https://glyzemia.app/fhir/identifier/insulin-advice|$identifierValue",
+      },
+    };
+  }
+
+  final normalizedTimespot = normalizeTimespot(timespot);
+  final timingText = doseTimingText(normalizedTimespot);
+
+  final baseIdentifier =
+      "TID-${clean(patientId)}-${compactDate(tidDate)}-$normalizedTimespot";
+
+  final shortActingCodeName = safeMedicationCodeName(shortActingInsulinName);
+  final longOrPremixedCodeName =
+      safeMedicationCodeName(longOrPremixedInsulinName);
+
+  final cleanedDoctorNotes = doctorNotes?.trim();
+
+  final shortActingIdentifier = "$baseIdentifier-$shortActingCodeName";
+  final longOrPremixedIdentifier = "$baseIdentifier-$longOrPremixedCodeName";
+
+  return {
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "entry": [
+      createMedicationRequestEntry(
+        fullUrl: "urn:uuid:${shortActingCodeName.toLowerCase()}-request",
+        medicationName: shortActingInsulinName,
+        dose: shortActingInsulinDose,
+        identifierValue: shortActingIdentifier,
+        normalizedTimespot: normalizedTimespot,
+        timingText: timingText,
+        insulinTypeCode: "short-acting-insulin",
+        insulinTypeDisplay: "Short Acting Insulin",
+        cleanedDoctorNotes: cleanedDoctorNotes,
+      ),
+      createMedicationRequestEntry(
+        fullUrl: "urn:uuid:${longOrPremixedCodeName.toLowerCase()}-request",
+        medicationName: longOrPremixedInsulinName,
+        dose: longOrPremixedInsulinDose,
+        identifierValue: longOrPremixedIdentifier,
+        normalizedTimespot: normalizedTimespot,
+        timingText: timingText,
+        insulinTypeCode: "long-acting-or-premixed-insulin",
+        insulinTypeDisplay: "Long Acting / Premixed Insulin",
+        cleanedDoctorNotes: cleanedDoctorNotes,
+      ),
+    ],
+  };
+}
+
+List<InsulinAdviceStruct> parseFhirInsulinAdviceEntries(
+    List<dynamic>? entries) {
+  final List<dynamic> entryList = entries ?? <dynamic>[];
+
+  if (entryList.isEmpty) {
+    return <InsulinAdviceStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  int safeInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.round();
+
+    return int.tryParse(value.toString()) ??
+        double.tryParse(value.toString())?.round() ??
+        0;
+  }
+
+  DateTime? safeDateTime(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
+  String getReferenceId(dynamic refObj) {
+    final ref = refObj?['reference'];
+    if (ref == null) return '';
+
+    final refString = ref.toString();
+    if (refString.contains('/')) {
+      return refString.split('/').last;
+    }
+
+    return refString;
+  }
+
+  String getMedicationName(dynamic resource) {
+    final medConcept = resource?['medicationCodeableConcept'];
+
+    if (medConcept != null) {
+      final text = safeString(medConcept['text']);
+      if (text.trim().isNotEmpty) {
+        return text;
+      }
+
+      final coding = medConcept['coding'];
+      if (coding is List && coding.isNotEmpty) {
+        final display = safeString(coding[0]?['display']);
+        if (display.trim().isNotEmpty) {
+          return display;
+        }
+
+        return safeString(coding[0]?['code']);
+      }
+    }
+
+    final medRef = resource?['medicationReference'];
+    if (medRef != null) {
+      final display = safeString(medRef['display']);
+      if (display.trim().isNotEmpty) {
+        return display;
+      }
+
+      return safeString(medRef['reference']);
+    }
+
+    return '';
+  }
+
+  int getDose(dynamic resource) {
+    final dosageInstruction = resource?['dosageInstruction'];
+
+    if (dosageInstruction is List && dosageInstruction.isNotEmpty) {
+      final doseAndRate = dosageInstruction[0]?['doseAndRate'];
+
+      if (doseAndRate is List && doseAndRate.isNotEmpty) {
+        final doseQuantity = doseAndRate[0]?['doseQuantity'];
+
+        if (doseQuantity != null) {
+          return safeInt(doseQuantity['value']);
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  String getTimespot(dynamic resource) {
+    final dosageInstruction = resource?['dosageInstruction'];
+
+    if (dosageInstruction is List && dosageInstruction.isNotEmpty) {
+      final timingText = dosageInstruction[0]?['timing']?['code']?['text'];
+      final value = safeString(timingText).trim().toUpperCase();
+
+      if (value == 'MORNING' || value == 'AFTERNOON' || value == 'NIGHT') {
+        return value;
+      }
+    }
+
+    final identifiers = resource?['identifier'];
+
+    if (identifiers is List && identifiers.isNotEmpty) {
+      final value = safeString(identifiers[0]?['value']).toUpperCase();
+
+      if (value.contains('-MORNING-') || value.endsWith('-MORNING')) {
+        return 'MORNING';
+      }
+
+      if (value.contains('-AFTERNOON-') || value.endsWith('-AFTERNOON')) {
+        return 'AFTERNOON';
+      }
+
+      if (value.contains('-NIGHT-') || value.endsWith('-NIGHT')) {
+        return 'NIGHT';
+      }
+    }
+
+    return '';
+  }
+
+  String getDoctorNotes(dynamic resource) {
+    final notes = resource?['note'];
+
+    if (notes is List && notes.isNotEmpty) {
+      for (final note in notes) {
+        final text = safeString(note?['text']).trim();
+        if (text.isNotEmpty) {
+          return text;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  String getTidObservationId(dynamic resource) {
+    final supportingInfo = resource?['supportingInformation'];
+
+    if (supportingInfo is List && supportingInfo.isNotEmpty) {
+      for (final info in supportingInfo) {
+        final ref = safeString(info?['reference']);
+
+        if (ref.startsWith('Observation/')) {
+          return ref.split('/').last;
+        }
+
+        if (ref.isNotEmpty) {
+          return ref;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  String getInsulinType(dynamic resource) {
+    final extensions = resource?['extension'];
+
+    if (extensions is List) {
+      for (final ext in extensions) {
+        final url = safeString(ext?['url']);
+
+        if (url ==
+            'https://glyzemia.app/fhir/StructureDefinition/insulin-type') {
+          final concept = ext?['valueCodeableConcept'];
+
+          final text = safeString(concept?['text']);
+          if (text.trim().isNotEmpty) {
+            return text;
+          }
+
+          final coding = concept?['coding'];
+          if (coding is List && coding.isNotEmpty) {
+            final display = safeString(coding[0]?['display']);
+            if (display.trim().isNotEmpty) {
+              return display;
+            }
+
+            final code = safeString(coding[0]?['code']);
+
+            if (code == 'short-acting-insulin') {
+              return 'Short Acting Insulin';
+            }
+
+            if (code == 'long-acting-or-premixed-insulin') {
+              return 'Long Acting / Premixed Insulin';
+            }
+
+            return code;
+          }
+        }
+      }
+    }
+
+    return '';
+  }
+
+  final List<InsulinAdviceStruct> parsed = [];
+
+  for (final entry in entryList) {
+    final resource = entry?['resource'];
+
+    if (resource == null || resource?['resourceType'] != 'MedicationRequest') {
+      continue;
+    }
+
+    final tidObservationId = getTidObservationId(resource);
+
+    if (tidObservationId.isEmpty) {
+      continue;
+    }
+
+    final insulinType = getInsulinType(resource);
+
+    if (insulinType.trim().isEmpty) {
+      continue;
+    }
+
+    parsed.add(
+      InsulinAdviceStruct(
+        medicationRequestId: safeString(resource?['id']),
+        tidObservationId: tidObservationId,
+        patientId: getReferenceId(resource?['subject']),
+        encounterId: getReferenceId(resource?['encounter']),
+        medicationName: getMedicationName(resource),
+        dose: getDose(resource),
+        status: safeString(resource?['status']),
+        doctorId: getReferenceId(resource?['requester']),
+        doctorName: safeString(resource?['requester']?['display']),
+        doctorNotes: getDoctorNotes(resource),
+        authoredOn: safeDateTime(resource?['authoredOn']),
+        timespot: getTimespot(resource),
+        insulinType: insulinType,
+      ),
+    );
+  }
+
+  return parsed;
+}
+
+dynamic createInsulinAdministrationBundleJson(
+  String patientId,
+  String encounterId,
+  String tidDate,
+  String timespot,
+  String nursePractitionerId,
+  String nurseDisplayName,
+  String administeredAtIso,
+  String saiMedicationRequestId,
+  String saiName,
+  int saiDose,
+  String laiMedicationRequestId,
+  String laiName,
+  int laiDose,
+  String? nurseCompletionNotes,
+) {
+  String clean(String value) => value.trim();
+
+  String compactDate(String yyyyMmDd) {
+    return yyyyMmDd.trim().replaceAll('-', '');
+  }
+
+  String normalizeTimespot(String value) {
+    final upper = value.trim().toUpperCase();
+
+    if (upper == 'MORNING') return 'MORNING';
+    if (upper == 'AFTERNOON') return 'AFTERNOON';
+    if (upper == 'NIGHT') return 'NIGHT';
+
+    return upper;
+  }
+
+  String safeMedicationCodeName(String medicationName) {
+    final cleaned = medicationName
+        .trim()
+        .toUpperCase()
+        .replaceAll(RegExp(r'[^A-Z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+
+    return cleaned.isEmpty ? 'INSULIN' : cleaned;
+  }
+
+  Map<String, dynamic> createMedicationAdministrationEntry({
+    required String medicationRequestId,
+    required String medicationName,
+    required int dose,
+    required String identifierValue,
+    required String fullUrl,
+    required String? cleanedNurseNotes,
+  }) {
+    final bool isZeroDose = dose <= 0;
+
+    final List<Map<String, dynamic>> notes = [];
+
+    notes.add({
+      "text": isZeroDose
+          ? "Insulin advice followed. Zero dose advised, so no insulin was administered."
+          : "Insulin advice followed and administered by nurse."
+    });
+
+    if (cleanedNurseNotes != null && cleanedNurseNotes.isNotEmpty) {
+      notes.add({
+        "text": cleanedNurseNotes,
+      });
+    }
+
+    return {
+      "fullUrl": fullUrl,
+      "resource": {
+        "resourceType": "MedicationAdministration",
+        "identifier": [
+          {
+            "system":
+                "https://glyzemia.app/fhir/identifier/insulin-administration",
+            "value": identifierValue,
+          }
+        ],
+        "status": "completed",
+        "medicationCodeableConcept": {
+          "text": medicationName,
+        },
+        "subject": {
+          "reference": "Patient/$patientId",
+        },
+        "context": {
+          "reference": "Encounter/$encounterId",
+        },
+        "request": {
+          "reference": "MedicationRequest/$medicationRequestId",
+        },
+        "effectiveDateTime": administeredAtIso,
+        "performer": [
+          {
+            "actor": {
+              "reference": "Practitioner/$nursePractitionerId",
+              "display": nurseDisplayName,
+            }
+          }
+        ],
+        "dosage": {
+          "text": isZeroDose
+              ? "$medicationName 0 units - advice followed, no insulin administered"
+              : "$medicationName $dose units administered subcutaneously",
+          "route": {
+            "text": "Subcutaneous",
+          },
+          "dose": {
+            "value": dose,
+            "unit": "unit",
+            "system": "http://unitsofmeasure.org",
+            "code": "U",
+          }
+        },
+        "note": notes,
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationAdministration",
+        "ifNoneExist":
+            "identifier=https://glyzemia.app/fhir/identifier/insulin-administration|$identifierValue",
+      },
+    };
+  }
+
+  final normalizedTimespot = normalizeTimespot(timespot);
+
+  final baseIdentifier =
+      "TID-${clean(patientId)}-${compactDate(tidDate)}-$normalizedTimespot";
+
+  final cleanedNurseNotes = nurseCompletionNotes?.trim();
+
+  final List<Map<String, dynamic>> entries = [];
+
+  if (saiMedicationRequestId.trim().isNotEmpty && saiName.trim().isNotEmpty) {
+    final saiCodeName = safeMedicationCodeName(saiName);
+
+    entries.add(
+      createMedicationAdministrationEntry(
+        medicationRequestId: saiMedicationRequestId,
+        medicationName: saiName,
+        dose: saiDose,
+        identifierValue: "$baseIdentifier-$saiCodeName-ADMINISTRATION",
+        fullUrl: "urn:uuid:${saiCodeName.toLowerCase()}-administration",
+        cleanedNurseNotes: cleanedNurseNotes,
+      ),
+    );
+  }
+
+  if (laiMedicationRequestId.trim().isNotEmpty && laiName.trim().isNotEmpty) {
+    final laiCodeName = safeMedicationCodeName(laiName);
+
+    entries.add(
+      createMedicationAdministrationEntry(
+        medicationRequestId: laiMedicationRequestId,
+        medicationName: laiName,
+        dose: laiDose,
+        identifierValue: "$baseIdentifier-$laiCodeName-ADMINISTRATION",
+        fullUrl: "urn:uuid:${laiCodeName.toLowerCase()}-administration",
+        cleanedNurseNotes: cleanedNurseNotes,
+      ),
+    );
+  }
+
+  return {
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "entry": entries,
+  };
+}
+
+List<InsulinAdministrationStruct> parseFhirInsulinAdministrations(
+    List<dynamic>? entries) {
+  final List<dynamic> entryList = entries ?? <dynamic>[];
+
+  if (entryList.isEmpty) {
+    return <InsulinAdministrationStruct>[];
+  }
+
+  String safeString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  int safeInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.round();
+
+    return int.tryParse(value.toString()) ??
+        double.tryParse(value.toString())?.round() ??
+        0;
+  }
+
+  DateTime? safeDateTime(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
+  String getReferenceId(dynamic refObj) {
+    final ref = refObj?['reference'];
+    if (ref == null) return '';
+
+    final refString = ref.toString();
+    if (refString.contains('/')) {
+      return refString.split('/').last;
+    }
+
+    return refString;
+  }
+
+  String getMedicationName(dynamic resource) {
+    final medConcept = resource?['medicationCodeableConcept'];
+
+    if (medConcept != null) {
+      final text = safeString(medConcept['text']);
+      if (text.trim().isNotEmpty) {
+        return text;
+      }
+
+      final coding = medConcept['coding'];
+      if (coding is List && coding.isNotEmpty) {
+        final display = safeString(coding[0]?['display']);
+        if (display.trim().isNotEmpty) {
+          return display;
+        }
+
+        return safeString(coding[0]?['code']);
+      }
+    }
+
+    final medRef = resource?['medicationReference'];
+    if (medRef != null) {
+      final display = safeString(medRef['display']);
+      if (display.trim().isNotEmpty) {
+        return display;
+      }
+
+      return safeString(medRef['reference']);
+    }
+
+    return '';
+  }
+
+  int getDose(dynamic resource) {
+    final dosage = resource?['dosage'];
+
+    if (dosage != null) {
+      final dose = dosage['dose'];
+
+      if (dose != null) {
+        return safeInt(dose['value']);
+      }
+    }
+
+    return 0;
+  }
+
+  String getRoute(dynamic resource) {
+    final dosage = resource?['dosage'];
+
+    if (dosage != null) {
+      final route = dosage['route'];
+
+      if (route != null) {
+        final text = safeString(route['text']);
+        if (text.trim().isNotEmpty) {
+          return text;
+        }
+
+        final coding = route['coding'];
+        if (coding is List && coding.isNotEmpty) {
+          final display = safeString(coding[0]?['display']);
+          if (display.trim().isNotEmpty) {
+            return display;
+          }
+
+          return safeString(coding[0]?['code']);
+        }
+      }
+    }
+
+    return '';
+  }
+
+  String getNurseId(dynamic resource) {
+    final performers = resource?['performer'];
+
+    if (performers is List && performers.isNotEmpty) {
+      final actor = performers[0]?['actor'];
+      return getReferenceId(actor);
+    }
+
+    return '';
+  }
+
+  String getNurseName(dynamic resource) {
+    final performers = resource?['performer'];
+
+    if (performers is List && performers.isNotEmpty) {
+      final actor = performers[0]?['actor'];
+      return safeString(actor?['display']);
+    }
+
+    return '';
+  }
+
+  String getNurseNotes(dynamic resource) {
+    final notes = resource?['note'];
+
+    if (notes is List && notes.isNotEmpty) {
+      final List<String> texts = [];
+
+      for (final note in notes) {
+        final text = safeString(note?['text']).trim();
+        if (text.isNotEmpty) {
+          texts.add(text);
+        }
+      }
+
+      return texts.join(' | ');
+    }
+
+    return '';
+  }
+
+  String getMedicationRequestId(dynamic resource) {
+    final request = resource?['request'];
+    return getReferenceId(request);
+  }
+
+  String getIdentifierValue(dynamic resource) {
+    final identifiers = resource?['identifier'];
+
+    if (identifiers is List && identifiers.isNotEmpty) {
+      for (final identifier in identifiers) {
+        final system = safeString(identifier?['system']);
+        final value = safeString(identifier?['value']);
+
+        if (system ==
+                'https://glyzemia.app/fhir/identifier/insulin-administration' &&
+            value.isNotEmpty) {
+          return value;
+        }
+      }
+
+      return safeString(identifiers[0]?['value']);
+    }
+
+    return '';
+  }
+
+  String getTidIdentifierFromAdministrationIdentifier(String identifier) {
+    final value = identifier.trim();
+
+    if (value.isEmpty) {
+      return '';
+    }
+
+    final upper = value.toUpperCase();
+
+    if (upper.contains('-MORNING')) {
+      final index = upper.indexOf('-MORNING');
+      return value.substring(0, index + '-MORNING'.length);
+    }
+
+    if (upper.contains('-AFTERNOON')) {
+      final index = upper.indexOf('-AFTERNOON');
+      return value.substring(0, index + '-AFTERNOON'.length);
+    }
+
+    if (upper.contains('-NIGHT')) {
+      final index = upper.indexOf('-NIGHT');
+      return value.substring(0, index + '-NIGHT'.length);
+    }
+
+    return value;
+  }
+
+  String getTimespotFromIdentifier(String identifier) {
+    final upper = identifier.toUpperCase();
+
+    if (upper.contains('-MORNING')) {
+      return 'MORNING';
+    }
+
+    if (upper.contains('-AFTERNOON')) {
+      return 'AFTERNOON';
+    }
+
+    if (upper.contains('-NIGHT')) {
+      return 'NIGHT';
+    }
+
+    return '';
+  }
+
+  final List<InsulinAdministrationStruct> parsed = [];
+
+  for (final entry in entryList) {
+    final resource = entry?['resource'];
+
+    if (resource == null) {
+      continue;
+    }
+
+    if (resource?['resourceType'] != 'MedicationAdministration') {
+      continue;
+    }
+
+    final medicationRequestId = getMedicationRequestId(resource);
+
+    if (medicationRequestId.trim().isEmpty) {
+      continue;
+    }
+
+    final identifierValue = getIdentifierValue(resource);
+    final tidIdentifier =
+        getTidIdentifierFromAdministrationIdentifier(identifierValue);
+
+    final completedAt = safeDateTime(resource?['effectiveDateTime']);
+
+    parsed.add(
+      InsulinAdministrationStruct(
+        medicationAdministrationId: safeString(resource?['id']),
+        medicationRequestId: medicationRequestId,
+        patientId: getReferenceId(resource?['subject']),
+        encounterId: getReferenceId(resource?['context']),
+        medicationName: getMedicationName(resource),
+        dose: getDose(resource),
+        status: safeString(resource?['status']),
+        nurseId: getNurseId(resource),
+        nurseName: getNurseName(resource),
+        completedAt: completedAt,
+        date: completedAt,
+        timespot: getTimespotFromIdentifier(identifierValue),
+        nurseNotes: getNurseNotes(resource),
+        route: getRoute(resource),
+        tidIdentifier: tidIdentifier,
+      ),
+    );
+  }
+
+  return parsed;
 }
