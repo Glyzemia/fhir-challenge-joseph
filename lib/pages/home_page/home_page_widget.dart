@@ -10359,10 +10359,25 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             Builder(
                                                                           builder:
                                                                               (context) {
-                                                                            if (_model.patientObservations.isNotEmpty) {
+                                                                            if (_model.patientObservations
+                                                                                .where((e) => (String name) {
+                                                                                      return name == 'Heart rate' || name == 'Body temperature' || name == 'Systolic blood pressure' || name == 'Diastolic blood pressure' || name == 'Consciousness' || name == 'SpO2' || name == 'Air or oxygen' || name == 'is_individual_3' || name == 'Respiratory rate' || name == 'Hypercapnic respiratory failure' || name == 'NEWS2 total score';
+                                                                                    }(e.name))
+                                                                                .toList()
+                                                                                .isNotEmpty) {
                                                                               return Builder(
                                                                                 builder: (context) {
-                                                                                  final newsPages = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+                                                                                  final newsPages = functions
+                                                                                      .createPageIndices(
+                                                                                          _model.patientObservations
+                                                                                              .where((e) => (String name) {
+                                                                                                    return name == 'Heart rate' || name == 'Body temperature' || name == 'Systolic blood pressure' || name == 'Diastolic blood pressure' || name == 'Consciousness' || name == 'SpO2' || name == 'Air or oxygen' || name == 'is_individual_3' || name == 'Respiratory rate' || name == 'Hypercapnic respiratory failure' || name == 'NEWS2 total score';
+                                                                                                  }(e.name))
+                                                                                              .toList()
+                                                                                              .unique((e) => e.recordedAt!)
+                                                                                              .length,
+                                                                                          10)
+                                                                                      .toList();
 
                                                                                   return Container(
                                                                                     width: double.infinity,
@@ -10380,27 +10395,39 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                                             children: [
                                                                                               Builder(
                                                                                                 builder: (context) {
-                                                                                                  final newsRows = functions.sliceDatesListForTablePages(_model.patientObservations.unique((e) => e.recordedAt!).sortedList(keyOf: (e) => e.recordedAt!, desc: true).map((e) => e.recordedAt).withoutNulls.toList(), newsPagesItem * 10, (newsPagesItem + 1) * 10)?.toList() ?? [];
+                                                                                                  final newsRows = functions
+                                                                                                          .sliceDatesListForTablePages(
+                                                                                                              _model.patientObservations
+                                                                                                                  .where((e) => (String name) {
+                                                                                                                        return name == 'Heart rate' || name == 'Body temperature' || name == 'Systolic blood pressure' || name == 'Diastolic blood pressure' || name == 'Consciousness' || name == 'SpO2' || name == 'Air or oxygen' || name == 'is_individual_3' || name == 'Respiratory rate' || name == 'Hypercapnic respiratory failure' || name == 'NEWS2 total score';
+                                                                                                                      }(e.name))
+                                                                                                                  .toList()
+                                                                                                                  .unique((e) => e.recordedAt!)
+                                                                                                                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                                                                                                                  .map((e) => e.recordedAt)
+                                                                                                                  .withoutNulls
+                                                                                                                  .toList(),
+                                                                                                              newsPagesItem * 10,
+                                                                                                              (newsPagesItem + 1) * 10)
+                                                                                                          ?.toList() ??
+                                                                                                      [];
 
                                                                                                   return Column(
                                                                                                     mainAxisSize: MainAxisSize.max,
                                                                                                     children: List.generate(newsRows.length, (newsRowsIndex) {
                                                                                                       final newsRowsItem = newsRows[newsRowsIndex];
-                                                                                                      return Visibility(
-                                                                                                        visible: _model.patientObservations.where((e) => (e.recordedAt == newsRowsItem) && (e.name == 'NEWS2 total score')).toList().firstOrNull?.value != null && _model.patientObservations.where((e) => (e.recordedAt == newsRowsItem) && (e.name == 'NEWS2 total score')).toList().firstOrNull?.value != '',
-                                                                                                        child: wrapWithModel(
-                                                                                                          model: _model.nEWSRowComponentModels.getModel(
-                                                                                                            newsRowsIndex.toString(),
-                                                                                                            newsRowsIndex,
+                                                                                                      return wrapWithModel(
+                                                                                                        model: _model.nEWSRowComponentModels.getModel(
+                                                                                                          newsRowsIndex.toString(),
+                                                                                                          newsRowsIndex,
+                                                                                                        ),
+                                                                                                        updateCallback: () => safeSetState(() {}),
+                                                                                                        child: NEWSRowComponentWidget(
+                                                                                                          key: Key(
+                                                                                                            'Keyqy8_${newsRowsIndex.toString()}',
                                                                                                           ),
-                                                                                                          updateCallback: () => safeSetState(() {}),
-                                                                                                          child: NEWSRowComponentWidget(
-                                                                                                            key: Key(
-                                                                                                              'Keyqy8_${newsRowsIndex.toString()}',
-                                                                                                            ),
-                                                                                                            observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
-                                                                                                            isLatest: newsRowsIndex == 0,
-                                                                                                          ),
+                                                                                                          observationsRow: _model.patientObservations.where((e) => e.recordedAt == newsRowsItem).toList(),
+                                                                                                          isLatest: newsRowsIndex == 0,
                                                                                                         ),
                                                                                                       );
                                                                                                     }),
@@ -10457,7 +10484,17 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             ),
                                                                             Builder(
                                                                               builder: (context) {
-                                                                                final newsPages2 = functions.createPageIndices(_model.patientObservations.unique((e) => e.recordedAt!).length, 10).toList();
+                                                                                final newsPages2 = functions
+                                                                                    .createPageIndices(
+                                                                                        _model.patientObservations
+                                                                                            .where((e) => (String name) {
+                                                                                                  return name == 'Heart rate' || name == 'Body temperature' || name == 'Systolic blood pressure' || name == 'Diastolic blood pressure' || name == 'Consciousness' || name == 'SpO2' || name == 'Air or oxygen' || name == 'is_individual_3' || name == 'Respiratory rate' || name == 'Hypercapnic respiratory failure' || name == 'NEWS2 total score';
+                                                                                                }(e.name))
+                                                                                            .toList()
+                                                                                            .unique((e) => e.recordedAt!)
+                                                                                            .length,
+                                                                                        10)
+                                                                                    .toList();
 
                                                                                 return Row(
                                                                                   mainAxisSize: MainAxisSize.max,
