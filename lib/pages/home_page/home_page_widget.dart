@@ -10824,11 +10824,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             icon: Icon(
                                                               Icons
                                                                   .menu_book_sharp,
-                                                              size: 300.0,
+                                                              size: 200.0,
                                                             ),
                                                             options:
                                                                 FFButtonOptions(
-                                                              height: 350.0,
+                                                              height: 200.0,
                                                               padding:
                                                                   EdgeInsetsDirectional
                                                                       .fromSTEB(

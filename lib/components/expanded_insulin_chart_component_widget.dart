@@ -6618,38 +6618,39 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                             size: 24.0,
                                                                                                           ),
                                                                                                         ),
-                                                                                                        AlignedTooltip(
-                                                                                                          content: Padding(
-                                                                                                            padding: EdgeInsets.all(4.0),
-                                                                                                            child: Text(
-                                                                                                              'Insulin Advised By Dr. ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.doctorId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.authoredOn)}',
-                                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
-                                                                                                                    font: GoogleFonts.inter(
+                                                                                                        if (_model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.doctorId != null && _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.doctorId != '')
+                                                                                                          AlignedTooltip(
+                                                                                                            content: Padding(
+                                                                                                              padding: EdgeInsets.all(4.0),
+                                                                                                              child: Text(
+                                                                                                                'Insulin Advised By Dr. ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.doctorId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.authoredOn)}',
+                                                                                                                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                                      font: GoogleFonts.inter(
+                                                                                                                        fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                      ),
+                                                                                                                      letterSpacing: 0.0,
                                                                                                                       fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                                       fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                                     ),
-                                                                                                                    letterSpacing: 0.0,
-                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                                                                  ),
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                            offset: 4.0,
+                                                                                                            preferredDirection: AxisDirection.up,
+                                                                                                            borderRadius: BorderRadius.circular(8.0),
+                                                                                                            backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                                            elevation: 4.0,
+                                                                                                            tailBaseWidth: 24.0,
+                                                                                                            tailLength: 12.0,
+                                                                                                            waitDuration: Duration(milliseconds: 100),
+                                                                                                            showDuration: Duration(milliseconds: 1500),
+                                                                                                            triggerMode: TooltipTriggerMode.tap,
+                                                                                                            child: FaIcon(
+                                                                                                              FontAwesomeIcons.syringe,
+                                                                                                              color: FlutterFlowTheme.of(context).info,
+                                                                                                              size: 24.0,
                                                                                                             ),
                                                                                                           ),
-                                                                                                          offset: 4.0,
-                                                                                                          preferredDirection: AxisDirection.up,
-                                                                                                          borderRadius: BorderRadius.circular(8.0),
-                                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                                          elevation: 4.0,
-                                                                                                          tailBaseWidth: 24.0,
-                                                                                                          tailLength: 12.0,
-                                                                                                          waitDuration: Duration(milliseconds: 100),
-                                                                                                          showDuration: Duration(milliseconds: 1500),
-                                                                                                          triggerMode: TooltipTriggerMode.tap,
-                                                                                                          child: FaIcon(
-                                                                                                            FontAwesomeIcons.syringe,
-                                                                                                            color: FlutterFlowTheme.of(context).info,
-                                                                                                            size: 24.0,
-                                                                                                          ),
-                                                                                                        ),
                                                                                                         if (responsiveVisibility(
                                                                                                           context: context,
                                                                                                           desktop: false,
@@ -6677,38 +6678,39 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                             color: FlutterFlowTheme.of(context).info,
                                                                                                             size: 24.0,
                                                                                                           ),
-                                                                                                        AlignedTooltip(
-                                                                                                          content: Padding(
-                                                                                                            padding: EdgeInsets.all(4.0),
-                                                                                                            child: Text(
-                                                                                                              'Insulin Administered By ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().lastOrNull?.nurseId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.completedAt)}',
-                                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
-                                                                                                                    font: GoogleFonts.inter(
+                                                                                                        if (_model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().lastOrNull?.nurseId != null && _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().lastOrNull?.nurseId != '')
+                                                                                                          AlignedTooltip(
+                                                                                                            content: Padding(
+                                                                                                              padding: EdgeInsets.all(4.0),
+                                                                                                              child: Text(
+                                                                                                                'Insulin Administered By ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().lastOrNull?.nurseId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.completedAt)}',
+                                                                                                                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                                      font: GoogleFonts.inter(
+                                                                                                                        fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                      ),
+                                                                                                                      letterSpacing: 0.0,
                                                                                                                       fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                                       fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                                     ),
-                                                                                                                    letterSpacing: 0.0,
-                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                                                                  ),
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                            offset: 4.0,
+                                                                                                            preferredDirection: AxisDirection.up,
+                                                                                                            borderRadius: BorderRadius.circular(8.0),
+                                                                                                            backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                                            elevation: 4.0,
+                                                                                                            tailBaseWidth: 24.0,
+                                                                                                            tailLength: 12.0,
+                                                                                                            waitDuration: Duration(milliseconds: 100),
+                                                                                                            showDuration: Duration(milliseconds: 1500),
+                                                                                                            triggerMode: TooltipTriggerMode.tap,
+                                                                                                            child: Icon(
+                                                                                                              Icons.check_circle_rounded,
+                                                                                                              color: FlutterFlowTheme.of(context).info,
+                                                                                                              size: 30.0,
                                                                                                             ),
                                                                                                           ),
-                                                                                                          offset: 4.0,
-                                                                                                          preferredDirection: AxisDirection.up,
-                                                                                                          borderRadius: BorderRadius.circular(8.0),
-                                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                                          elevation: 4.0,
-                                                                                                          tailBaseWidth: 24.0,
-                                                                                                          tailLength: 12.0,
-                                                                                                          waitDuration: Duration(milliseconds: 100),
-                                                                                                          showDuration: Duration(milliseconds: 1500),
-                                                                                                          triggerMode: TooltipTriggerMode.tap,
-                                                                                                          child: Icon(
-                                                                                                            Icons.check_circle_rounded,
-                                                                                                            color: FlutterFlowTheme.of(context).info,
-                                                                                                            size: 30.0,
-                                                                                                          ),
-                                                                                                        ),
                                                                                                         AlignedTooltip(
                                                                                                           content: Padding(
                                                                                                             padding: EdgeInsets.all(4.0),
@@ -6926,6 +6928,31 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                     size: 24.0,
                                                                                                                   ),
                                                                                                                   onPressed: () async {
+                                                                                                                    var _shouldSetState = false;
+                                                                                                                    var confirmDialogResponse = await showDialog<bool>(
+                                                                                                                          context: context,
+                                                                                                                          builder: (alertDialogContext) {
+                                                                                                                            return AlertDialog(
+                                                                                                                              title: Text('Confirm?'),
+                                                                                                                              content: Text('Confirm Insulin Administration?'),
+                                                                                                                              actions: [
+                                                                                                                                TextButton(
+                                                                                                                                  onPressed: () => Navigator.pop(alertDialogContext, false),
+                                                                                                                                  child: Text('Cancel'),
+                                                                                                                                ),
+                                                                                                                                TextButton(
+                                                                                                                                  onPressed: () => Navigator.pop(alertDialogContext, true),
+                                                                                                                                  child: Text('Confirm'),
+                                                                                                                                ),
+                                                                                                                              ],
+                                                                                                                            );
+                                                                                                                          },
+                                                                                                                        ) ??
+                                                                                                                        false;
+                                                                                                                    if (!confirmDialogResponse) {
+                                                                                                                      if (_shouldSetState) safeSetState(() {});
+                                                                                                                      return;
+                                                                                                                    }
                                                                                                                     _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                                     _model.selectedTimespot = timeSpotItem;
                                                                                                                     safeSetState(() {});
@@ -6934,12 +6961,14 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                       buildJsonJson: functions.createInsulinAdministrationBundleJson(widget.patientDetails!.identifier, widget.encounter!.encounterID, dateTimeFormat("y-MM-dd", _model.selectedDate), timeSpotItem, functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()), 'Display Administration Nurse', functions.datetimeToISO8601String(getCurrentTimestamp)!, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.dose, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.dose, ''),
                                                                                                                     );
 
+                                                                                                                    _shouldSetState = true;
                                                                                                                     if ((_model.postInsulinAdministration?.succeeded ?? true)) {
                                                                                                                       _model.insulinAdministration2 = await GetAllInsulinAdministrationByIDCall.call(
                                                                                                                         token: FFAppState().fhirBearerToken,
                                                                                                                         id: widget.patientDetails?.identifier,
                                                                                                                       );
 
+                                                                                                                      _shouldSetState = true;
                                                                                                                       if ((_model.insulinAdministration2?.succeeded ?? true)) {
                                                                                                                         _model.insulinAdministrationList = functions
                                                                                                                             .parseFhirInsulinAdministrations(GetAllInsulinAdministrationByIDCall.entries(
@@ -6967,7 +6996,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                       );
                                                                                                                     }
 
-                                                                                                                    safeSetState(() {});
+                                                                                                                    if (_shouldSetState) safeSetState(() {});
                                                                                                                   },
                                                                                                                 ),
                                                                                                               ),
