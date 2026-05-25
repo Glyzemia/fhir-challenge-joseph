@@ -721,7 +721,10 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
       final doseAndRate = dosage?['doseAndRate'];
 
       if (doseAndRate is List && doseAndRate.isNotEmpty) {
-        final doseQuantity = doseAndRate[0]?['doseQuantity'];
+        final firstDoseAndRate = doseAndRate[0];
+
+        // 1. Standard doseQuantity: e.g. 500 mg, 4 unit
+        final doseQuantity = firstDoseAndRate?['doseQuantity'];
 
         if (doseQuantity != null) {
           final value = safeString(doseQuantity['value']);
@@ -738,7 +741,9 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
           }
         }
 
-        final doseRange = doseAndRate[0]?['doseRange'];
+        // 2. Standard doseRange: e.g. 5 - 10 mg
+        final doseRange = firstDoseAndRate?['doseRange'];
+
         if (doseRange != null) {
           final low = doseRange['low'];
           final high = doseRange['high'];
@@ -753,7 +758,67 @@ List<MedicationStruct> parseFhirMedications(List<dynamic> entries) {
             final unit = highUnit.isNotEmpty ? highUnit : lowUnit;
             return '$lowValue - $highValue $unit'.trim();
           }
+
+          if (lowValue.isNotEmpty) {
+            return '$lowValue $lowUnit'.trim();
+          }
+
+          if (highValue.isNotEmpty) {
+            return '$highValue $highUnit'.trim();
+          }
         }
+
+        // 3. Infusion rateQuantity: e.g. noradrenaline 10 mcg/kg/min
+        final rateQuantity = firstDoseAndRate?['rateQuantity'];
+
+        if (rateQuantity != null) {
+          final value = safeString(rateQuantity['value']);
+          final unit = safeString(
+            rateQuantity['unit'] ?? rateQuantity['code'],
+          );
+
+          if (value.isNotEmpty && unit.isNotEmpty) {
+            return '$value $unit';
+          }
+
+          if (value.isNotEmpty) {
+            return value;
+          }
+        }
+
+        // 4. Infusion rateRange, just in case later you use variable rates
+        final rateRange = firstDoseAndRate?['rateRange'];
+
+        if (rateRange != null) {
+          final low = rateRange['low'];
+          final high = rateRange['high'];
+
+          final lowValue = safeString(low?['value']);
+          final lowUnit = safeString(low?['unit'] ?? low?['code']);
+
+          final highValue = safeString(high?['value']);
+          final highUnit = safeString(high?['unit'] ?? high?['code']);
+
+          if (lowValue.isNotEmpty && highValue.isNotEmpty) {
+            final unit = highUnit.isNotEmpty ? highUnit : lowUnit;
+            return '$lowValue - $highValue $unit'.trim();
+          }
+
+          if (lowValue.isNotEmpty) {
+            return '$lowValue $lowUnit'.trim();
+          }
+
+          if (highValue.isNotEmpty) {
+            return '$highValue $highUnit'.trim();
+          }
+        }
+      }
+
+      // 5. Final fallback: dosageInstruction.text
+      final dosageText = safeString(dosage?['text']);
+
+      if (dosageText.trim().isNotEmpty) {
+        return dosageText;
       }
     }
 

@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'conditioon_table_row_component_model.dart';
 export 'conditioon_table_row_component_model.dart';
 
+/// inotrope display fix.
 class ConditioonTableRowComponentWidget extends StatefulWidget {
   const ConditioonTableRowComponentWidget({
     super.key,
