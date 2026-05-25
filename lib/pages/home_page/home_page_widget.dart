@@ -8375,7 +8375,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         .max,
                                                                 children: [
                                                                   Text(
-                                                                    'Body Temperature',
+                                                                    'Temperature',
                                                                     style: FlutterFlowTheme.of(
                                                                             context)
                                                                         .bodyMedium
@@ -10575,126 +10575,137 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                           MainAxisAlignment
                                                               .start,
                                                       children: [
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            if (GetAdmissionEncounterByPatientIDCall
-                                                                        .admittedUnder(
-                                                                      patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                          .jsonBody,
-                                                                    ) ==
-                                                                    null ||
-                                                                GetAdmissionEncounterByPatientIDCall
-                                                                        .admittedUnder(
-                                                                      patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                          .jsonBody,
-                                                                    ) ==
-                                                                    '')
-                                                              FlutterFlowIconButton(
-                                                                borderRadius:
-                                                                    8.0,
-                                                                buttonSize:
-                                                                    40.0,
-                                                                fillColor:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary,
-                                                                icon: Icon(
-                                                                  Icons
-                                                                      .upload_rounded,
-                                                                  color: FlutterFlowTheme.of(
+                                                        if (GetAdmissionEncounterByPatientIDCall
+                                                                    .admittedUnder(
+                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                      .jsonBody,
+                                                                ) ==
+                                                                null ||
+                                                            GetAdmissionEncounterByPatientIDCall
+                                                                    .admittedUnder(
+                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                      .jsonBody,
+                                                                ) ==
+                                                                '')
+                                                          Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .max,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              if (GetAdmissionEncounterByPatientIDCall
+                                                                          .admittedUnder(
+                                                                        patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                            .jsonBody,
+                                                                      ) ==
+                                                                      null ||
+                                                                  GetAdmissionEncounterByPatientIDCall
+                                                                          .admittedUnder(
+                                                                        patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                            .jsonBody,
+                                                                      ) ==
+                                                                      '')
+                                                                FlutterFlowIconButton(
+                                                                  borderRadius:
+                                                                      8.0,
+                                                                  buttonSize:
+                                                                      40.0,
+                                                                  fillColor: FlutterFlowTheme.of(
                                                                           context)
-                                                                      .info,
-                                                                  size: 24.0,
-                                                                ),
-                                                                onPressed:
-                                                                    () async {
-                                                                  _model.randomPractitioner = functions.getRandomStringFromList(FFAppState()
-                                                                      .practitioners
-                                                                      .map((e) =>
-                                                                          e.id)
-                                                                      .toList());
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  _model.patchAdmission =
-                                                                      await PatchAdmissionEncountersForGlyzemiaCall
-                                                                          .call(
-                                                                    token: FFAppState()
-                                                                        .fhirBearerToken,
-                                                                    encounterId:
-                                                                        GetAdmissionEncounterByPatientIDCall
-                                                                            .encounterID(
-                                                                      patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                          .jsonBody,
-                                                                    ),
-                                                                    practitionerId:
-                                                                        _model
-                                                                            .randomPractitioner,
-                                                                    practitionerDisplay: FFAppState()
-                                                                        .practitioners
-                                                                        .where((e) =>
-                                                                            e.id ==
-                                                                            _model.randomPractitioner)
-                                                                        .toList()
-                                                                        .firstOrNull
-                                                                        ?.combinedNames,
-                                                                  );
-
-                                                                  if ((_model
-                                                                          .patchAdmission
-                                                                          ?.succeeded ??
-                                                                      true)) {
-                                                                    ScaffoldMessenger.of(
+                                                                      .primary,
+                                                                  icon: Icon(
+                                                                    Icons
+                                                                        .upload_rounded,
+                                                                    color: FlutterFlowTheme.of(
                                                                             context)
-                                                                        .showSnackBar(
-                                                                      SnackBar(
-                                                                        content:
-                                                                            Text(
-                                                                          'Updated Admission',
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                FlutterFlowTheme.of(context).primaryText,
-                                                                          ),
-                                                                        ),
-                                                                        duration:
-                                                                            Duration(milliseconds: 4000),
-                                                                        backgroundColor:
-                                                                            FlutterFlowTheme.of(context).secondary,
+                                                                        .info,
+                                                                    size: 24.0,
+                                                                  ),
+                                                                  onPressed:
+                                                                      () async {
+                                                                    _model.randomPractitioner = functions.getRandomStringFromList(FFAppState()
+                                                                        .practitioners
+                                                                        .map((e) =>
+                                                                            e.id)
+                                                                        .toList());
+                                                                    safeSetState(
+                                                                        () {});
+                                                                    _model.patchAdmission =
+                                                                        await PatchAdmissionEncountersForGlyzemiaCall
+                                                                            .call(
+                                                                      token: FFAppState()
+                                                                          .fhirBearerToken,
+                                                                      encounterId:
+                                                                          GetAdmissionEncounterByPatientIDCall
+                                                                              .encounterID(
+                                                                        patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                            .jsonBody,
                                                                       ),
+                                                                      practitionerId:
+                                                                          _model
+                                                                              .randomPractitioner,
+                                                                      practitionerDisplay: FFAppState()
+                                                                          .practitioners
+                                                                          .where((e) =>
+                                                                              e.id ==
+                                                                              _model.randomPractitioner)
+                                                                          .toList()
+                                                                          .firstOrNull
+                                                                          ?.combinedNames,
                                                                     );
-                                                                  } else {
-                                                                    await showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (alertDialogContext) {
-                                                                        return AlertDialog(
-                                                                          title:
-                                                                              Text('Failed'),
-                                                                          content:
-                                                                              Text((_model.patchAdmission?.bodyText ?? '')),
-                                                                          actions: [
-                                                                            TextButton(
-                                                                              onPressed: () => Navigator.pop(alertDialogContext),
-                                                                              child: Text('Ok'),
-                                                                            ),
-                                                                          ],
-                                                                        );
-                                                                      },
-                                                                    );
-                                                                  }
 
-                                                                  safeSetState(
-                                                                      () {});
-                                                                },
-                                                              ),
-                                                          ],
-                                                        ),
+                                                                    if ((_model
+                                                                            .patchAdmission
+                                                                            ?.succeeded ??
+                                                                        true)) {
+                                                                      ScaffoldMessenger.of(
+                                                                              context)
+                                                                          .showSnackBar(
+                                                                        SnackBar(
+                                                                          content:
+                                                                              Text(
+                                                                            'Updated Admission',
+                                                                            style:
+                                                                                TextStyle(
+                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                            ),
+                                                                          ),
+                                                                          duration:
+                                                                              Duration(milliseconds: 4000),
+                                                                          backgroundColor:
+                                                                              FlutterFlowTheme.of(context).secondary,
+                                                                        ),
+                                                                      );
+                                                                    } else {
+                                                                      await showDialog(
+                                                                        context:
+                                                                            context,
+                                                                        builder:
+                                                                            (alertDialogContext) {
+                                                                          return AlertDialog(
+                                                                            title:
+                                                                                Text('Failed'),
+                                                                            content:
+                                                                                Text((_model.patchAdmission?.bodyText ?? '')),
+                                                                            actions: [
+                                                                              TextButton(
+                                                                                onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                child: Text('Ok'),
+                                                                              ),
+                                                                            ],
+                                                                          );
+                                                                        },
+                                                                      );
+                                                                    }
+
+                                                                    safeSetState(
+                                                                        () {});
+                                                                  },
+                                                                ),
+                                                            ],
+                                                          ),
                                                         if (responsiveVisibility(
                                                           context: context,
                                                           desktop: false,
@@ -10743,136 +10754,124 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                       .fontStyle,
                                                                 ),
                                                           ),
-                                                        Builder(
-                                                          builder: (context) =>
-                                                              FFButtonWidget(
-                                                            onPressed:
-                                                                () async {
-                                                              await showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (dialogContext) {
-                                                                  return Dialog(
-                                                                    elevation:
-                                                                        0,
-                                                                    insetPadding:
-                                                                        EdgeInsets
-                                                                            .zero,
-                                                                    backgroundColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0)
-                                                                        .resolve(
-                                                                            Directionality.of(context)),
-                                                                    child:
-                                                                        ExpandedInsulinChartComponentWidget(
-                                                                      patientDetails:
-                                                                          _model
-                                                                              .patientSelectedForDetails!,
-                                                                      conditions:
-                                                                          _model
-                                                                              .patientConditions,
-                                                                      encounter:
-                                                                          EncounterStruct(
-                                                                        patientID: _model
-                                                                            .patientSelectedForDetails
-                                                                            ?.identifier,
-                                                                        encounterID:
-                                                                            GetAdmissionEncounterByPatientIDCall.encounterID(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
+                                                        if (GetAdmissionEncounterByPatientIDCall
+                                                                    .admittedUnder(
+                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                      .jsonBody,
+                                                                ) !=
+                                                                null &&
+                                                            GetAdmissionEncounterByPatientIDCall
+                                                                    .admittedUnder(
+                                                                  patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
+                                                                      .jsonBody,
+                                                                ) !=
+                                                                '')
+                                                          Builder(
+                                                            builder: (context) =>
+                                                                FFButtonWidget(
+                                                              onPressed:
+                                                                  () async {
+                                                                await showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (dialogContext) {
+                                                                    return Dialog(
+                                                                      elevation:
+                                                                          0,
+                                                                      insetPadding:
+                                                                          EdgeInsets
+                                                                              .zero,
+                                                                      backgroundColor:
+                                                                          Colors
+                                                                              .transparent,
+                                                                      alignment: AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0)
+                                                                          .resolve(
+                                                                              Directionality.of(context)),
+                                                                      child:
+                                                                          ExpandedInsulinChartComponentWidget(
+                                                                        patientDetails:
+                                                                            _model.patientSelectedForDetails!,
+                                                                        conditions:
+                                                                            _model.patientConditions,
+                                                                        encounter:
+                                                                            EncounterStruct(
+                                                                          patientID: _model
+                                                                              .patientSelectedForDetails
+                                                                              ?.identifier,
+                                                                          encounterID:
+                                                                              GetAdmissionEncounterByPatientIDCall.encounterID(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          ),
+                                                                          encounterStatus:
+                                                                              GetAdmissionEncounterByPatientIDCall.encounterStatus(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          ),
+                                                                          encounterType:
+                                                                              GetAdmissionEncounterByPatientIDCall.encounterType(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          ),
+                                                                          admissionDate:
+                                                                              functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          )),
+                                                                          wardName:
+                                                                              GetAdmissionEncounterByPatientIDCall.wardName(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          ),
+                                                                          admittedUnder:
+                                                                              GetAdmissionEncounterByPatientIDCall.admittedUnder(
+                                                                            patientDetailsContainerGetAdmissionEncounterByPatientIDResponse.jsonBody,
+                                                                          ),
                                                                         ),
-                                                                        encounterStatus:
-                                                                            GetAdmissionEncounterByPatientIDCall.encounterStatus(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
-                                                                        ),
-                                                                        encounterType:
-                                                                            GetAdmissionEncounterByPatientIDCall.encounterType(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
-                                                                        ),
-                                                                        admissionDate:
-                                                                            functions.convertSingleDateStringtoDateTime(GetAdmissionEncounterByPatientIDCall.admissionDate(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
-                                                                        )),
-                                                                        wardName:
-                                                                            GetAdmissionEncounterByPatientIDCall.wardName(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
-                                                                        ),
-                                                                        admittedUnder:
-                                                                            GetAdmissionEncounterByPatientIDCall.admittedUnder(
-                                                                          patientDetailsContainerGetAdmissionEncounterByPatientIDResponse
-                                                                              .jsonBody,
-                                                                        ),
+                                                                        observationsListGiven:
+                                                                            _model.patientObservations,
                                                                       ),
-                                                                      observationsListGiven:
-                                                                          _model
-                                                                              .patientObservations,
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              );
-                                                            },
-                                                            text:
-                                                                'OPEN INSULIN CHART',
-                                                            icon: Icon(
-                                                              Icons
-                                                                  .menu_book_sharp,
-                                                              size: 200.0,
-                                                            ),
-                                                            options:
-                                                                FFButtonOptions(
-                                                              height: 200.0,
-                                                              padding:
-                                                                  EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          16.0,
-                                                                          0.0,
-                                                                          16.0,
-                                                                          0.0),
-                                                              iconAlignment:
-                                                                  IconAlignment
-                                                                      .end,
-                                                              iconPadding:
-                                                                  EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0),
-                                                              iconColor:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .tertiary,
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .cardTertiary,
-                                                              textStyle:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .titleSmall
-                                                                      .override(
-                                                                        font: GoogleFonts
-                                                                            .inter(
-                                                                          fontWeight: FlutterFlowTheme.of(context)
-                                                                              .titleSmall
-                                                                              .fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context)
-                                                                              .titleSmall
-                                                                              .fontStyle,
-                                                                        ),
-                                                                        color: FlutterFlowTheme.of(context)
-                                                                            .tertiary,
-                                                                        fontSize:
-                                                                            50.0,
-                                                                        letterSpacing:
+                                                                    );
+                                                                  },
+                                                                );
+                                                              },
+                                                              text:
+                                                                  'OPEN INSULIN CHART',
+                                                              icon: Icon(
+                                                                Icons
+                                                                    .menu_book_sharp,
+                                                                size: 200.0,
+                                                              ),
+                                                              options:
+                                                                  FFButtonOptions(
+                                                                height: 200.0,
+                                                                padding: EdgeInsetsDirectional
+                                                                    .fromSTEB(
+                                                                        16.0,
+                                                                        0.0,
+                                                                        16.0,
+                                                                        0.0),
+                                                                iconAlignment:
+                                                                    IconAlignment
+                                                                        .end,
+                                                                iconPadding:
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
                                                                             0.0,
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0),
+                                                                iconColor:
+                                                                    FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .tertiary,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .cardTertiary,
+                                                                textStyle: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .titleSmall
+                                                                    .override(
+                                                                      font: GoogleFonts
+                                                                          .inter(
                                                                         fontWeight: FlutterFlowTheme.of(context)
                                                                             .titleSmall
                                                                             .fontWeight,
@@ -10880,34 +10879,50 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             .titleSmall
                                                                             .fontStyle,
                                                                       ),
-                                                              elevation: 10.0,
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .cardTertiary,
-                                                              ),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          20.0),
-                                                              hoverColor:
-                                                                  FlutterFlowTheme.of(
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .tertiary,
+                                                                      fontSize:
+                                                                          50.0,
+                                                                      letterSpacing:
+                                                                          0.0,
+                                                                      fontWeight: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .titleSmall
+                                                                          .fontWeight,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .titleSmall
+                                                                          .fontStyle,
+                                                                    ),
+                                                                elevation: 10.0,
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .cardTertiary,
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.0),
+                                                                hoverColor:
+                                                                    FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .tertiary,
+                                                                hoverBorderSide:
+                                                                    BorderSide(
+                                                                  color: FlutterFlowTheme.of(
                                                                           context)
                                                                       .tertiary,
-                                                              hoverBorderSide:
-                                                                  BorderSide(
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .tertiary,
+                                                                ),
+                                                                hoverTextColor:
+                                                                    FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .info,
                                                               ),
-                                                              hoverTextColor:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .info,
                                                             ),
                                                           ),
-                                                        ),
                                                       ]
                                                           .divide(SizedBox(
                                                               height: 10.0))

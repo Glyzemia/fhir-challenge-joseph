@@ -5449,7 +5449,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     content: Padding(
                                                                                                       padding: EdgeInsets.all(4.0),
                                                                                                       child: Text(
-                                                                                                        'Message...',
+                                                                                                        valueOrDefault<String>(
+                                                                                                          _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                          'feedstatus',
+                                                                                                        ),
                                                                                                         style: FlutterFlowTheme.of(context).bodyLarge.override(
                                                                                                               font: GoogleFonts.inter(
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
@@ -5582,7 +5585,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     content: Padding(
                                                                                                       padding: EdgeInsets.all(4.0),
                                                                                                       child: Text(
-                                                                                                        'Message...',
+                                                                                                        valueOrDefault<String>(
+                                                                                                          _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.steroidStatus,
+                                                                                                          'STEROIDS',
+                                                                                                        ),
                                                                                                         style: FlutterFlowTheme.of(context).bodyLarge.override(
                                                                                                               font: GoogleFonts.inter(
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
@@ -5606,13 +5612,21 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     triggerMode: TooltipTriggerMode.tap,
                                                                                                     child: Builder(
                                                                                                       builder: (context) {
-                                                                                                        if (true) {
+                                                                                                        if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.steroidStatus,
+                                                                                                              'STEROIDS',
+                                                                                                            ) ==
+                                                                                                            'NO STEROIDS') {
                                                                                                           return Icon(
                                                                                                             Icons.check_circle_outline_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).success,
                                                                                                             size: 24.0,
                                                                                                           );
-                                                                                                        } else if (true) {
+                                                                                                        } else if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.steroidStatus,
+                                                                                                              'STEROIDS',
+                                                                                                            ) ==
+                                                                                                            'IV STEROIDS') {
                                                                                                           return FaIcon(
                                                                                                             FontAwesomeIcons.syringe,
                                                                                                             color: FlutterFlowTheme.of(context).error,
@@ -5683,7 +5697,13 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     content: Padding(
                                                                                                       padding: EdgeInsets.all(4.0),
                                                                                                       child: Text(
-                                                                                                        'Message...',
+                                                                                                        valueOrDefault<String>(
+                                                                                                                  _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.inotropeStatus,
+                                                                                                                  'INOTROPES',
+                                                                                                                ) ==
+                                                                                                                'YES'
+                                                                                                            ? 'INOTROPES ON FLOW'
+                                                                                                            : 'NO INOTROPES',
                                                                                                         style: FlutterFlowTheme.of(context).bodyLarge.override(
                                                                                                               font: GoogleFonts.inter(
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
@@ -5707,13 +5727,21 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     triggerMode: TooltipTriggerMode.tap,
                                                                                                     child: Builder(
                                                                                                       builder: (context) {
-                                                                                                        if (true) {
+                                                                                                        if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.inotropeStatus,
+                                                                                                              'INOTROPES',
+                                                                                                            ) ==
+                                                                                                            'NO') {
                                                                                                           return Icon(
                                                                                                             Icons.check_circle_outline_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).success,
                                                                                                             size: 24.0,
                                                                                                           );
-                                                                                                        } else if (true) {
+                                                                                                        } else if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.inotropeStatus,
+                                                                                                              'INOTROPES',
+                                                                                                            ) ==
+                                                                                                            'YES') {
                                                                                                           return Icon(
                                                                                                             Icons.water_drop_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).error,
@@ -5743,7 +5771,13 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                               ),
-                                                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                                                              color: valueOrDefault<String>(
+                                                                                                                        _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.inotropeStatus,
+                                                                                                                        'INOTROPES',
+                                                                                                                      ) ==
+                                                                                                                      'YES'
+                                                                                                                  ? FlutterFlowTheme.of(context).error
+                                                                                                                  : FlutterFlowTheme.of(context).primaryText,
                                                                                                               letterSpacing: 0.0,
                                                                                                               fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                               fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
@@ -5769,7 +5803,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     content: Padding(
                                                                                                       padding: EdgeInsets.all(4.0),
                                                                                                       child: Text(
-                                                                                                        'Message...',
+                                                                                                        'NO INSULIN INFUSION',
                                                                                                         style: FlutterFlowTheme.of(context).bodyLarge.override(
                                                                                                               font: GoogleFonts.inter(
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
@@ -5862,7 +5896,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     content: Padding(
                                                                                                       padding: EdgeInsets.all(4.0),
                                                                                                       child: Text(
-                                                                                                        'Message...',
+                                                                                                        valueOrDefault<String>(
+                                                                                                          _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.creatinine.toString(),
+                                                                                                          'CREATININE',
+                                                                                                        ),
                                                                                                         style: FlutterFlowTheme.of(context).bodyLarge.override(
                                                                                                               font: GoogleFonts.inter(
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
@@ -5886,7 +5923,14 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     triggerMode: TooltipTriggerMode.tap,
                                                                                                     child: Icon(
                                                                                                       Icons.water_rounded,
-                                                                                                      color: FlutterFlowTheme.of(context).primary,
+                                                                                                      color: (String val) {
+                                                                                                        return double.parse(val) >= 1.4;
+                                                                                                      }(valueOrDefault<String>(
+                                                                                                        _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.creatinine.toString(),
+                                                                                                        'CREATININE',
+                                                                                                      ))
+                                                                                                          ? FlutterFlowTheme.of(context).error
+                                                                                                          : FlutterFlowTheme.of(context).primary,
                                                                                                       size: 24.0,
                                                                                                     ),
                                                                                                   ),
@@ -5926,7 +5970,14 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                 fontWeight: FontWeight.w500,
                                                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                               ),
-                                                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                                                              color: (String val) {
+                                                                                                                return double.parse(val) >= 1.4;
+                                                                                                              }(valueOrDefault<String>(
+                                                                                                                _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.creatinine.toString(),
+                                                                                                                'CREATININE',
+                                                                                                              ))
+                                                                                                                  ? FlutterFlowTheme.of(context).error
+                                                                                                                  : FlutterFlowTheme.of(context).primaryText,
                                                                                                               fontSize: 16.0,
                                                                                                               letterSpacing: 0.0,
                                                                                                               fontWeight: FontWeight.w500,
