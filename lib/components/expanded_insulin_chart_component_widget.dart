@@ -214,19 +214,6 @@ class _ExpandedInsulinChartComponentWidgetState
               },
             );
           }
-
-          safeSetState(() {
-            _model.steroidsTextController?.text =
-                functions.getSteroidStatusFromMedications(
-                    _model.allMedications.toList(),
-                    FFAppState().steroidsList.toList());
-          });
-          safeSetState(() {
-            _model.inotropesTextController?.text =
-                functions.getInotropeStatusFromMedications(
-                    _model.allMedications.toList(),
-                    FFAppState().inotropesList.toList());
-          });
         }),
         Future(() async {
           _model.allMedicationRequestsQuery =
@@ -254,6 +241,18 @@ class _ExpandedInsulinChartComponentWidgetState
               safeSetState(() {});
             }
           }
+          safeSetState(() {
+            _model.steroidsTextController?.text =
+                functions.getSteroidStatusFromMedications(
+                    _model.allMedications.toList(),
+                    FFAppState().steroidsList.toList());
+          });
+          safeSetState(() {
+            _model.inotropesTextController?.text =
+                functions.getInotropeStatusFromMedications(
+                    _model.allMedications.toList(),
+                    FFAppState().inotropesList.toList());
+          });
         }),
         Future(() async {
           _model.tidChartObservations1 =
@@ -5326,6 +5325,23 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                 size: 40.0,
                                                                                               ),
                                                                                               onPressed: () async {
+                                                                                                if (!(2 * _model.tidChartEntries.length == _model.insulinAdministrationList.length)) {
+                                                                                                  await showDialog(
+                                                                                                    context: context,
+                                                                                                    builder: (alertDialogContext) {
+                                                                                                      return AlertDialog(
+                                                                                                        title: Text('Error'),
+                                                                                                        content: Text('One or more CBG Entries are incomplete..!! '),
+                                                                                                        actions: [
+                                                                                                          TextButton(
+                                                                                                            onPressed: () => Navigator.pop(alertDialogContext),
+                                                                                                            child: Text('Ok'),
+                                                                                                          ),
+                                                                                                        ],
+                                                                                                      );
+                                                                                                    },
+                                                                                                  );
+                                                                                                }
                                                                                                 _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                 _model.selectedTimespot = timeSpotItem;
                                                                                                 _model.showCBGEntryForm = true;
@@ -5456,25 +5472,41 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     triggerMode: TooltipTriggerMode.tap,
                                                                                                     child: Builder(
                                                                                                       builder: (context) {
-                                                                                                        if (true) {
+                                                                                                        if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                              'feedstatus',
+                                                                                                            ) ==
+                                                                                                            'NORMAL ORAL') {
                                                                                                           return Icon(
                                                                                                             Icons.check_circle_outline_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).success,
                                                                                                             size: 24.0,
                                                                                                           );
-                                                                                                        } else if (true) {
+                                                                                                        } else if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                              'feedstatus',
+                                                                                                            ) ==
+                                                                                                            'REDUCED ORAL') {
                                                                                                           return Icon(
                                                                                                             Icons.arrow_downward_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).tertiary,
                                                                                                             size: 24.0,
                                                                                                           );
-                                                                                                        } else if (true) {
+                                                                                                        } else if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                              'feedstatus',
+                                                                                                            ) ==
+                                                                                                            'RT FEEDS') {
                                                                                                           return Icon(
                                                                                                             Icons.cable_rounded,
                                                                                                             color: FlutterFlowTheme.of(context).tertiary,
                                                                                                             size: 24.0,
                                                                                                           );
-                                                                                                        } else if (true) {
+                                                                                                        } else if (valueOrDefault<String>(
+                                                                                                              _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                              'feedstatus',
+                                                                                                            ) ==
+                                                                                                            'TPN') {
                                                                                                           return FaIcon(
                                                                                                             FontAwesomeIcons.fillDrip,
                                                                                                             color: FlutterFlowTheme.of(context).tertiary,
@@ -5504,7 +5536,16 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                               ),
-                                                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                                                              color: valueOrDefault<Color>(
+                                                                                                                valueOrDefault<String>(
+                                                                                                                          _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.feedStatus,
+                                                                                                                          'feedstatus',
+                                                                                                                        ) ==
+                                                                                                                        'NORMAL ORAL'
+                                                                                                                    ? FlutterFlowTheme.of(context).primaryText
+                                                                                                                    : FlutterFlowTheme.of(context).error,
+                                                                                                                FlutterFlowTheme.of(context).primaryText,
+                                                                                                              ),
                                                                                                               letterSpacing: 0.0,
                                                                                                               fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                               fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
@@ -5606,7 +5647,16 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                 fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                               ),
-                                                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                                                              color: valueOrDefault<Color>(
+                                                                                                                valueOrDefault<String>(
+                                                                                                                          _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.steroidStatus,
+                                                                                                                          'feedstatus',
+                                                                                                                        ) ==
+                                                                                                                        'NO STEROIDS'
+                                                                                                                    ? FlutterFlowTheme.of(context).primaryText
+                                                                                                                    : FlutterFlowTheme.of(context).error,
+                                                                                                                FlutterFlowTheme.of(context).primaryText,
+                                                                                                              ),
                                                                                                               letterSpacing: 0.0,
                                                                                                               fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                               fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
@@ -7155,9 +7205,37 @@ class _ExpandedInsulinChartComponentWidgetState
                                     children: [
                                       Text(
                                         valueOrDefault<String>(
-                                          _model.selectedDate?.toString(),
-                                          'D',
+                                          _model.tidChartEntries.length
+                                              .toString(),
+                                          'tid',
                                         ),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.inter(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                      ),
+                                      Text(
+                                        _model.insulinAdministrationList.length
+                                            .toString(),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -7599,9 +7677,35 @@ class _ExpandedInsulinChartComponentWidgetState
                                                               OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primary,
+                                                              color: () {
+                                                                if (functions.getSteroidStatusFromMedications(
+                                                                        _model
+                                                                            .allMedications
+                                                                            .toList(),
+                                                                        FFAppState()
+                                                                            .steroidsList
+                                                                            .toList()) ==
+                                                                    'IV STEROIDS') {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error;
+                                                                } else if (functions.getSteroidStatusFromMedications(
+                                                                        _model
+                                                                            .allMedications
+                                                                            .toList(),
+                                                                        FFAppState()
+                                                                            .steroidsList
+                                                                            .toList()) ==
+                                                                    'ORAL STEROIDS') {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .tertiary;
+                                                                } else {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error;
+                                                                }
+                                                              }(),
                                                               width: 1.0,
                                                             ),
                                                             borderRadius:
@@ -7613,9 +7717,35 @@ class _ExpandedInsulinChartComponentWidgetState
                                                               OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primary,
+                                                              color: () {
+                                                                if (functions.getSteroidStatusFromMedications(
+                                                                        _model
+                                                                            .allMedications
+                                                                            .toList(),
+                                                                        FFAppState()
+                                                                            .steroidsList
+                                                                            .toList()) ==
+                                                                    'IV STEROIDS') {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error;
+                                                                } else if (functions.getSteroidStatusFromMedications(
+                                                                        _model
+                                                                            .allMedications
+                                                                            .toList(),
+                                                                        FFAppState()
+                                                                            .steroidsList
+                                                                            .toList()) ==
+                                                                    'ORAL STEROIDS') {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .tertiary;
+                                                                } else {
+                                                                  return FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error;
+                                                                }
+                                                              }(),
                                                               width: 1.0,
                                                             ),
                                                             borderRadius:
@@ -7652,10 +7782,35 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                         10.0),
                                                           ),
                                                           filled: true,
-                                                          fillColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
+                                                          fillColor: () {
+                                                            if (functions.getSteroidStatusFromMedications(
+                                                                    _model
+                                                                        .allMedications
+                                                                        .toList(),
+                                                                    FFAppState()
+                                                                        .steroidsList
+                                                                        .toList()) ==
+                                                                'IV STEROIDS') {
+                                                              return FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .error;
+                                                            } else if (functions.getSteroidStatusFromMedications(
+                                                                    _model
+                                                                        .allMedications
+                                                                        .toList(),
+                                                                    FFAppState()
+                                                                        .steroidsList
+                                                                        .toList()) ==
+                                                                'ORAL STEROIDS') {
+                                                              return FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .tertiary;
+                                                            } else {
+                                                              return FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .error;
+                                                            }
+                                                          }(),
                                                         ),
                                                         style:
                                                             FlutterFlowTheme.of(
@@ -7841,9 +7996,20 @@ class _ExpandedInsulinChartComponentWidgetState
                                                               OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primary,
+                                                              color: functions.getInotropeStatusFromMedications(
+                                                                          _model
+                                                                              .allMedications
+                                                                              .toList(),
+                                                                          FFAppState()
+                                                                              .inotropesList
+                                                                              .toList()) ==
+                                                                      'YES'
+                                                                  ? FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error
+                                                                  : FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .success,
                                                               width: 1.0,
                                                             ),
                                                             borderRadius:
@@ -7855,9 +8021,20 @@ class _ExpandedInsulinChartComponentWidgetState
                                                               OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primary,
+                                                              color: functions.getInotropeStatusFromMedications(
+                                                                          _model
+                                                                              .allMedications
+                                                                              .toList(),
+                                                                          FFAppState()
+                                                                              .inotropesList
+                                                                              .toList()) ==
+                                                                      'YES'
+                                                                  ? FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .error
+                                                                  : FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .success,
                                                               width: 1.0,
                                                             ),
                                                             borderRadius:
@@ -7894,10 +8071,21 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                         10.0),
                                                           ),
                                                           filled: true,
-                                                          fillColor:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
+                                                          fillColor: functions.getInotropeStatusFromMedications(
+                                                                      _model
+                                                                          .allMedications
+                                                                          .toList(),
+                                                                      FFAppState()
+                                                                          .inotropesList
+                                                                          .toList()) ==
+                                                                  'YES'
+                                                              ? FlutterFlowTheme
+                                                                      .of(
+                                                                          context)
+                                                                  .error
+                                                              : FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .success,
                                                         ),
                                                         style:
                                                             FlutterFlowTheme.of(
@@ -10022,7 +10210,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                         .sAIDoseTextController,
                                                     focusNode:
                                                         _model.sAIDoseFocusNode,
-                                                    autofocus: false,
+                                                    autofocus: true,
                                                     enabled: true,
                                                     obscureText: false,
                                                     decoration: InputDecoration(

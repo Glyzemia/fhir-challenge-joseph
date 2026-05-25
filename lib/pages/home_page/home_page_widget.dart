@@ -10060,26 +10060,16 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                             },
                                                                           );
 
+                                                                          await Future
+                                                                              .delayed(
+                                                                            Duration(
+                                                                              milliseconds: 200,
+                                                                            ),
+                                                                          );
                                                                           _model.isPatientDetailsLoading =
                                                                               true;
                                                                           safeSetState(
                                                                               () {});
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .clearSnackBars();
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
-                                                                            SnackBar(
-                                                                              content: Text(
-                                                                                'Fectching Updated Records. Please wait..!!',
-                                                                                style: TextStyle(
-                                                                                  color: FlutterFlowTheme.of(context).info,
-                                                                                ),
-                                                                                textAlign: TextAlign.center,
-                                                                              ),
-                                                                              duration: Duration(milliseconds: 4000),
-                                                                              backgroundColor: FlutterFlowTheme.of(context).tertiary,
-                                                                            ),
-                                                                          );
                                                                           _model.fetchPatientsWithNews4 =
                                                                               await actions.fetchFhirPatientsWithLatestNews2(
                                                                             FFAppState().fhirBaseUrl,
@@ -10193,7 +10183,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                   .patientObservations
                                                                   .isNotEmpty) {
                                                                 return Container(
-                                                                  height: 500.0,
+                                                                  height: 580.0,
                                                                   decoration:
                                                                       BoxDecoration(),
                                                                   child: Column(
@@ -10381,7 +10371,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
                                                                                   return Container(
                                                                                     width: double.infinity,
-                                                                                    height: 540.0,
+                                                                                    height: 580.0,
                                                                                     child: Padding(
                                                                                       padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 40.0),
                                                                                       child: PageView.builder(

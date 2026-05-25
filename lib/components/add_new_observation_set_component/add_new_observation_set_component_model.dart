@@ -30,6 +30,8 @@ class AddNewObservationSetComponentModel
 
   int? airOrOxygenScore;
 
+  bool isVisible = true;
+
   ///  State fields for stateful widgets in this component.
 
   final formKey = GlobalKey<FormState>();
