@@ -5341,6 +5341,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                       );
                                                                                                     },
                                                                                                   );
+                                                                                                  return;
                                                                                                 }
                                                                                                 _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                 _model.selectedTimespot = timeSpotItem;
@@ -6585,15 +6586,69 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                       mainAxisSize: MainAxisSize.min,
                                                                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                                                                       children: [
-                                                                                                        Icon(
-                                                                                                          Icons.add_box,
-                                                                                                          color: FlutterFlowTheme.of(context).info,
-                                                                                                          size: 24.0,
+                                                                                                        AlignedTooltip(
+                                                                                                          content: Padding(
+                                                                                                            padding: EdgeInsets.all(4.0),
+                                                                                                            child: Text(
+                                                                                                              'CBG Entry By ${FFAppState().practitioners.where((e) => e.id == _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.nursePractitionerId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.effectiveDateTime)}',
+                                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                                    font: GoogleFonts.inter(
+                                                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                    ),
+                                                                                                                    letterSpacing: 0.0,
+                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                  ),
+                                                                                                            ),
+                                                                                                          ),
+                                                                                                          offset: 4.0,
+                                                                                                          preferredDirection: AxisDirection.up,
+                                                                                                          borderRadius: BorderRadius.circular(8.0),
+                                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                                          elevation: 4.0,
+                                                                                                          tailBaseWidth: 24.0,
+                                                                                                          tailLength: 12.0,
+                                                                                                          waitDuration: Duration(milliseconds: 100),
+                                                                                                          showDuration: Duration(milliseconds: 1500),
+                                                                                                          triggerMode: TooltipTriggerMode.tap,
+                                                                                                          child: Icon(
+                                                                                                            Icons.add_box,
+                                                                                                            color: FlutterFlowTheme.of(context).info,
+                                                                                                            size: 24.0,
+                                                                                                          ),
                                                                                                         ),
-                                                                                                        FaIcon(
-                                                                                                          FontAwesomeIcons.syringe,
-                                                                                                          color: FlutterFlowTheme.of(context).info,
-                                                                                                          size: 24.0,
+                                                                                                        AlignedTooltip(
+                                                                                                          content: Padding(
+                                                                                                            padding: EdgeInsets.all(4.0),
+                                                                                                            child: Text(
+                                                                                                              'Insulin Advised By Dr. ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.doctorId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull?.authoredOn)}',
+                                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                                    font: GoogleFonts.inter(
+                                                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                    ),
+                                                                                                                    letterSpacing: 0.0,
+                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                  ),
+                                                                                                            ),
+                                                                                                          ),
+                                                                                                          offset: 4.0,
+                                                                                                          preferredDirection: AxisDirection.up,
+                                                                                                          borderRadius: BorderRadius.circular(8.0),
+                                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                                          elevation: 4.0,
+                                                                                                          tailBaseWidth: 24.0,
+                                                                                                          tailLength: 12.0,
+                                                                                                          waitDuration: Duration(milliseconds: 100),
+                                                                                                          showDuration: Duration(milliseconds: 1500),
+                                                                                                          triggerMode: TooltipTriggerMode.tap,
+                                                                                                          child: FaIcon(
+                                                                                                            FontAwesomeIcons.syringe,
+                                                                                                            color: FlutterFlowTheme.of(context).info,
+                                                                                                            size: 24.0,
+                                                                                                          ),
                                                                                                         ),
                                                                                                         if (responsiveVisibility(
                                                                                                           context: context,
@@ -6622,10 +6677,37 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                             color: FlutterFlowTheme.of(context).info,
                                                                                                             size: 24.0,
                                                                                                           ),
-                                                                                                        Icon(
-                                                                                                          Icons.check_circle_rounded,
-                                                                                                          color: FlutterFlowTheme.of(context).info,
-                                                                                                          size: 30.0,
+                                                                                                        AlignedTooltip(
+                                                                                                          content: Padding(
+                                                                                                            padding: EdgeInsets.all(4.0),
+                                                                                                            child: Text(
+                                                                                                              'Insulin Administered By ${FFAppState().practitioners.where((e) => e.id == _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().lastOrNull?.nurseId).toList().firstOrNull?.combinedNames} at ${dateTimeFormat("d/M h:mm a", _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.completedAt)}',
+                                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                                    font: GoogleFonts.inter(
+                                                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                    ),
+                                                                                                                    letterSpacing: 0.0,
+                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                                  ),
+                                                                                                            ),
+                                                                                                          ),
+                                                                                                          offset: 4.0,
+                                                                                                          preferredDirection: AxisDirection.up,
+                                                                                                          borderRadius: BorderRadius.circular(8.0),
+                                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                                          elevation: 4.0,
+                                                                                                          tailBaseWidth: 24.0,
+                                                                                                          tailLength: 12.0,
+                                                                                                          waitDuration: Duration(milliseconds: 100),
+                                                                                                          showDuration: Duration(milliseconds: 1500),
+                                                                                                          triggerMode: TooltipTriggerMode.tap,
+                                                                                                          child: Icon(
+                                                                                                            Icons.check_circle_rounded,
+                                                                                                            color: FlutterFlowTheme.of(context).info,
+                                                                                                            size: 30.0,
+                                                                                                          ),
                                                                                                         ),
                                                                                                         AlignedTooltip(
                                                                                                           content: Padding(
