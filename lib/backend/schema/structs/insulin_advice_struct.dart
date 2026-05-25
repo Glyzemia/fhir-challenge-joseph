@@ -20,6 +20,7 @@ class InsulinAdviceStruct extends BaseStruct {
     DateTime? authoredOn,
     String? timespot,
     String? insulinType,
+    DateTime? date,
   })  : _medicationRequestId = medicationRequestId,
         _tidObservationId = tidObservationId,
         _patientId = patientId,
@@ -32,7 +33,8 @@ class InsulinAdviceStruct extends BaseStruct {
         _doctorNotes = doctorNotes,
         _authoredOn = authoredOn,
         _timespot = timespot,
-        _insulinType = insulinType;
+        _insulinType = insulinType,
+        _date = date;
 
   // "medicationRequestId" field.
   String? _medicationRequestId;
@@ -127,6 +129,13 @@ class InsulinAdviceStruct extends BaseStruct {
 
   bool hasInsulinType() => _insulinType != null;
 
+  // "date" field.
+  DateTime? _date;
+  DateTime? get date => _date;
+  set date(DateTime? val) => _date = val;
+
+  bool hasDate() => _date != null;
+
   static InsulinAdviceStruct fromMap(Map<String, dynamic> data) =>
       InsulinAdviceStruct(
         medicationRequestId: data['medicationRequestId'] as String?,
@@ -142,6 +151,7 @@ class InsulinAdviceStruct extends BaseStruct {
         authoredOn: data['authoredOn'] as DateTime?,
         timespot: data['timespot'] as String?,
         insulinType: data['insulinType'] as String?,
+        date: data['date'] as DateTime?,
       );
 
   static InsulinAdviceStruct? maybeFromMap(dynamic data) => data is Map
@@ -162,6 +172,7 @@ class InsulinAdviceStruct extends BaseStruct {
         'authoredOn': _authoredOn,
         'timespot': _timespot,
         'insulinType': _insulinType,
+        'date': _date,
       }.withoutNulls;
 
   @override
@@ -217,6 +228,10 @@ class InsulinAdviceStruct extends BaseStruct {
         'insulinType': serializeParam(
           _insulinType,
           ParamType.String,
+        ),
+        'date': serializeParam(
+          _date,
+          ParamType.DateTime,
         ),
       }.withoutNulls;
 
@@ -287,6 +302,11 @@ class InsulinAdviceStruct extends BaseStruct {
           ParamType.String,
           false,
         ),
+        date: deserializeParam(
+          data['date'],
+          ParamType.DateTime,
+          false,
+        ),
       );
 
   @override
@@ -307,7 +327,8 @@ class InsulinAdviceStruct extends BaseStruct {
         doctorNotes == other.doctorNotes &&
         authoredOn == other.authoredOn &&
         timespot == other.timespot &&
-        insulinType == other.insulinType;
+        insulinType == other.insulinType &&
+        date == other.date;
   }
 
   @override
@@ -324,7 +345,8 @@ class InsulinAdviceStruct extends BaseStruct {
         doctorNotes,
         authoredOn,
         timespot,
-        insulinType
+        insulinType,
+        date
       ]);
 }
 
@@ -342,6 +364,7 @@ InsulinAdviceStruct createInsulinAdviceStruct({
   DateTime? authoredOn,
   String? timespot,
   String? insulinType,
+  DateTime? date,
 }) =>
     InsulinAdviceStruct(
       medicationRequestId: medicationRequestId,
@@ -357,4 +380,5 @@ InsulinAdviceStruct createInsulinAdviceStruct({
       authoredOn: authoredOn,
       timespot: timespot,
       insulinType: insulinType,
+      date: date,
     );

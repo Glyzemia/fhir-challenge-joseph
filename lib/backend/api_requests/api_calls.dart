@@ -54,7 +54,7 @@ class GetCBGObservationsByIDForPatientCall {
     return ApiManager.instance.makeApiCall(
       callName: 'Get CBG Observations by ID for Patient',
       apiUrl:
-          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}&code=https://glyzemia.app/fhir/CodeSystem/glyzemia-observation%7Ctid-insulin-chart-entry&_sort=date',
+          'https://fhir.medblocks.com/fhir/VJb5MbNQ8Ktr1T7Zzqpz0U2eE2JhOilP/Observation?patient=${id}',
       callType: ApiCallType.GET,
       headers: {
         'Authorization': 'Bearer ${token}',

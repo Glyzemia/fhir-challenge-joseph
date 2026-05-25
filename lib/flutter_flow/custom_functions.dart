@@ -1664,7 +1664,8 @@ dynamic generateNEWS2ObservationPostJSON(
 String? datetimeToISO8601String(DateTime? date) {
   // convert datetime object to iso8601 string format
   if (date == null) return null;
-  return date.toUtc().toIso8601String();
+
+  return date.toIso8601String();
 }
 
 NewsScoreDecodeStruct decodeNewsScore(
@@ -2225,17 +2226,20 @@ List<MedicationStatementStruct> parseFhirMedicationStatement(
 }
 
 List<DateTime> createDatesList(DateTime dateOfAdmission) {
-  // given a date of admission, I want the function return all the dates from the date of admission, till current date in ascending order.
-  List<DateTime> datesList = [];
-  DateTime currentDate = DateTime.now();
+  // The function should return all the dates beginning from date of admission till today. It should include both the date of admission and today's date also
+  List<DateTime> dates = [];
+  DateTime today = DateTime.now();
+  DateTime startDate = DateTime(
+      dateOfAdmission.year, dateOfAdmission.month, dateOfAdmission.day);
+  DateTime endDate = DateTime(today.year, today.month, today.day);
 
-  for (DateTime date = dateOfAdmission;
-      date.isBefore(currentDate) || date.isAtSameMomentAs(currentDate);
+  for (DateTime date = startDate;
+      date.isBefore(endDate) || date.isAtSameMomentAs(endDate);
       date = date.add(Duration(days: 1))) {
-    datesList.add(date);
+    dates.add(date);
   }
 
-  return datesList;
+  return dates;
 }
 
 String getSteroidStatusFromMedications(
@@ -2771,12 +2775,31 @@ List<TidChartEntryStruct> parseFhirTidChartEntries(List<dynamic> entries) {
     return '';
   }
 
-  DateTime? getDateFromEffectiveDateTime(dynamic resource) {
-    return safeDateTime(
-      resource?['effectiveDateTime'] ??
-          resource?['effectivePeriod']?['start'] ??
-          resource?['issued'],
-    );
+  DateTime? getDateFromTidIdentifier(String identifier) {
+    final match = RegExp(
+      r'-(\d{8})-(MORNING|AFTERNOON|NIGHT)(?:-|$)',
+      caseSensitive: false,
+    ).firstMatch(identifier);
+
+    if (match == null) {
+      return null;
+    }
+
+    final dateText = match.group(1);
+    if (dateText == null || dateText.length != 8) {
+      return null;
+    }
+
+    final year = int.tryParse(dateText.substring(0, 4));
+    final month = int.tryParse(dateText.substring(4, 6));
+    final day = int.tryParse(dateText.substring(6, 8));
+
+    if (year == null || month == null || day == null) {
+      return null;
+    }
+
+    // This creates a local DateTime date object without UTC conversion.
+    return DateTime(year, month, day);
   }
 
   String getTimespotFromIdentifier(String identifier) {
@@ -2939,7 +2962,7 @@ List<TidChartEntryStruct> parseFhirTidChartEntries(List<dynamic> entries) {
         patientId: patientId,
         encounterId: encounterId,
         tidIdentifier: tidIdentifier,
-        date: getDateFromEffectiveDateTime(resource),
+        date: getDateFromTidIdentifier(tidIdentifier),
         timespot: timespot,
         cbg: cbg,
         feedStatus: feedStatus,
@@ -3367,6 +3390,46 @@ List<InsulinAdviceStruct> parseFhirInsulinAdviceEntries(
     return '';
   }
 
+  DateTime? getDateFromTidIdentifier(String identifier) {
+    final match = RegExp(
+      r'-(\d{8})-(MORNING|AFTERNOON|NIGHT)(?:-|$)',
+      caseSensitive: false,
+    ).firstMatch(identifier);
+
+    if (match == null) return null;
+
+    final dateText = match.group(1);
+    if (dateText == null || dateText.length != 8) return null;
+
+    final year = int.tryParse(dateText.substring(0, 4));
+    final month = int.tryParse(dateText.substring(4, 6));
+    final day = int.tryParse(dateText.substring(6, 8));
+
+    if (year == null || month == null || day == null) return null;
+
+    return DateTime(year, month, day);
+  }
+
+  String getIdentifierValue(dynamic resource) {
+    final identifiers = resource?['identifier'];
+
+    if (identifiers is List && identifiers.isNotEmpty) {
+      for (final identifier in identifiers) {
+        final system = safeString(identifier?['system']);
+        final value = safeString(identifier?['value']);
+
+        if (system == 'https://glyzemia.app/fhir/identifier/insulin-advice' &&
+            value.isNotEmpty) {
+          return value;
+        }
+      }
+
+      return safeString(identifiers[0]?['value']);
+    }
+
+    return '';
+  }
+
   final List<InsulinAdviceStruct> parsed = [];
 
   for (final entry in entryList) {
@@ -3388,6 +3451,8 @@ List<InsulinAdviceStruct> parseFhirInsulinAdviceEntries(
       continue;
     }
 
+    final identifierValue = getIdentifierValue(resource);
+
     parsed.add(
       InsulinAdviceStruct(
         medicationRequestId: safeString(resource?['id']),
@@ -3401,6 +3466,7 @@ List<InsulinAdviceStruct> parseFhirInsulinAdviceEntries(
         doctorName: safeString(resource?['requester']?['display']),
         doctorNotes: getDoctorNotes(resource),
         authoredOn: safeDateTime(resource?['authoredOn']),
+        date: getDateFromTidIdentifier(identifierValue),
         timespot: getTimespot(resource),
         insulinType: insulinType,
       ),
@@ -3789,6 +3855,26 @@ List<InsulinAdministrationStruct> parseFhirInsulinAdministrations(
     return value;
   }
 
+  DateTime? getDateFromTidIdentifier(String identifier) {
+    final match = RegExp(
+      r'-(\d{8})-(MORNING|AFTERNOON|NIGHT)(?:-|$)',
+      caseSensitive: false,
+    ).firstMatch(identifier);
+
+    if (match == null) return null;
+
+    final dateText = match.group(1);
+    if (dateText == null || dateText.length != 8) return null;
+
+    final year = int.tryParse(dateText.substring(0, 4));
+    final month = int.tryParse(dateText.substring(4, 6));
+    final day = int.tryParse(dateText.substring(6, 8));
+
+    if (year == null || month == null || day == null) return null;
+
+    return DateTime(year, month, day);
+  }
+
   String getTimespotFromIdentifier(String identifier) {
     final upper = identifier.toUpperCase();
 
@@ -3844,7 +3930,7 @@ List<InsulinAdministrationStruct> parseFhirInsulinAdministrations(
         nurseId: getNurseId(resource),
         nurseName: getNurseName(resource),
         completedAt: completedAt,
-        date: completedAt,
+        date: getDateFromTidIdentifier(identifierValue),
         timespot: getTimespotFromIdentifier(identifierValue),
         nurseNotes: getNurseNotes(resource),
         route: getRoute(resource),
@@ -3854,4 +3940,21 @@ List<InsulinAdministrationStruct> parseFhirInsulinAdministrations(
   }
 
   return parsed;
+}
+
+DateTime calculateEffectiveDateTime(
+  DateTime date,
+  String timespot,
+) {
+  String cleanTimespot = timespot.toLowerCase();
+  if (cleanTimespot == 'morning') {
+    return date.add(Duration(hours: 7));
+  }
+  if (cleanTimespot == 'afternoon') {
+    return date.add(Duration(hours: 13));
+  }
+  if (cleanTimespot == 'night') {
+    return date.add(Duration(hours: 20));
+  }
+  return date;
 }

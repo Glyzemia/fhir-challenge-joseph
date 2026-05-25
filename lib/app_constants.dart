@@ -1,4 +1,4 @@
 
 abstract class FFAppConstants {
-  static const List<String> timespots = ['morning', 'afternoon', 'night'];
+  static const List<String> timespots = ['MORNING', 'AFTERNOON', 'NIGHT'];
 }

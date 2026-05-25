@@ -10,6 +10,7 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
+import 'dart:async';
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:easy_debounce/easy_debounce.dart';
@@ -66,219 +67,273 @@ class _ExpandedInsulinChartComponentWidgetState
     // On component load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.hideEverything = true;
-      safeSetState(() {});
-      _model.allObservations1 = await GetAllObservationsByIDForPatientCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-      );
-
-      if ((_model.allObservations1?.succeeded ?? true)) {
-        _model.allObservations = functions
-            .parseFhirObservations(GetAllObservationsByIDForPatientCall.entries(
-              (_model.allObservations1?.jsonBody ?? ''),
-            )!
-                .toList())
-            .toList()
-            .cast<ObservationStruct>();
-        safeSetState(() {});
-      }
-      _model.medicationStatementQuery1 =
-          await GetAllMedicationStatementsByIDForPatientCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-      );
-
-      if ((_model.medicationStatementQuery1?.succeeded ?? true)) {
-        if (GetAllMedicationStatementsByIDForPatientCall.total(
-              (_model.medicationStatementQuery1?.jsonBody ?? ''),
-            )! >
-            0) {
-          _model.medicationStatements = functions
-              .parseFhirMedicationStatement(
-                  GetAllMedicationStatementsByIDForPatientCall.entries(
-                (_model.medicationStatementQuery1?.jsonBody ?? ''),
-              )?.toList())
-              .toList()
-              .cast<MedicationStatementStruct>();
-          safeSetState(() {});
-        } else {
-          _model.medicationStatements = [];
-          safeSetState(() {});
-        }
-      } else {
-        await showDialog(
-          context: context,
-          builder: (alertDialogContext) {
-            return AlertDialog(
-              title: Text('Error'),
-              content: Text((_model.medicationStatementQuery1?.bodyText ?? '')),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(alertDialogContext),
-                  child: Text('Ok'),
-                ),
-              ],
-            );
-          },
-        );
-      }
-
-      _model.allMedicationRequestsQuery =
-          await GetPatientMedicationsByIDCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-        optionalQueries: '_sort=-_lastUpdated',
-      );
-
-      if ((_model.allMedicationRequestsQuery?.succeeded ?? true)) {
-        _model.allMedications = functions
-            .parseFhirMedications(GetPatientMedicationsByIDCall.entries(
-              (_model.allMedicationRequestsQuery?.jsonBody ?? ''),
-            )!
-                .toList())
-            .toList()
-            .cast<MedicationStruct>();
-        safeSetState(() {});
-      }
-      _model.tidChartObservations1 =
-          await GetCBGObservationsByIDForPatientCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-      );
-
-      if ((_model.tidChartObservations1?.succeeded ?? true)) {
-        if (GetCBGObservationsByIDForPatientCall.total(
-              (_model.tidChartObservations1?.jsonBody ?? ''),
-            )! >
-            0) {
-          _model.tidChartEntries = functions
-              .parseFhirTidChartEntries(
-                  GetCBGObservationsByIDForPatientCall.entries(
-                (_model.tidChartObservations1?.jsonBody ?? ''),
-              )!
-                      .toList())
-              .toList()
-              .cast<TidChartEntryStruct>();
-          safeSetState(() {});
-        }
-      }
-      _model.insulinAdvice1 = await GetAllInsulinAdviceByIDForPatientCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-      );
-
-      if ((_model.insulinAdvice1?.succeeded ?? true)) {
-        _model.insulinAdviceList = functions
-            .parseFhirInsulinAdviceEntries(
-                GetAllInsulinAdviceByIDForPatientCall.entries(
-              (_model.insulinAdvice1?.jsonBody ?? ''),
-            )?.toList())
-            .toList()
-            .cast<InsulinAdviceStruct>();
-        safeSetState(() {});
-      }
-      _model.insulinAdministration1 =
-          await GetAllInsulinAdministrationByIDCall.call(
-        token: FFAppState().fhirBearerToken,
-        id: widget.patientDetails?.identifier,
-      );
-
-      if ((_model.insulinAdministration1?.succeeded ?? true)) {
-        _model.insulinAdministrationList = functions
-            .parseFhirInsulinAdministrations(
-                GetAllInsulinAdministrationByIDCall.entries(
-              (_model.insulinAdministration1?.jsonBody ?? ''),
-            )?.toList())
-            .toList()
-            .cast<InsulinAdministrationStruct>();
-        safeSetState(() {});
-      }
-      _model.hideEverything = false;
       _model.ptConditions =
           widget.conditions!.toList().cast<ConditionStruct>();
       _model.selectedPageIdx =
           functions.createDatesList(widget.encounter!.admissionDate!).length -
               1;
       safeSetState(() {});
-      await _model.cBGPageViewController?.animateToPage(
-        _model.selectedPageIdx,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.ease,
-      );
-      safeSetState(() {
-        _model.steroidsTextController?.text =
-            functions.getSteroidStatusFromMedications(
-                _model.allMedications.toList(),
-                FFAppState().steroidsList.toList());
-      });
-      safeSetState(() {
-        _model.inotropesTextController?.text =
-            functions.getInotropeStatusFromMedications(
-                _model.allMedications.toList(),
-                FFAppState().inotropesList.toList());
-      });
-      if (_model.allObservations
-                  .where((e) => (String name) {
-                        return name.toLowerCase().trim() == 'hba1c';
-                      }(e.name))
-                  .toList()
-                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                  .firstOrNull
-                  ?.value !=
-              null &&
-          _model.allObservations
-                  .where((e) => (String name) {
-                        return name.toLowerCase().trim() == 'hba1c';
-                      }(e.name))
-                  .toList()
-                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                  .firstOrNull
-                  ?.value !=
-              '') {
-        safeSetState(() {
-          _model.hbA1cTextController?.text = _model.allObservations
-              .where((e) => (String name) {
-                    return name.toLowerCase().trim() == 'hba1c';
-                  }(e.name))
-              .toList()
-              .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-              .firstOrNull!
-              .value;
-        });
-      }
-      if (_model.allObservations
-                  .where((e) => (String name) {
-                        return name.toLowerCase().trim() == 'creatinine';
-                      }(e.name))
-                  .toList()
-                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                  .firstOrNull
-                  ?.value !=
-              null &&
-          _model.allObservations
-                  .where((e) => (String name) {
-                        return name.toLowerCase().trim() == 'creatinine';
-                      }(e.name))
-                  .toList()
-                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                  .firstOrNull
-                  ?.value !=
-              '') {
-        safeSetState(() {
-          _model.creatinineTextController?.text = valueOrDefault<String>(
-            double.parse(_model.allObservations
-                    .where((e) => (String name) {
-                          return name.toLowerCase().trim() == 'creatinine';
-                        }(e.name))
-                    .toList()
-                    .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
-                    .firstOrNull!
-                    .value)
-                .toStringAsFixed(2),
-            'creat',
+      unawaited(
+        () async {
+          await _model.cBGPageViewController?.animateToPage(
+            _model.selectedPageIdx,
+            duration: Duration(milliseconds: 500),
+            curve: Curves.ease,
           );
-        });
-      }
+        }(),
+      );
+      await Future.wait([
+        Future(() async {
+          _model.allObservations1 =
+              await GetAllObservationsByIDForPatientCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+          );
+
+          if ((_model.allObservations1?.succeeded ?? true)) {
+            if (GetAllObservationsByIDForPatientCall.total(
+                  (_model.allObservations1?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.allObservations = functions
+                  .parseFhirObservations(
+                      GetAllObservationsByIDForPatientCall.entries(
+                    (_model.allObservations1?.jsonBody ?? ''),
+                  )!
+                          .toList())
+                  .toList()
+                  .cast<ObservationStruct>();
+              safeSetState(() {});
+            } else {
+              _model.allObservations = [];
+              safeSetState(() {});
+            }
+          }
+          if (_model.allObservations
+                      .where((e) => (String name) {
+                            return name.toLowerCase().trim() == 'hba1c';
+                          }(e.name))
+                      .toList()
+                      .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                      .firstOrNull
+                      ?.value !=
+                  null &&
+              _model.allObservations
+                      .where((e) => (String name) {
+                            return name.toLowerCase().trim() == 'hba1c';
+                          }(e.name))
+                      .toList()
+                      .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                      .firstOrNull
+                      ?.value !=
+                  '') {
+            safeSetState(() {
+              _model.hbA1cTextController?.text = _model.allObservations
+                  .where((e) => (String name) {
+                        return name.toLowerCase().trim() == 'hba1c';
+                      }(e.name))
+                  .toList()
+                  .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                  .firstOrNull!
+                  .value;
+            });
+          }
+          if (_model.allObservations
+                      .where((e) => (String name) {
+                            return name.toLowerCase().trim() == 'creatinine';
+                          }(e.name))
+                      .toList()
+                      .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                      .firstOrNull
+                      ?.value !=
+                  null &&
+              _model.allObservations
+                      .where((e) => (String name) {
+                            return name.toLowerCase().trim() == 'creatinine';
+                          }(e.name))
+                      .toList()
+                      .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                      .firstOrNull
+                      ?.value !=
+                  '') {
+            safeSetState(() {
+              _model.creatinineTextController?.text = valueOrDefault<String>(
+                double.parse(_model.allObservations
+                        .where((e) => (String name) {
+                              return name.toLowerCase().trim() == 'creatinine';
+                            }(e.name))
+                        .toList()
+                        .sortedList(keyOf: (e) => e.recordedAt!, desc: true)
+                        .firstOrNull!
+                        .value)
+                    .toStringAsFixed(2),
+                'creat',
+              );
+            });
+          }
+        }),
+        Future(() async {
+          _model.medicationStatementQuery1 =
+              await GetAllMedicationStatementsByIDForPatientCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+          );
+
+          if ((_model.medicationStatementQuery1?.succeeded ?? true)) {
+            if (GetAllMedicationStatementsByIDForPatientCall.total(
+                  (_model.medicationStatementQuery1?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.medicationStatements = functions
+                  .parseFhirMedicationStatement(
+                      GetAllMedicationStatementsByIDForPatientCall.entries(
+                    (_model.medicationStatementQuery1?.jsonBody ?? ''),
+                  )?.toList())
+                  .toList()
+                  .cast<MedicationStatementStruct>();
+              safeSetState(() {});
+            } else {
+              _model.medicationStatements = [];
+              safeSetState(() {});
+            }
+          } else {
+            await showDialog(
+              context: context,
+              builder: (alertDialogContext) {
+                return AlertDialog(
+                  title: Text('Error'),
+                  content:
+                      Text((_model.medicationStatementQuery1?.bodyText ?? '')),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(alertDialogContext),
+                      child: Text('Ok'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+
+          safeSetState(() {
+            _model.steroidsTextController?.text =
+                functions.getSteroidStatusFromMedications(
+                    _model.allMedications.toList(),
+                    FFAppState().steroidsList.toList());
+          });
+          safeSetState(() {
+            _model.inotropesTextController?.text =
+                functions.getInotropeStatusFromMedications(
+                    _model.allMedications.toList(),
+                    FFAppState().inotropesList.toList());
+          });
+        }),
+        Future(() async {
+          _model.allMedicationRequestsQuery =
+              await GetPatientMedicationsByIDCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+            optionalQueries: '_sort=-_lastUpdated',
+          );
+
+          if ((_model.allMedicationRequestsQuery?.succeeded ?? true)) {
+            if (GetPatientMedicationsByIDCall.total(
+                  (_model.allMedicationRequestsQuery?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.allMedications = functions
+                  .parseFhirMedications(GetPatientMedicationsByIDCall.entries(
+                    (_model.allMedicationRequestsQuery?.jsonBody ?? ''),
+                  )!
+                      .toList())
+                  .toList()
+                  .cast<MedicationStruct>();
+              safeSetState(() {});
+            } else {
+              _model.allMedications = [];
+              safeSetState(() {});
+            }
+          }
+        }),
+        Future(() async {
+          _model.tidChartObservations1 =
+              await GetCBGObservationsByIDForPatientCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+          );
+
+          if ((_model.tidChartObservations1?.succeeded ?? true)) {
+            if (GetCBGObservationsByIDForPatientCall.total(
+                  (_model.tidChartObservations1?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.tidChartEntries = functions
+                  .parseFhirTidChartEntries(
+                      GetCBGObservationsByIDForPatientCall.entries(
+                    (_model.tidChartObservations1?.jsonBody ?? ''),
+                  )!
+                          .toList())
+                  .toList()
+                  .cast<TidChartEntryStruct>();
+              safeSetState(() {});
+            }
+          }
+        }),
+        Future(() async {
+          _model.insulinAdvice1 =
+              await GetAllInsulinAdviceByIDForPatientCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+          );
+
+          if ((_model.insulinAdvice1?.succeeded ?? true)) {
+            if (GetAllInsulinAdviceByIDForPatientCall.total(
+                  (_model.insulinAdvice1?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.insulinAdviceList = functions
+                  .parseFhirInsulinAdviceEntries(
+                      GetAllInsulinAdviceByIDForPatientCall.entries(
+                    (_model.insulinAdvice1?.jsonBody ?? ''),
+                  )?.toList())
+                  .toList()
+                  .cast<InsulinAdviceStruct>();
+              safeSetState(() {});
+            } else {
+              _model.insulinAdviceList = [];
+              safeSetState(() {});
+            }
+          }
+        }),
+        Future(() async {
+          _model.insulinAdministration1 =
+              await GetAllInsulinAdministrationByIDCall.call(
+            token: FFAppState().fhirBearerToken,
+            id: widget.patientDetails?.identifier,
+          );
+
+          if ((_model.insulinAdministration1?.succeeded ?? true)) {
+            if (GetAllInsulinAdministrationByIDCall.total(
+                  (_model.insulinAdministration1?.jsonBody ?? ''),
+                )! >
+                0) {
+              _model.insulinAdministrationList = functions
+                  .parseFhirInsulinAdministrations(
+                      GetAllInsulinAdministrationByIDCall.entries(
+                    (_model.insulinAdministration1?.jsonBody ?? ''),
+                  )?.toList())
+                  .toList()
+                  .cast<InsulinAdministrationStruct>();
+              safeSetState(() {});
+            } else {
+              _model.insulinAdministrationList = [];
+              safeSetState(() {});
+            }
+          }
+        }),
+      ]);
+      _model.hideEverything = false;
+      safeSetState(() {});
     });
 
     _model.diabetesDurationTextController ??= TextEditingController();
@@ -5207,13 +5262,14 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                             Container(
                                                                               width: double.infinity,
                                                                               decoration: BoxDecoration(
-                                                                                color: FlutterFlowTheme.of(context).cardBlue,
+                                                                                color: (_model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed') || !(_model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == timeSpotItem)).toList().isNotEmpty) ? FlutterFlowTheme.of(context).cardBlue : FlutterFlowTheme.of(context).cardTertiary,
                                                                                 borderRadius: BorderRadius.only(
                                                                                   topLeft: Radius.circular(10.0),
                                                                                   topRight: Radius.circular(10.0),
                                                                                 ),
                                                                                 border: Border.all(
-                                                                                  color: FlutterFlowTheme.of(context).primary,
+                                                                                  color: (_model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed') || !(_model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == timeSpotItem)).toList().isNotEmpty) ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).tertiary,
+                                                                                  width: 1.0,
                                                                                 ),
                                                                               ),
                                                                               child: Padding(
@@ -5229,7 +5285,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                           fontWeight: FontWeight.bold,
                                                                                           fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                         ),
-                                                                                        color: FlutterFlowTheme.of(context).primary,
+                                                                                        color: (_model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed') || !(_model.tidChartEntries.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == timeSpotItem)).toList().isNotEmpty) ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).tertiary,
                                                                                         letterSpacing: 0.0,
                                                                                         fontWeight: FontWeight.bold,
                                                                                         fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
@@ -5270,7 +5326,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                 size: 40.0,
                                                                                               ),
                                                                                               onPressed: () async {
-                                                                                                _model.selectedDate = datePagesItem;
+                                                                                                _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                 _model.selectedTimespot = timeSpotItem;
                                                                                                 _model.showCBGEntryForm = true;
                                                                                                 safeSetState(() {});
@@ -5284,49 +5340,59 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                           ],
                                                                                         ),
                                                                                       ),
-                                                                                      AlignedTooltip(
-                                                                                        content: Padding(
-                                                                                          padding: EdgeInsets.all(4.0),
-                                                                                          child: Text(
-                                                                                            'Reset',
-                                                                                            style: FlutterFlowTheme.of(context).bodyLarge.override(
-                                                                                                  font: GoogleFonts.inter(
+                                                                                      if (responsiveVisibility(
+                                                                                        context: context,
+                                                                                        desktop: false,
+                                                                                      ))
+                                                                                        AlignedTooltip(
+                                                                                          content: Padding(
+                                                                                            padding: EdgeInsets.all(4.0),
+                                                                                            child: Text(
+                                                                                              'Reset',
+                                                                                              style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                                                                    font: GoogleFonts.inter(
+                                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                                                    ),
+                                                                                                    letterSpacing: 0.0,
                                                                                                     fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
                                                                                                     fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
                                                                                                   ),
-                                                                                                  letterSpacing: 0.0,
-                                                                                                  fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                                                ),
-                                                                                          ),
-                                                                                        ),
-                                                                                        offset: 4.0,
-                                                                                        preferredDirection: AxisDirection.right,
-                                                                                        borderRadius: BorderRadius.circular(8.0),
-                                                                                        backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                        elevation: 4.0,
-                                                                                        tailBaseWidth: 24.0,
-                                                                                        tailLength: 12.0,
-                                                                                        waitDuration: Duration(milliseconds: 100),
-                                                                                        showDuration: Duration(milliseconds: 1500),
-                                                                                        triggerMode: TooltipTriggerMode.tap,
-                                                                                        child: Padding(
-                                                                                          padding: EdgeInsetsDirectional.fromSTEB(0.0, 10.0, 10.0, 0.0),
-                                                                                          child: FlutterFlowIconButton(
-                                                                                            borderRadius: 20.0,
-                                                                                            buttonSize: 40.0,
-                                                                                            fillColor: FlutterFlowTheme.of(context).primary,
-                                                                                            icon: Icon(
-                                                                                              Icons.key_sharp,
-                                                                                              color: FlutterFlowTheme.of(context).info,
-                                                                                              size: 24.0,
                                                                                             ),
-                                                                                            onPressed: () {
-                                                                                              print('ResetRowIB pressed ...');
-                                                                                            },
+                                                                                          ),
+                                                                                          offset: 4.0,
+                                                                                          preferredDirection: AxisDirection.right,
+                                                                                          borderRadius: BorderRadius.circular(8.0),
+                                                                                          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                          elevation: 4.0,
+                                                                                          tailBaseWidth: 24.0,
+                                                                                          tailLength: 12.0,
+                                                                                          waitDuration: Duration(milliseconds: 100),
+                                                                                          showDuration: Duration(milliseconds: 1500),
+                                                                                          triggerMode: TooltipTriggerMode.tap,
+                                                                                          child: Visibility(
+                                                                                            visible: responsiveVisibility(
+                                                                                              context: context,
+                                                                                              desktop: false,
+                                                                                            ),
+                                                                                            child: Padding(
+                                                                                              padding: EdgeInsetsDirectional.fromSTEB(0.0, 10.0, 10.0, 0.0),
+                                                                                              child: FlutterFlowIconButton(
+                                                                                                borderRadius: 20.0,
+                                                                                                buttonSize: 40.0,
+                                                                                                fillColor: FlutterFlowTheme.of(context).primary,
+                                                                                                icon: Icon(
+                                                                                                  Icons.key_sharp,
+                                                                                                  color: FlutterFlowTheme.of(context).info,
+                                                                                                  size: 24.0,
+                                                                                                ),
+                                                                                                onPressed: () {
+                                                                                                  print('ResetRowIB pressed ...');
+                                                                                                },
+                                                                                              ),
+                                                                                            ),
                                                                                           ),
                                                                                         ),
-                                                                                      ),
                                                                                     ],
                                                                                   );
                                                                                 } else {
@@ -5343,7 +5409,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                             bottomRight: Radius.circular(10.0),
                                                                                           ),
                                                                                           border: Border.all(
-                                                                                            color: FlutterFlowTheme.of(context).primary,
+                                                                                            color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).tertiary,
                                                                                           ),
                                                                                         ),
                                                                                         child: Column(
@@ -5355,7 +5421,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               child: Row(
@@ -5463,7 +5529,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               child: Row(
@@ -5555,7 +5621,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               child: Row(
@@ -5641,7 +5707,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               child: Row(
@@ -5733,7 +5799,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               alignment: AlignmentDirectional(0.0, 0.0),
@@ -5832,7 +5898,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               alignment: AlignmentDirectional(0.0, 0.0),
@@ -5901,7 +5967,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               alignment: AlignmentDirectional(0.0, 0.0),
@@ -6053,7 +6119,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               width: double.infinity,
                                                                                               decoration: BoxDecoration(
                                                                                                 border: Border.all(
-                                                                                                  color: FlutterFlowTheme.of(context).accent2,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).accent2 : FlutterFlowTheme.of(context).cardTertiary,
                                                                                                 ),
                                                                                               ),
                                                                                               alignment: AlignmentDirectional(0.0, 0.0),
@@ -6213,20 +6279,24 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                     child: Stack(
                                                                                                       alignment: AlignmentDirectional(0.0, 0.0),
                                                                                                       children: [
-                                                                                                        Text(
-                                                                                                          'NO NOTES',
-                                                                                                          textAlign: TextAlign.center,
-                                                                                                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                                                font: GoogleFonts.inter(
+                                                                                                        if (responsiveVisibility(
+                                                                                                          context: context,
+                                                                                                          desktop: false,
+                                                                                                        ))
+                                                                                                          Text(
+                                                                                                            'NO NOTES',
+                                                                                                            textAlign: TextAlign.center,
+                                                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                                                  font: GoogleFonts.inter(
+                                                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                                                  ),
+                                                                                                                  fontSize: 14.0,
+                                                                                                                  letterSpacing: 0.0,
                                                                                                                   fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                                                                                                                   fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                                                 ),
-                                                                                                                fontSize: 14.0,
-                                                                                                                letterSpacing: 0.0,
-                                                                                                                fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                                              ),
-                                                                                                        ),
+                                                                                                          ),
                                                                                                         Align(
                                                                                                           alignment: AlignmentDirectional(0.0, 0.0),
                                                                                                           child: Container(
@@ -6449,10 +6519,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                               child: Container(
                                                                                                 width: double.infinity,
                                                                                                 decoration: BoxDecoration(
-                                                                                                  color: FlutterFlowTheme.of(context).tertiary,
+                                                                                                  color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).secondary : FlutterFlowTheme.of(context).tertiary,
                                                                                                   borderRadius: BorderRadius.circular(8.0),
                                                                                                   border: Border.all(
-                                                                                                    color: FlutterFlowTheme.of(context).tertiary,
+                                                                                                    color: _model.insulinAdministrationList.where((e) => (dateTimeFormat("d/M/y", e.date) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase()))).toList().firstOrNull?.status == 'completed' ? FlutterFlowTheme.of(context).secondary : FlutterFlowTheme.of(context).tertiary,
                                                                                                   ),
                                                                                                 ),
                                                                                                 alignment: AlignmentDirectional(0.0, 0.0),
@@ -6724,12 +6794,12 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                     size: 24.0,
                                                                                                                   ),
                                                                                                                   onPressed: () async {
-                                                                                                                    _model.selectedDate = datePagesItem;
+                                                                                                                    _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                                     _model.selectedTimespot = timeSpotItem;
                                                                                                                     safeSetState(() {});
                                                                                                                     _model.postInsulinAdministration = await BundlePOSTInsulinAdministrationRecordCall.call(
                                                                                                                       token: FFAppState().fhirBearerToken,
-                                                                                                                      buildJsonJson: functions.createInsulinAdministrationBundleJson(widget.patientDetails!.identifier, widget.encounter!.encounterID, functions.datetimeToISO8601String(datePagesItem)!, timeSpotItem, functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()), 'Display Administration Nurse', functions.datetimeToISO8601String(getCurrentTimestamp)!, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.dose, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.dose, ''),
+                                                                                                                      buildJsonJson: functions.createInsulinAdministrationBundleJson(widget.patientDetails!.identifier, widget.encounter!.encounterID, dateTimeFormat("y-MM-dd", _model.selectedDate), timeSpotItem, functions.getRandomStringFromList(FFAppState().practitioners.map((e) => e.id).toList()), 'Display Administration Nurse', functions.datetimeToISO8601String(getCurrentTimestamp)!, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Short Acting Insulin')).toList().firstOrNull!.dose, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationRequestId, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.medicationName, _model.insulinAdviceList.where((e) => (dateTimeFormat("d/M/y", e.authoredOn) == dateTimeFormat("d/M/y", datePagesItem)) && (e.timespot == (timeSpotItem.toUpperCase())) && (e.insulinType == 'Long Acting / Premixed Insulin')).toList().firstOrNull!.dose, ''),
                                                                                                                     );
 
                                                                                                                     if ((_model.postInsulinAdministration?.succeeded ?? true)) {
@@ -6880,7 +6950,7 @@ class _ExpandedInsulinChartComponentWidgetState
                                                                                                                     size: 24.0,
                                                                                                                   ),
                                                                                                                   onPressed: () async {
-                                                                                                                    _model.selectedDate = datePagesItem;
+                                                                                                                    _model.selectedDate = functions.calculateEffectiveDateTime(datePagesItem, timeSpotItem);
                                                                                                                     _model.selectedTimespot = timeSpotItem;
                                                                                                                     _model.showInsulinEntryForm = true;
                                                                                                                     safeSetState(() {});
@@ -7085,31 +7155,8 @@ class _ExpandedInsulinChartComponentWidgetState
                                     children: [
                                       Text(
                                         valueOrDefault<String>(
-                                          _model.insulinAdministrationList
-                                              .where((e) =>
-                                                  e.medicationRequestId ==
-                                                  _model.insulinAdviceList
-                                                      .where((e) =>
-                                                          (dateTimeFormat(
-                                                                  "d/M/y",
-                                                                  e
-                                                                      .authoredOn) ==
-                                                              dateTimeFormat(
-                                                                  "d/M/y",
-                                                                  _model
-                                                                      .selectedDate)) &&
-                                                          (e.timespot ==
-                                                              ((_model.selectedTimespot!)
-                                                                  .toUpperCase())) &&
-                                                          (e.insulinType ==
-                                                              'Short Acting Insulin'))
-                                                      .toList()
-                                                      .firstOrNull
-                                                      ?.medicationRequestId)
-                                              .toList()
-                                              .firstOrNull
-                                              ?.status,
-                                          'status',
+                                          _model.selectedDate?.toString(),
+                                          'D',
                                         ),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
@@ -9234,13 +9281,13 @@ class _ExpandedInsulinChartComponentWidgetState
                                                 widget
                                                     .patientDetails!.identifier,
                                                 widget.encounter!.encounterID,
-                                                functions.datetimeToISO8601String(
-                                                    _model.selectedDate)!,
+                                                dateTimeFormat("y-MM-dd",
+                                                    _model.selectedDate),
                                                 _model.selectedTimespot!,
                                                 functions.datetimeToISO8601String(
                                                     _model.selectedDate)!,
                                                 functions.datetimeToISO8601String(
-                                                    _model.selectedDate)!,
+                                                    getCurrentTimestamp)!,
                                                 functions.getRandomStringFromList(
                                                     FFAppState()
                                                         .practitioners
@@ -9260,9 +9307,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                 double.tryParse(_model
                                                     .creatinineTextController
                                                     .text),
-                                                double.tryParse(
-                                                    _model.hbA1cTextController.text),
-                                                _model.nurseNotesTextController.text),
+                                                double.tryParse(_model
+                                                    .hbA1cTextController.text),
+                                                _model.nurseNotesTextController
+                                                    .text),
                                           );
 
                                           _shouldSetState = true;
@@ -10705,8 +10753,8 @@ class _ExpandedInsulinChartComponentWidgetState
                                                 widget
                                                     .patientDetails!.identifier,
                                                 widget.encounter!.encounterID,
-                                                functions.datetimeToISO8601String(
-                                                    _model.selectedDate)!,
+                                                dateTimeFormat("y-MM-dd",
+                                                    _model.selectedDate),
                                                 _model.selectedTimespot!,
                                                 _model.tidChartEntries
                                                     .where((e) =>
@@ -10730,7 +10778,9 @@ class _ExpandedInsulinChartComponentWidgetState
                                                 functions.datetimeToISO8601String(
                                                     _model.selectedDate)!,
                                                 _model.sAINameValue!,
-                                                int.parse(_model.sAIDoseTextController.text),
+                                                int.parse(_model
+                                                    .sAIDoseTextController
+                                                    .text),
                                                 _model.lAINameValue!,
                                                 int.parse(_model.lAIDoseTextController.text),
                                                 _model.doctorNotesTextController.text),
