@@ -5507,6 +5507,15 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                             .validate()) {
                                                       return;
                                                     }
+                                                    _model.randomPractitioner =
+                                                        functions
+                                                            .getRandomStringFromList(
+                                                                FFAppState()
+                                                                    .practitioners
+                                                                    .map((e) =>
+                                                                        e.id)
+                                                                    .toList());
+                                                    safeSetState(() {});
                                                     if (!(_model.genderCCValue !=
                                                             null &&
                                                         _model.genderCCValue !=
@@ -5668,6 +5677,18 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                     ?.jsonBody ??
                                                                 ''),
                                                           )}',
+                                                          practitionerID: _model
+                                                              .randomPractitioner,
+                                                          practitionerName:
+                                                              FFAppState()
+                                                                  .practitioners
+                                                                  .where((e) =>
+                                                                      e.id ==
+                                                                      _model
+                                                                          .randomPractitioner)
+                                                                  .toList()
+                                                                  .firstOrNull
+                                                                  ?.combinedNames,
                                                         );
 
                                                         _shouldSetState = true;
@@ -10828,10 +10849,53 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         ),
                                                                         observationsListGiven:
                                                                             _model.patientObservations,
+                                                                        refreshCallback:
+                                                                            (patientId) async {
+                                                                          await Future
+                                                                              .wait([
+                                                                            Future(() async {
+                                                                              _model.allConditions = await GetPatientConditionByIDCopyCall.call(
+                                                                                token: FFAppState().fhirBearerToken,
+                                                                                id: patientId,
+                                                                              );
+
+                                                                              if ((_model.allConditions?.succeeded ?? true)) {
+                                                                                _model.patientConditions = functions
+                                                                                    .parseFhirConditions(GetPatientConditionByIDCopyCall.entries(
+                                                                                      (_model.allConditions?.jsonBody ?? ''),
+                                                                                    )!
+                                                                                        .toList())
+                                                                                    .toList()
+                                                                                    .cast<ConditionStruct>();
+                                                                                safeSetState(() {});
+                                                                              }
+                                                                            }),
+                                                                            Future(() async {
+                                                                              _model.allMedications = await GetPatientMedicationsByIDCall.call(
+                                                                                token: FFAppState().fhirBearerToken,
+                                                                                id: patientId,
+                                                                              );
+
+                                                                              if ((_model.allMedications?.succeeded ?? true)) {
+                                                                                _model.patientMedications = functions
+                                                                                    .parseFhirMedications(GetPatientMedicationsByIDCall.entries(
+                                                                                      (_model.allMedications?.jsonBody ?? ''),
+                                                                                    )!
+                                                                                        .toList())
+                                                                                    .toList()
+                                                                                    .cast<MedicationStruct>();
+                                                                                safeSetState(() {});
+                                                                              }
+                                                                            }),
+                                                                          ]);
+                                                                        },
                                                                       ),
                                                                     );
                                                                   },
                                                                 );
+
+                                                                safeSetState(
+                                                                    () {});
                                                               },
                                                               text:
                                                                   'OPEN INSULIN CHART',

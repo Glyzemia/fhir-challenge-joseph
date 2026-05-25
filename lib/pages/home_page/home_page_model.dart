@@ -385,6 +385,10 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
       customDotComponentPageViewModels4;
   // Stores action output result for [Backend Call - API (Patch Admission Encounters for Glyzemia)] action in IconButton widget.
   ApiCallResponse? patchAdmission;
+  // Stores action output result for [Backend Call - API (Get Patient Condition by ID Copy)] action in Button widget.
+  ApiCallResponse? allConditions;
+  // Stores action output result for [Backend Call - API (Get Patient Medications by ID)] action in Button widget.
+  ApiCallResponse? allMedications;
 
   @override
   void initState(BuildContext context) {

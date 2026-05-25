@@ -280,7 +280,9 @@ class _ConditioonTableRowComponentWidgetState
                           height: 30.0,
                           decoration: BoxDecoration(
                             color: valueOrDefault<Color>(
-                              widget.conditionsRow?.status == 'active'
+                              (String status) {
+                                return status.toLowerCase() == 'active';
+                              }(widget.conditionsRow!.status)
                                   ? FlutterFlowTheme.of(context).cardSuccess
                                   : FlutterFlowTheme.of(context).cardTertiary,
                               FlutterFlowTheme.of(context).cardSuccess,
@@ -288,7 +290,9 @@ class _ConditioonTableRowComponentWidgetState
                             borderRadius: BorderRadius.circular(10.0),
                             border: Border.all(
                               color: valueOrDefault<Color>(
-                                widget.conditionsRow?.status == 'active'
+                                (String status) {
+                                  return status.toLowerCase() == 'active';
+                                }(widget.conditionsRow!.status)
                                     ? FlutterFlowTheme.of(context).success
                                     : FlutterFlowTheme.of(context).tertiary,
                                 FlutterFlowTheme.of(context).success,
@@ -300,8 +304,9 @@ class _ConditioonTableRowComponentWidgetState
                             children: [
                               Builder(
                                 builder: (context) {
-                                  if (widget.conditionsRow?.status ==
-                                      'active') {
+                                  if ((String status) {
+                                    return status.toLowerCase() == 'active';
+                                  }(widget.conditionsRow!.status)) {
                                     return Icon(
                                       Icons.check_circle_outline_rounded,
                                       color:
@@ -338,8 +343,10 @@ class _ConditioonTableRowComponentWidgetState
                                             .fontStyle,
                                       ),
                                       color: valueOrDefault<Color>(
-                                        widget.conditionsRow?.status ==
-                                                'active'
+                                        (String status) {
+                                          return status.toLowerCase() ==
+                                              'active';
+                                        }(widget.conditionsRow!.status)
                                             ? FlutterFlowTheme.of(context)
                                                 .success
                                             : FlutterFlowTheme.of(context)

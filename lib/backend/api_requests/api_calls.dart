@@ -1108,6 +1108,8 @@ class AdmitPatientCall {
     String? id = '',
     String? startPeriod = '',
     String? encounterID = '',
+    String? practitionerID = '',
+    String? practitionerName = '',
   }) async {
     final ffApiRequestBody = '''
 {
@@ -1127,6 +1129,26 @@ class AdmitPatientCall {
   "subject": {
     "reference": "Patient/${escapeStringForJson(id)}"
   },
+  "participant": [
+    {
+      "type": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+              "code": "ATND",
+              "display": "attender"
+            }
+          ],
+          "text": "Admitting / attending practitioner"
+        }
+      ],
+      "individual": {
+        "reference": "Practitioner/${escapeStringForJson(practitionerID)}",
+        "display": "${escapeStringForJson(practitionerName)}"
+      }
+    }
+  ],
   "period": {
     "start": "${escapeStringForJson(startPeriod)}"
   },

@@ -33,12 +33,14 @@ class ExpandedInsulinChartComponentWidget extends StatefulWidget {
     required this.conditions,
     required this.encounter,
     required this.observationsListGiven,
+    required this.refreshCallback,
   });
 
   final PatientStruct? patientDetails;
   final List<ConditionStruct>? conditions;
   final EncounterStruct? encounter;
   final List<ObservationStruct>? observationsListGiven;
+  final Future Function(String patientId)? refreshCallback;
 
   @override
   State<ExpandedInsulinChartComponentWidget> createState() =>
@@ -5099,6 +5101,12 @@ class _ExpandedInsulinChartComponentWidgetState
                                                   },
                                                 );
                                               }
+
+                                              await widget.refreshCallback
+                                                  ?.call(
+                                                widget
+                                                    .patientDetails!.identifier,
+                                              );
 
                                               safeSetState(() {});
                                             },
@@ -11206,6 +11214,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                               },
                                             );
                                           }
+
+                                          await widget.refreshCallback?.call(
+                                            widget.patientDetails!.identifier,
+                                          );
 
                                           safeSetState(() {});
                                         },
