@@ -4023,3 +4023,622 @@ DateTime calculateEffectiveDateTime(
   }
   return date;
 }
+
+String extractDialCodeFromE164(String e164Number) {
+  final cleaned = e164Number.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+  if (cleaned.isEmpty) {
+    return '';
+  }
+
+  final normalized = cleaned.startsWith('+') ? cleaned : '+$cleaned';
+
+  // Check longer codes first.
+  // Add/adjust codes depending on the countries your app supports.
+  const dialCodes = [
+    '+998',
+    '+996',
+    '+995',
+    '+994',
+    '+993',
+    '+992',
+    '+977',
+    '+976',
+    '+975',
+    '+974',
+    '+973',
+    '+972',
+    '+971',
+    '+970',
+    '+968',
+    '+967',
+    '+966',
+    '+965',
+    '+964',
+    '+963',
+    '+962',
+    '+961',
+    '+960',
+    '+886',
+    '+880',
+    '+856',
+    '+855',
+    '+853',
+    '+852',
+    '+850',
+    '+692',
+    '+691',
+    '+690',
+    '+689',
+    '+688',
+    '+687',
+    '+686',
+    '+685',
+    '+683',
+    '+682',
+    '+681',
+    '+680',
+    '+679',
+    '+678',
+    '+677',
+    '+676',
+    '+675',
+    '+674',
+    '+673',
+    '+672',
+    '+670',
+    '+599',
+    '+598',
+    '+597',
+    '+596',
+    '+595',
+    '+594',
+    '+593',
+    '+592',
+    '+591',
+    '+590',
+    '+509',
+    '+508',
+    '+507',
+    '+506',
+    '+505',
+    '+504',
+    '+503',
+    '+502',
+    '+501',
+    '+500',
+    '+423',
+    '+421',
+    '+420',
+    '+389',
+    '+387',
+    '+386',
+    '+385',
+    '+383',
+    '+382',
+    '+381',
+    '+380',
+    '+379',
+    '+378',
+    '+377',
+    '+376',
+    '+375',
+    '+374',
+    '+373',
+    '+372',
+    '+371',
+    '+370',
+    '+359',
+    '+358',
+    '+357',
+    '+356',
+    '+355',
+    '+354',
+    '+353',
+    '+352',
+    '+351',
+    '+350',
+    '+299',
+    '+298',
+    '+297',
+    '+291',
+    '+290',
+    '+269',
+    '+268',
+    '+267',
+    '+266',
+    '+265',
+    '+264',
+    '+263',
+    '+262',
+    '+261',
+    '+260',
+    '+258',
+    '+257',
+    '+256',
+    '+255',
+    '+254',
+    '+253',
+    '+252',
+    '+251',
+    '+250',
+    '+249',
+    '+248',
+    '+247',
+    '+246',
+    '+245',
+    '+244',
+    '+243',
+    '+242',
+    '+241',
+    '+240',
+    '+239',
+    '+238',
+    '+237',
+    '+236',
+    '+235',
+    '+234',
+    '+233',
+    '+232',
+    '+231',
+    '+230',
+    '+229',
+    '+228',
+    '+227',
+    '+226',
+    '+225',
+    '+224',
+    '+223',
+    '+222',
+    '+221',
+    '+220',
+    '+218',
+    '+216',
+    '+213',
+    '+212',
+    '+211',
+    '+98',
+    '+95',
+    '+94',
+    '+93',
+    '+92',
+    '+91',
+    '+90',
+    '+86',
+    '+84',
+    '+82',
+    '+81',
+    '+66',
+    '+65',
+    '+64',
+    '+63',
+    '+62',
+    '+61',
+    '+60',
+    '+58',
+    '+57',
+    '+56',
+    '+55',
+    '+54',
+    '+53',
+    '+52',
+    '+51',
+    '+49',
+    '+48',
+    '+47',
+    '+46',
+    '+45',
+    '+44',
+    '+43',
+    '+41',
+    '+40',
+    '+39',
+    '+36',
+    '+34',
+    '+33',
+    '+32',
+    '+31',
+    '+30',
+    '+27',
+    '+20',
+    '+7',
+    '+1',
+  ];
+
+  for (final code in dialCodes) {
+    if (normalized.startsWith(code)) {
+      return code;
+    }
+  }
+
+  return '';
+}
+
+String extractNationalNumberFromE164(String e164Number) {
+  final cleaned = e164Number.trim();
+
+  if (cleaned.isEmpty) {
+    return '';
+  }
+
+  final normalized = cleaned.startsWith('+') ? cleaned : '+$cleaned';
+
+  final dialCode = extractDialCodeFromE164(normalized);
+
+  if (dialCode.isEmpty) {
+    // If no international code is found, return digits only.
+    return cleaned.replaceAll(RegExp(r'\D'), '');
+  }
+
+  final withoutDialCode = normalized.substring(dialCode.length);
+
+  return withoutDialCode.replaceAll(RegExp(r'\D'), '');
+}
+
+String inferIsoCodeFromDialCode(String dialCode) {
+  final code = dialCode.trim();
+
+  switch (code) {
+    case '+91':
+      return 'IN';
+    case '+1':
+      return 'US'; // For your FHIR challenge, default +1 to US.
+    case '+44':
+      return 'GB';
+    case '+971':
+      return 'AE';
+    case '+65':
+      return 'SG';
+    case '+61':
+      return 'AU';
+    case '+81':
+      return 'JP';
+    case '+86':
+      return 'CN';
+    case '+49':
+      return 'DE';
+    case '+33':
+      return 'FR';
+    case '+39':
+      return 'IT';
+    case '+34':
+      return 'ES';
+    case '+966':
+      return 'SA';
+    case '+974':
+      return 'QA';
+    case '+965':
+      return 'KW';
+    case '+968':
+      return 'OM';
+    case '+973':
+      return 'BH';
+    default:
+      return 'US'; // Or IN, depending on your app default.
+  }
+}
+
+String formatE164PhoneForDisplay(String e164Number) {
+  final input = e164Number.trim();
+
+  if (input.isEmpty) {
+    return '';
+  }
+
+  // Remove spaces, brackets, hyphens etc., but preserve digits.
+  final digitsOnly = input.replaceAll(RegExp(r'\D'), '');
+
+  if (digitsOnly.isEmpty) {
+    return input;
+  }
+
+  final normalized = input.startsWith('+') ? '+$digitsOnly' : '+$digitsOnly';
+
+  String dialCode = '';
+  String nationalNumber = '';
+
+  // Check longer dial codes first.
+  const dialCodes = [
+    '+998',
+    '+996',
+    '+995',
+    '+994',
+    '+993',
+    '+992',
+    '+977',
+    '+976',
+    '+975',
+    '+974',
+    '+973',
+    '+972',
+    '+971',
+    '+970',
+    '+968',
+    '+967',
+    '+966',
+    '+965',
+    '+964',
+    '+963',
+    '+962',
+    '+961',
+    '+960',
+    '+886',
+    '+880',
+    '+856',
+    '+855',
+    '+853',
+    '+852',
+    '+850',
+    '+692',
+    '+691',
+    '+690',
+    '+689',
+    '+688',
+    '+687',
+    '+686',
+    '+685',
+    '+683',
+    '+682',
+    '+681',
+    '+680',
+    '+679',
+    '+678',
+    '+677',
+    '+676',
+    '+675',
+    '+674',
+    '+673',
+    '+672',
+    '+670',
+    '+599',
+    '+598',
+    '+597',
+    '+596',
+    '+595',
+    '+594',
+    '+593',
+    '+592',
+    '+591',
+    '+590',
+    '+509',
+    '+508',
+    '+507',
+    '+506',
+    '+505',
+    '+504',
+    '+503',
+    '+502',
+    '+501',
+    '+500',
+    '+423',
+    '+421',
+    '+420',
+    '+389',
+    '+387',
+    '+386',
+    '+385',
+    '+383',
+    '+382',
+    '+381',
+    '+380',
+    '+379',
+    '+378',
+    '+377',
+    '+376',
+    '+375',
+    '+374',
+    '+373',
+    '+372',
+    '+371',
+    '+370',
+    '+359',
+    '+358',
+    '+357',
+    '+356',
+    '+355',
+    '+354',
+    '+353',
+    '+352',
+    '+351',
+    '+350',
+    '+299',
+    '+298',
+    '+297',
+    '+291',
+    '+290',
+    '+269',
+    '+268',
+    '+267',
+    '+266',
+    '+265',
+    '+264',
+    '+263',
+    '+262',
+    '+261',
+    '+260',
+    '+258',
+    '+257',
+    '+256',
+    '+255',
+    '+254',
+    '+253',
+    '+252',
+    '+251',
+    '+250',
+    '+249',
+    '+248',
+    '+247',
+    '+246',
+    '+245',
+    '+244',
+    '+243',
+    '+242',
+    '+241',
+    '+240',
+    '+239',
+    '+238',
+    '+237',
+    '+236',
+    '+235',
+    '+234',
+    '+233',
+    '+232',
+    '+231',
+    '+230',
+    '+229',
+    '+228',
+    '+227',
+    '+226',
+    '+225',
+    '+224',
+    '+223',
+    '+222',
+    '+221',
+    '+220',
+    '+218',
+    '+216',
+    '+213',
+    '+212',
+    '+211',
+    '+98',
+    '+95',
+    '+94',
+    '+93',
+    '+92',
+    '+91',
+    '+90',
+    '+86',
+    '+84',
+    '+82',
+    '+81',
+    '+66',
+    '+65',
+    '+64',
+    '+63',
+    '+62',
+    '+61',
+    '+60',
+    '+58',
+    '+57',
+    '+56',
+    '+55',
+    '+54',
+    '+53',
+    '+52',
+    '+51',
+    '+49',
+    '+48',
+    '+47',
+    '+46',
+    '+45',
+    '+44',
+    '+43',
+    '+41',
+    '+40',
+    '+39',
+    '+36',
+    '+34',
+    '+33',
+    '+32',
+    '+31',
+    '+30',
+    '+27',
+    '+20',
+    '+7',
+    '+1',
+  ];
+
+  for (final code in dialCodes) {
+    if (normalized.startsWith(code)) {
+      dialCode = code;
+      nationalNumber = normalized.substring(code.length);
+      break;
+    }
+  }
+
+  if (dialCode.isEmpty) {
+    return input;
+  }
+
+  // Remove any non-digit characters from national number.
+  nationalNumber = nationalNumber.replaceAll(RegExp(r'\D'), '');
+
+  switch (dialCode) {
+    case '+1':
+      // US / Canada style: +1 (555) 404-9778
+      if (nationalNumber.length == 10) {
+        return '$dialCode (${nationalNumber.substring(0, 3)}) '
+            '${nationalNumber.substring(3, 6)}-'
+            '${nationalNumber.substring(6, 10)}';
+      }
+      return '$dialCode $nationalNumber';
+
+    case '+91':
+      // India style: +91 98765 43210
+      if (nationalNumber.length == 10) {
+        return '$dialCode ${nationalNumber.substring(0, 5)} '
+            '${nationalNumber.substring(5, 10)}';
+      }
+      return '$dialCode $nationalNumber';
+
+    case '+65':
+      // Singapore style: +65 8123 4567
+      if (nationalNumber.length == 8) {
+        return '$dialCode ${nationalNumber.substring(0, 4)} '
+            '${nationalNumber.substring(4, 8)}';
+      }
+      return '$dialCode $nationalNumber';
+
+    case '+971':
+      // UAE style: +971 50 123 4567
+      if (nationalNumber.length == 9) {
+        return '$dialCode ${nationalNumber.substring(0, 2)} '
+            '${nationalNumber.substring(2, 5)} '
+            '${nationalNumber.substring(5, 9)}';
+      }
+      return '$dialCode $nationalNumber';
+
+    case '+44':
+      // Simple UK display fallback.
+      // UK numbers vary, so avoid over-formatting.
+      if (nationalNumber.length == 10) {
+        return '$dialCode ${nationalNumber.substring(0, 4)} '
+            '${nationalNumber.substring(4)}';
+      }
+      return '$dialCode $nationalNumber';
+
+    default:
+      return '$dialCode ${_groupPhoneDigits(nationalNumber)}';
+  }
+}
+
+String _groupPhoneDigits(String digits) {
+  if (digits.isEmpty) {
+    return '';
+  }
+
+  // Generic fallback: group into readable chunks.
+  // Example: 1234567890 -> 123 456 7890
+  if (digits.length <= 4) {
+    return digits;
+  }
+
+  if (digits.length <= 7) {
+    return '${digits.substring(0, 3)} ${digits.substring(3)}';
+  }
+
+  if (digits.length <= 10) {
+    return '${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}';
+  }
+
+  final buffer = StringBuffer();
+  for (int i = 0; i < digits.length; i++) {
+    buffer.write(digits[i]);
+    final remaining = digits.length - i - 1;
+    if (remaining > 0 && remaining % 3 == 0) {
+      buffer.write(' ');
+    }
+  }
+
+  return buffer.toString();
+}

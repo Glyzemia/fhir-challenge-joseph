@@ -2671,9 +2671,28 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                         () {
                                                                       _model.phoneNumberTextController
                                                                               ?.text =
-                                                                          patientRow
-                                                                              .telecomValue;
+                                                                          functions
+                                                                              .extractNationalNumberFromE164(patientRow.telecomValue);
                                                                     });
+                                                                    FFAppState()
+                                                                            .selectedPhoneDialCode =
+                                                                        functions
+                                                                            .extractDialCodeFromE164(patientRow.telecomValue);
+                                                                    safeSetState(
+                                                                        () {});
+                                                                    await Future
+                                                                        .delayed(
+                                                                      Duration(
+                                                                        milliseconds:
+                                                                            100,
+                                                                      ),
+                                                                    );
+                                                                    FFAppState()
+                                                                            .selectedPhoneIsoCode =
+                                                                        functions
+                                                                            .inferIsoCodeFromDialCode(FFAppState().selectedPhoneDialCode);
+                                                                    safeSetState(
+                                                                        () {});
                                                                     if (animationsMap[
                                                                             'containerOnActionTriggerAnimation1'] !=
                                                                         null) {
@@ -5621,9 +5640,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                         gender: (_model
                                                                 .genderCCValue!)
                                                             .toLowerCase(),
-                                                        phoneNumber: _model
-                                                            .phoneNumberTextController
-                                                            .text,
+                                                        phoneNumber:
+                                                            '${FFAppState().selectedPhoneDialCode}${_model.phoneNumberTextController.text}',
                                                         token: FFAppState()
                                                             .fhirBearerToken,
                                                       );
@@ -5692,38 +5710,10 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                         );
 
                                                         _shouldSetState = true;
-                                                        if ((_model.admitPatient
+                                                        if (!(_model
+                                                                .admitPatient
                                                                 ?.succeeded ??
                                                             true)) {
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .clearSnackBars();
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                            SnackBar(
-                                                              content: Text(
-                                                                'Patient admitted successfully..!!',
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .info,
-                                                                ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .center,
-                                                              ),
-                                                              duration: Duration(
-                                                                  milliseconds:
-                                                                      4000),
-                                                              backgroundColor:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .success,
-                                                            ),
-                                                          );
-                                                        } else {
                                                           await showDialog(
                                                             context: context,
                                                             builder:
@@ -5795,9 +5785,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                         birthDate: dateTimeFormat(
                                                             "y-MM-dd",
                                                             _model.selectedDob),
-                                                        phoneNumber: _model
-                                                            .phoneNumberTextController
-                                                            .text,
+                                                        phoneNumber:
+                                                            '${FFAppState().selectedPhoneDialCode}${_model.phoneNumberTextController.text}',
                                                         gender: (_model
                                                                 .genderCCValue!)
                                                             .toLowerCase(),
@@ -5812,30 +5801,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       if ((_model.editPatient
                                                               ?.succeeded ??
                                                           true)) {
-                                                        ScaffoldMessenger.of(
-                                                                context)
-                                                            .showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              'Patient Edited successfully..!!',
-                                                              style: TextStyle(
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .info,
-                                                              ),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                            ),
-                                                            duration: Duration(
-                                                                milliseconds:
-                                                                    4000),
-                                                            backgroundColor:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .success,
-                                                          ),
-                                                        );
                                                         _model.showPatients =
                                                             true;
                                                         _model.showSearch =
@@ -5930,6 +5895,31 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                       duration: Duration(
                                                           milliseconds: 500),
                                                       curve: Curves.ease,
+                                                    );
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .clearSnackBars();
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          'Success..!!',
+                                                          style: TextStyle(
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .info,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                        duration: Duration(
+                                                            milliseconds: 4000),
+                                                        backgroundColor:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .success,
+                                                      ),
                                                     );
                                                     if (_shouldSetState)
                                                       safeSetState(() {});
@@ -7788,13 +7778,14 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                   size: 20.0,
                                                                 ),
                                                                 Text(
-                                                                  valueOrDefault<
-                                                                      String>(
+                                                                  functions.formatE164PhoneForDisplay(
+                                                                      valueOrDefault<
+                                                                          String>(
                                                                     _model
                                                                         .patientSelectedForDetails
                                                                         ?.telecomValue,
                                                                     'Phone Number',
-                                                                  ),
+                                                                  )),
                                                                   style: FlutterFlowTheme.of(
                                                                           context)
                                                                       .bodyMedium

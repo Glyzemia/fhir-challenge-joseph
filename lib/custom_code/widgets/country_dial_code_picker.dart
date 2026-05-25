@@ -41,21 +41,44 @@ class _CountryDialCodePickerState extends State<CountryDialCodePicker> {
   @override
   void initState() {
     super.initState();
+    _syncFromWidgetParameters();
+  }
 
-    dialCode =
-        widget.initialDialCode.isNotEmpty ? widget.initialDialCode : '+91';
+  @override
+  void didUpdateWidget(covariant CountryDialCodePicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
 
-    isoCode = widget.initialIsoCode.isNotEmpty
-        ? widget.initialIsoCode.toUpperCase()
+    final oldDialCode = oldWidget.initialDialCode.trim();
+    final newDialCode = widget.initialDialCode.trim();
+
+    final oldIsoCode = oldWidget.initialIsoCode.trim().toUpperCase();
+    final newIsoCode = widget.initialIsoCode.trim().toUpperCase();
+
+    if (oldDialCode != newDialCode || oldIsoCode != newIsoCode) {
+      _syncFromWidgetParameters();
+    }
+  }
+
+  void _syncFromWidgetParameters() {
+    final String newDialCode = widget.initialDialCode.trim().isNotEmpty
+        ? widget.initialDialCode.trim()
+        : '+91';
+
+    final String newIsoCode = widget.initialIsoCode.trim().isNotEmpty
+        ? widget.initialIsoCode.trim().toUpperCase()
         : 'IN';
 
-    countryName = FFAppState().selectedPhoneCountryName.isNotEmpty
-        ? FFAppState().selectedPhoneCountryName
-        : 'India';
+    setState(() {
+      dialCode = newDialCode;
+      isoCode = newIsoCode;
+      flagEmoji = _countryCodeToEmoji(newIsoCode);
 
-    flagEmoji = FFAppState().selectedPhoneFlagEmoji.isNotEmpty
-        ? FFAppState().selectedPhoneFlagEmoji
-        : _countryCodeToEmoji(isoCode);
+      // This is only for internal reference. The visible widget currently
+      // displays only flag + dial code.
+      countryName = FFAppState().selectedPhoneCountryName.isNotEmpty
+          ? FFAppState().selectedPhoneCountryName
+          : '';
+    });
   }
 
   String _countryCodeToEmoji(String countryCode) {
@@ -94,9 +117,9 @@ class _CountryDialCodePickerState extends State<CountryDialCodePicker> {
       ),
       onSelect: (Country country) {
         final String newDialCode = '+${country.phoneCode}';
-        final String newIsoCode = country.countryCode;
+        final String newIsoCode = country.countryCode.toUpperCase();
         final String newCountryName = country.name;
-        final String newFlagEmoji = _countryCodeToEmoji(country.countryCode);
+        final String newFlagEmoji = _countryCodeToEmoji(newIsoCode);
 
         setState(() {
           dialCode = newDialCode;
@@ -164,5 +187,3 @@ class _CountryDialCodePickerState extends State<CountryDialCodePicker> {
     );
   }
 }
-// Set your widget name, define your parameter, and then add the
-// boilerplate code using the green button on the right!

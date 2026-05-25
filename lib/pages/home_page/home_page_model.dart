@@ -273,9 +273,6 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
       return 'ⓘ Phone Number is required';
     }
 
-    if (!RegExp('^\\d{3}-\\d{3}-\\d{4}\$').hasMatch(val)) {
-      return 'Invalid US Phone Format.';
-    }
     return null;
   }
 
