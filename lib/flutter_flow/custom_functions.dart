@@ -1937,6 +1937,7 @@ int calculateNews2IndividualScores(
           value == 'confused' ||
           value == 'c' ||
           value == 'voice' ||
+          value == 'verbal' ||
           value == 'v' ||
           value == 'pain' ||
           value == 'p' ||
