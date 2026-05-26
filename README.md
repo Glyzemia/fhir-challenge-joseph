@@ -1,7 +1,7 @@
 # FHIR CHALLENGE
 
-A new Flutter project developed for the FHIR challenge.
+A new Flutter project.
 
 ## Getting Started
 
-Install Instructions are given in the main branch.
+FlutterFlow projects are built to run on the Flutter _stable_ release.
