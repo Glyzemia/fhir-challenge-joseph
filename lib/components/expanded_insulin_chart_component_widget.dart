@@ -828,7 +828,10 @@ class _ExpandedInsulinChartComponentWidgetState
                                                             milliseconds: 800),
                                                         curve: Curves.easeInOut,
                                                         child: Text(
-                                                          'DOA',
+                                                          dateTimeFormat(
+                                                              "y-MM-d",
+                                                              widget.encounter!
+                                                                  .admissionDate!),
                                                         ),
                                                       )),
                                                     ),
