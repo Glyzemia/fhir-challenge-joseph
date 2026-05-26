@@ -584,7 +584,397 @@ class _HomePageWidgetState extends State<HomePageWidget>
                         ),
                       ),
                     ),
-                  ].divide(SizedBox(height: 20.0)),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              FlutterFlowTheme.of(context).secondaryBackground,
+                        ),
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              PageTransition(
+                                type: PageTransitionType.fade,
+                                child: FlutterFlowExpandedImageView(
+                                  image: Image.asset(
+                                    'assets/images/Joseph_copy.jpg',
+                                    fit: BoxFit.contain,
+                                    alignment: Alignment(0.0, -1.0),
+                                  ),
+                                  allowRotation: false,
+                                  tag: 'imageTag1',
+                                  useHeroAnimation: true,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Hero(
+                            tag: 'imageTag1',
+                            transitionOnUserGestures: true,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.asset(
+                                'assets/images/Joseph_copy.jpg',
+                                width: 200.0,
+                                height: 200.0,
+                                fit: BoxFit.cover,
+                                alignment: Alignment(0.0, -1.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'Personal Website',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL('https://josephselvaraj.in');
+                                },
+                                child: FaIcon(
+                                  FontAwesomeIcons.globe,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'LinkedIn Profile',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL(
+                                      'https://www.linkedin.com/in/joseph-s-md/');
+                                },
+                                child: FaIcon(
+                                  FontAwesomeIcons.linkedin,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'Twitter / X Profile',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL(
+                                      'https://x.com/josephselvraj');
+                                },
+                                child: FaIcon(
+                                  FontAwesomeIcons.twitter,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'Github Repo: Flutterflow Branch.',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL(
+                                      'https://github.com/Glyzemia/fhir-challenge-joseph/tree/flutterflow');
+                                },
+                                child: FaIcon(
+                                  FontAwesomeIcons.github,
+                                  color: Colors.black,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'Startup website',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL('https://glyzemia.com');
+                                },
+                                child: Icon(
+                                  Icons.business_rounded,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                            AlignedTooltip(
+                              content: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text(
+                                  'YouTube Profile',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyLarge
+                                      .override(
+                                        font: GoogleFonts.inter(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyLarge
+                                                  .fontStyle,
+                                        ),
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyLarge
+                                            .fontStyle,
+                                      ),
+                                ),
+                              ),
+                              offset: 4.0,
+                              preferredDirection: AxisDirection.down,
+                              borderRadius: BorderRadius.circular(8.0),
+                              backgroundColor: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                              elevation: 4.0,
+                              tailBaseWidth: 24.0,
+                              tailLength: 12.0,
+                              waitDuration: Duration(milliseconds: 100),
+                              showDuration: Duration(milliseconds: 1500),
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  await launchURL(
+                                      'https://www.youtube.com/@GlyzemiaHealthTech');
+                                },
+                                child: FaIcon(
+                                  FontAwesomeIcons.youtube,
+                                  color: FlutterFlowTheme.of(context).error,
+                                  size: 24.0,
+                                ),
+                              ),
+                            ),
+                          ]
+                              .divide(SizedBox(width: 10.0))
+                              .around(SizedBox(width: 10.0)),
+                        ),
+                      ]
+                          .divide(SizedBox(height: 10.0))
+                          .around(SizedBox(height: 10.0)),
+                    ),
+                  ]
+                      .divide(SizedBox(height: 20.0))
+                      .addToEnd(SizedBox(height: 50.0)),
                 ),
               ),
             ),
@@ -7298,7 +7688,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                       allowRotation:
                                                                           false,
                                                                       tag:
-                                                                          'imageTag',
+                                                                          'imageTag2',
                                                                       useHeroAnimation:
                                                                           true,
                                                                     ),
@@ -7306,7 +7696,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                                                 );
                                                               },
                                                               child: Hero(
-                                                                tag: 'imageTag',
+                                                                tag:
+                                                                    'imageTag2',
                                                                 transitionOnUserGestures:
                                                                     true,
                                                                 child:
